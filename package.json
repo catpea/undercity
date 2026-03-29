@@ -10,5 +10,21 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
+  },
+
+  "author": "catpea (https://github.com/catpea)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catpea/undercity.git"
+  },
+  "bugs": {
+    "url": "https://github.com/catpea/undercity/issues"
+  },
+  "homepage": "https://github.com/catpea/undercity",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/catpea"
   }
+
 }
