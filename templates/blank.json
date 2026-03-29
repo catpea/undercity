@@ -1,0 +1,39 @@
+{
+  "id": "blank",
+  "name": "Blank",
+  "description": "An empty canvas — start building your flow from scratch.",
+  "icon": "app-indicator",
+  "category": "starter",
+  "preview": "A lobby entry node, ready for your first room.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "lobby",
+        "type": "room",
+        "label": "Welcome",
+        "x": 120,
+        "y": 200,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "lobby",
+        "meta": {
+          "isEntry": true,
+          "appName": "My App",
+          "tagline": "Your tagline goes here.",
+          "icon": "stars"
+        }
+      }
+    ],
+    "edges": []
+  },
+  "inventory": {
+    "schema": {}
+  },
+  "customActions": {}
+}

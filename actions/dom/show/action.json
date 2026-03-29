@@ -1,0 +1,18 @@
+{
+  "id": "dom.show",
+  "category": "dom",
+  "categoryLabel": "DOM",
+  "icon": "image",
+  "color": "var(--sol-green)",
+  "label": "Show Element",
+  "desc": "Remove d-none / display:none from matching elements.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Selector",
+      "type": "text",
+      "placeholder": "#my-div"
+    }
+  ]
+}

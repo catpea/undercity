@@ -1,0 +1,22 @@
+{
+  "id": "session.load",
+  "category": "session",
+  "categoryLabel": "Session",
+  "icon": "floppy",
+  "color": "var(--sol-base1)",
+  "label": "Load from Session",
+  "desc": "Read a value from sessionStorage into inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "key",
+      "label": "Key",
+      "type": "text"
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text"
+    }
+  ]
+}

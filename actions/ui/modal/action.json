@@ -1,0 +1,18 @@
+{
+  "id": "ui.modal",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Show Modal",
+  "desc": "Open a named Bootstrap modal by selector.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Modal selector",
+      "type": "text",
+      "placeholder": "#my-modal"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "nav.reload",
+  "category": "navigation",
+  "categoryLabel": "Navigation",
+  "icon": "signpost",
+  "color": "var(--sol-blue)",
+  "label": "Reload Page",
+  "desc": "Hard-reload the current room.",
+  "version": "1.0.0",
+  "params": []
+}

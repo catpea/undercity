@@ -1,0 +1,24 @@
+{
+  "id": "logic.transform",
+  "category": "logic",
+  "categoryLabel": "Logic",
+  "icon": "gear",
+  "color": "var(--sol-yellow)",
+  "label": "Transform Value",
+  "desc": "Evaluate a JS expression and store the result.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "expr",
+      "label": "Expression",
+      "type": "code",
+      "placeholder": "inventory.items.length"
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text",
+      "placeholder": "itemCount"
+    }
+  ]
+}

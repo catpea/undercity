@@ -1,0 +1,11 @@
+{
+  "id": "nav.reset",
+  "category": "navigation",
+  "categoryLabel": "Navigation",
+  "icon": "signpost",
+  "color": "var(--sol-blue)",
+  "label": "Reset Flow",
+  "desc": "Clear inventory and return the user to the Lobby.",
+  "version": "1.0.0",
+  "params": []
+}

@@ -1,0 +1,29 @@
+{
+  "id": "ui.toast",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Show Toast",
+  "desc": "Show a transient notification overlay.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "msg",
+      "label": "Message",
+      "type": "text"
+    },
+    {
+      "name": "type",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "info",
+        "success",
+        "warning",
+        "danger"
+      ],
+      "default": "info"
+    }
+  ]
+}

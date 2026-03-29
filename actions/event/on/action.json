@@ -1,0 +1,23 @@
+{
+  "id": "event.on",
+  "category": "events",
+  "categoryLabel": "Events",
+  "icon": "broadcast",
+  "color": "var(--sol-cyan)",
+  "label": "Listen for Event",
+  "desc": "Register a handler for an event. Auto-unsubscribed on room exit.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "event",
+      "label": "Event name",
+      "type": "text"
+    },
+    {
+      "name": "handler",
+      "label": "Handler fn",
+      "type": "code",
+      "placeholder": "(data) => { /* ... */ }"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "user.check",
+  "category": "user",
+  "categoryLabel": "User",
+  "icon": "backpack",
+  "color": "var(--sol-cyan)",
+  "label": "Check Condition",
+  "desc": "Evaluate a JS expression against inventory. Branch via diamond.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "expr",
+      "label": "Expression",
+      "type": "code",
+      "placeholder": "inventory.age >= 18"
+    },
+    {
+      "name": "into",
+      "label": "Into var",
+      "type": "text",
+      "placeholder": "isAdult"
+    }
+  ]
+}

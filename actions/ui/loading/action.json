@@ -1,0 +1,18 @@
+{
+  "id": "ui.loading",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Loading Spinner",
+  "desc": "Show or hide a full-screen loading overlay.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "show",
+      "label": "Visible",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}

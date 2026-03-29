@@ -1,0 +1,24 @@
+{
+  "id": "display.rawHtml",
+  "category": "display",
+  "categoryLabel": "Display",
+  "icon": "type",
+  "color": "var(--sol-cyan)",
+  "label": "Print Raw HTML",
+  "desc": "Inject trusted HTML directly (no sanitization). Use only with controlled content.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Target selector",
+      "type": "text",
+      "placeholder": "#my-area"
+    },
+    {
+      "name": "html",
+      "label": "HTML",
+      "type": "textarea",
+      "placeholder": "<b>Trusted HTML</b>"
+    }
+  ]
+}

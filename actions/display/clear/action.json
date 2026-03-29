@@ -1,0 +1,18 @@
+{
+  "id": "display.clear",
+  "category": "display",
+  "categoryLabel": "Display",
+  "icon": "type",
+  "color": "var(--sol-cyan)",
+  "label": "Clear Content",
+  "desc": "Empty the innerHTML of a selector.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Target selector",
+      "type": "text",
+      "placeholder": "#my-area"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "form.setField",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Set Field Value",
+  "desc": "Set a form field's value from an inventory key once when this step runs. Use Configure mode for JS expressions.",
+  "version": "2.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text",
+      "placeholder": "email"
+    },
+    {
+      "name": "value",
+      "label": "Inventory key",
+      "type": "inventory-key",
+      "placeholder": "userEmail"
+    }
+  ]
+}

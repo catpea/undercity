@@ -1,0 +1,335 @@
+{
+  "id": "test-1",
+  "name": "Test 1",
+  "description": "",
+  "graph": {
+    "nodes": [
+      {
+        "id": "b3a341bc",
+        "type": "room",
+        "label": "Start",
+        "x": 680,
+        "y": 280,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": true
+        },
+        "things": []
+      },
+      {
+        "id": "49fdaf43",
+        "type": "room",
+        "label": "Phone Video",
+        "x": 720,
+        "y": 640,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "e1ecf6a7",
+        "type": "room",
+        "label": "As Is",
+        "x": -240,
+        "y": 320,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "999f75fd",
+        "type": "room",
+        "label": "Select Thumbnail Frame",
+        "x": -40,
+        "y": 640,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "0a31269c",
+        "type": "room",
+        "label": "Audio To Text",
+        "x": 120,
+        "y": 240,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "448d783e",
+        "type": "room",
+        "label": "Summary/Preview",
+        "x": 360,
+        "y": 280,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "ed8704a3",
+        "type": "room",
+        "label": "Use PersonaLive",
+        "x": 360,
+        "y": 680,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "e299b642",
+        "type": "room",
+        "label": "Audio Recording",
+        "x": 760,
+        "y": 160,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "6ac7cbc9",
+        "type": "room",
+        "label": "Upload Cover Image",
+        "x": 280,
+        "y": 400,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "0b80f80d",
+        "type": "room",
+        "label": "Just Text",
+        "x": 920,
+        "y": 280,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "b637bb7d",
+        "type": "room",
+        "label": "Upload Narration",
+        "x": 880,
+        "y": 440,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "de22c8c2",
+        "fromId": "b3a341bc",
+        "toId": "49fdaf43",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "cd3908ca",
+        "fromId": "49fdaf43",
+        "toId": "e1ecf6a7",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "4f633376",
+        "fromId": "e1ecf6a7",
+        "toId": "999f75fd",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "c6e1b3be",
+        "fromId": "999f75fd",
+        "toId": "0a31269c",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "5151920c",
+        "fromId": "0a31269c",
+        "toId": "448d783e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "6f62b5f6",
+        "fromId": "49fdaf43",
+        "toId": "ed8704a3",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "57301709",
+        "fromId": "ed8704a3",
+        "toId": "999f75fd",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "d0a60cc1",
+        "fromId": "b3a341bc",
+        "toId": "e299b642",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "61cc497b",
+        "fromId": "e299b642",
+        "toId": "0a31269c",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "debdde4f",
+        "fromId": "0a31269c",
+        "toId": "6ac7cbc9",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "8d99e7e4",
+        "fromId": "6ac7cbc9",
+        "toId": "448d783e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "48146134",
+        "fromId": "b3a341bc",
+        "toId": "0b80f80d",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "44d1da16",
+        "fromId": "0b80f80d",
+        "toId": "b637bb7d",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "f25aa545",
+        "fromId": "b637bb7d",
+        "toId": "6ac7cbc9",
+        "label": "",
+        "condition": ""
+      }
+    ]
+  },
+  "inventory": {
+    "schema": {}
+  },
+  "customActions": {},
+  "created": "2026-03-29T01:42:35.973Z",
+  "modified": "2026-03-29T01:46:48.082Z"
+}

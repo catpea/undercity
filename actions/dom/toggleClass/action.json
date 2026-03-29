@@ -1,0 +1,22 @@
+{
+  "id": "dom.toggleClass",
+  "category": "dom",
+  "categoryLabel": "DOM",
+  "icon": "image",
+  "color": "var(--sol-green)",
+  "label": "Toggle Class",
+  "desc": "Toggle a CSS class on matching elements.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Selector",
+      "type": "text"
+    },
+    {
+      "name": "class",
+      "label": "Class",
+      "type": "text"
+    }
+  ]
+}

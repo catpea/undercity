@@ -1,0 +1,11 @@
+{
+  "id": "form.clearErrors",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Clear All Errors",
+  "desc": "Hide all [data-error] elements on the page.",
+  "version": "1.0.0",
+  "params": []
+}

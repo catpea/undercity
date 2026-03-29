@@ -1,0 +1,30 @@
+{
+  "id": "media.askAudioUpload",
+  "category": "media",
+  "categoryLabel": "Media & Upload",
+  "icon": "film",
+  "color": "var(--sol-magenta)",
+  "label": "Ask for Audio Upload",
+  "desc": "Open file picker for audio. Shows waveform preview.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "label",
+      "label": "Prompt label",
+      "type": "text",
+      "placeholder": "Upload audio"
+    },
+    {
+      "name": "accept",
+      "label": "Accept",
+      "type": "text",
+      "default": "audio/*"
+    },
+    {
+      "name": "into",
+      "label": "Store in var",
+      "type": "text",
+      "placeholder": "audioFile"
+    }
+  ]
+}

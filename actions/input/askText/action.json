@@ -1,0 +1,36 @@
+{
+  "id": "input.askText",
+  "category": "input",
+  "categoryLabel": "Input Prompts",
+  "icon": "pencil-square",
+  "color": "var(--sol-orange)",
+  "label": "Ask for Text Input",
+  "desc": "Show a modal asking the user to type a text value.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "label",
+      "label": "Prompt label",
+      "type": "text",
+      "placeholder": "Your name"
+    },
+    {
+      "name": "placeholder",
+      "label": "Placeholder",
+      "type": "text",
+      "placeholder": "Type here…"
+    },
+    {
+      "name": "into",
+      "label": "Store in var",
+      "type": "text",
+      "placeholder": "userName"
+    },
+    {
+      "name": "multiline",
+      "label": "Multiline",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}

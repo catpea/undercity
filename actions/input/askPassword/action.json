@@ -1,0 +1,24 @@
+{
+  "id": "input.askPassword",
+  "category": "input",
+  "categoryLabel": "Input Prompts",
+  "icon": "pencil-square",
+  "color": "var(--sol-orange)",
+  "label": "Ask for Password",
+  "desc": "Show a masked password input modal.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "label",
+      "label": "Prompt label",
+      "type": "text",
+      "placeholder": "Enter password"
+    },
+    {
+      "name": "into",
+      "label": "Store in var",
+      "type": "text",
+      "placeholder": "password"
+    }
+  ]
+}

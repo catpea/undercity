@@ -1,0 +1,18 @@
+{
+  "id": "render.subtitle",
+  "category": "render",
+  "categoryLabel": "Page Builder",
+  "icon": "layout-text-window",
+  "color": "var(--sol-violet)",
+  "label": "Subtitle",
+  "desc": "Append a muted subtitle paragraph.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "text",
+      "label": "Text",
+      "type": "text",
+      "placeholder": "Welcome back. Enter your credentials."
+    }
+  ]
+}

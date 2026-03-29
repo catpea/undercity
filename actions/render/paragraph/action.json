@@ -1,0 +1,32 @@
+{
+  "id": "render.paragraph",
+  "category": "render",
+  "categoryLabel": "Page Builder",
+  "icon": "layout-text-window",
+  "color": "var(--sol-violet)",
+  "label": "Paragraph",
+  "desc": "Append a styled paragraph of text.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "text",
+      "label": "Text",
+      "type": "textarea",
+      "placeholder": "Body copy…"
+    },
+    {
+      "name": "style",
+      "label": "Style",
+      "type": "select",
+      "options": [
+        "muted",
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "body"
+      ],
+      "default": "muted"
+    }
+  ]
+}

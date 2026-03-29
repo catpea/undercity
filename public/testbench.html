@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Undercity Action Testbench</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "undercity/shared": "/actions/_shared/container.js"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="/lib/bootstrap/css/bootstrap.min.css">
+  <style>
+    :root {
+      --sol-base03:#002b36;--sol-base02:#073642;--sol-base01:#586e75;
+      --sol-base0:#839496;--sol-base1:#93a1a1;--sol-base3:#fdf6e3;
+      --sol-yellow:#b58900;--sol-orange:#cb4b16;--sol-red:#dc322f;
+      --sol-magenta:#d33682;--sol-violet:#6c71c4;--sol-blue:#268bd2;
+      --sol-cyan:#2aa198;--sol-green:#859900;
+      --bg:var(--sol-base03);--bg2:var(--sol-base02);
+      --border:#073642;--text:var(--sol-base0);--text-em:var(--sol-base1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'SF Mono',Consolas,monospace;font-size:13px;display:flex;height:100vh;overflow:hidden;}
+
+    /* Sidebar */
+    #sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+    #sidebar-title{padding:14px 16px;font-weight:700;font-size:14px;color:var(--sol-cyan);border-bottom:1px solid var(--border);letter-spacing:.04em;}
+    #suite-list{flex:1;overflow-y:auto;padding:8px 0;}
+    .suite-item{padding:7px 16px;cursor:pointer;color:var(--text);border-left:3px solid transparent;transition:all .15s;}
+    .suite-item:hover{background:var(--bg);color:var(--text-em);}
+    .suite-item.active{border-left-color:var(--sol-cyan);color:var(--sol-cyan);background:var(--bg);}
+    .suite-badge{float:right;font-size:10px;padding:1px 6px;border-radius:10px;background:var(--sol-base01);color:#fff;}
+    .suite-badge.pass{background:var(--sol-green);}
+    .suite-badge.fail{background:var(--sol-red);}
+    .suite-badge.running{background:var(--sol-yellow);}
+
+    /* Main */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #toolbar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    #toolbar h1{font-size:14px;font-weight:700;color:var(--text-em);flex:1;}
+    .btn-tb{background:var(--bg2);border:1px solid var(--border);color:var(--text-em);padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;}
+    .btn-tb:hover{border-color:var(--sol-cyan);color:var(--sol-cyan);}
+    #status-bar{padding:6px 16px;font-size:11px;color:var(--sol-base01);border-bottom:1px solid var(--border);}
+    #content{flex:1;display:flex;overflow:hidden;}
+
+    /* Test list panel */
+    #test-panel{width:320px;min-width:320px;border-right:1px solid var(--border);overflow-y:auto;padding:8px 0;}
+    .test-row{padding:7px 16px;display:flex;align-items:center;gap:8px;cursor:pointer;border-left:3px solid transparent;}
+    .test-row:hover{background:var(--bg2);}
+    .test-row.active{border-left-color:var(--sol-blue);background:var(--bg2);}
+    .test-row.pass .test-dot{color:var(--sol-green);}
+    .test-row.fail .test-dot{color:var(--sol-red);}
+    .test-row.skip .test-dot{color:var(--sol-base01);}
+    .test-row.running .test-dot{color:var(--sol-yellow);}
+    .test-dot{font-size:16px;line-height:1;}
+    .test-name{flex:1;font-size:12px;}
+    .test-time{font-size:10px;color:var(--sol-base01);}
+
+    /* Detail panel */
+    #detail-panel{flex:1;overflow-y:auto;padding:16px;}
+    #detail-panel h2{font-size:13px;font-weight:700;color:var(--text-em);margin-bottom:10px;}
+    .detail-section{margin-bottom:14px;}
+    .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--sol-base01);margin-bottom:5px;}
+    .code-block{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:11px;white-space:pre-wrap;word-break:break-all;color:var(--sol-base1);}
+    .code-block.error{border-color:var(--sol-red);color:var(--sol-red);}
+    .code-block.pass{border-color:var(--sol-green);color:var(--sol-green);}
+
+    /* DOM sandbox — hidden off-screen */
+    #sandbox{position:fixed;left:-9999px;top:0;width:600px;pointer-events:none;}
+    /* Give the sandbox Bootstrap context */
+    #sandbox #pw-content{width:100%;min-height:10px;}
+
+    /* Progress */
+    #progress-bar{height:3px;background:var(--sol-cyan);width:0;transition:width .2s;}
+  </style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div id="sidebar-title">⚗ Testbench</div>
+  <div id="suite-list"></div>
+</aside>
+
+<main id="main">
+  <div id="toolbar">
+    <h1 id="suite-title">Undercity Action Testbench</h1>
+    <button class="btn-tb" id="btn-run-all">▶ Run All</button>
+    <button class="btn-tb" id="btn-run-suite">▶ Suite</button>
+  </div>
+  <div id="progress-bar"></div>
+  <div id="status-bar" id="status">Ready — click "Run All" to begin.</div>
+  <div id="content">
+    <div id="test-panel"></div>
+    <div id="detail-panel"><p style="color:var(--sol-base01)">Select a test to inspect.</p></div>
+  </div>
+</main>
+
+<!-- Off-screen DOM sandbox for action testing -->
+<div id="sandbox">
+  <div id="pw-content"></div>
+  <div id="pw-form"></div>
+  <div id="pw-loading" class="d-none"></div>
+  <div id="pw-input-modal" style="display:none">
+    <span id="pw-input-label"></span>
+    <input id="pw-input-field" class="form-control">
+    <button id="pw-input-confirm">OK</button>
+  </div>
+</div>
+
+<script type="module">
+// ── Testbench engine ─────────────────────────────────────────────────────────
+
+const PROJ_ID   = '__testbench__';
+const BASE_URL  = '';           // same origin
+let RT          = null;         // loaded runtime module
+let allResults  = {};           // suite → [{name, status, err, domBefore, domAfter, ms}]
+let activeSuite = null;
+let activeTest  = null;
+
+// ── Bootstrap the runtime ────────────────────────────────────────────────────
+
+async function bootRuntime() {
+  setStatus('Generating test runtime…');
+
+  const projPayload = {
+    id: PROJ_ID, name: 'Testbench',
+    graph: { nodes: [{ id: 'lobby', type: 'room', label: 'Lobby', template: 'lobby', x:100, y:100, meta:{ isEntry:true, appName:'Test', tagline:'' }, payload:{ onEnter:[], onExit:[], onBack:[], onReset:[], onUnload:[] } }], edges: [] },
+    inventory: { schema: {} },
+    customActions: {}
+  };
+
+  // Upsert project
+  await fetch(`${BASE_URL}/api/projects/${PROJ_ID}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(projPayload)
+  }).catch(() => {});
+
+  // Create if PUT fails (try POST)
+  try {
+    const check = await fetch(`${BASE_URL}/api/projects/${PROJ_ID}`);
+    if (!check.ok) {
+      await fetch(`${BASE_URL}/api/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projPayload)
+      });
+    }
+  } catch {}
+
+  // Generate
+  const genRes = await fetch(`${BASE_URL}/api/projects/${PROJ_ID}/generate`, { method: 'POST' });
+  if (!genRes.ok) throw new Error(`Generate failed: ${genRes.status}`);
+  const genData = await genRes.json().catch(() => ({}));
+  const rtUrl = `${BASE_URL}/generated/${PROJ_ID}/js/runtime.js`;
+
+  // Dynamic import with cache-bust
+  RT = await import(rtUrl + '?t=' + Date.now());
+  setStatus('Runtime loaded. Ready.');
+  return RT;
+}
+
+// ── Test utilities ───────────────────────────────────────────────────────────
+
+function clearSandbox() {
+  document.getElementById('pw-content').innerHTML = '';
+  document.getElementById('pw-form').innerHTML = '';
+}
+
+function sandboxHTML() {
+  return document.getElementById('pw-content').innerHTML ||
+         document.getElementById('pw-form').innerHTML || '(empty)';
+}
+
+function sandboxText() {
+  const el = document.getElementById('pw-content');
+  return el.textContent.trim() || '(empty)';
+}
+
+function expect(label, actual, expected) {
+  if (actual !== expected) throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+}
+
+function expectContains(label, haystack, needle) {
+  if (!String(haystack).includes(needle))
+    throw new Error(`${label}: expected to contain ${JSON.stringify(needle)}, got: ${String(haystack).slice(0,200)}`);
+}
+
+function expectMatch(label, str, pattern) {
+  if (!pattern.test(str))
+    throw new Error(`${label}: ${JSON.stringify(str.slice(0,200))} did not match ${pattern}`);
+}
+
+function expectElement(selector) {
+  const el = document.getElementById('pw-content').querySelector(selector) ||
+             document.getElementById('pw-form').querySelector(selector);
+  if (!el) throw new Error(`Expected element matching "${selector}" in sandbox, but not found`);
+  return el;
+}
+
+function expectNoElement(selector) {
+  const el = document.getElementById('pw-content').querySelector(selector);
+  if (el) throw new Error(`Expected NO element matching "${selector}", but found one`);
+}
+
+// ── Test suite definitions ───────────────────────────────────────────────────
+
+const SUITES = {
+
+  'render.*': [
+    {
+      name: 'render.clear empties #pw-content',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<p>old</p>';
+        RT.Render.clear();
+        expect('innerHTML', document.getElementById('pw-content').innerHTML, '');
+      }
+    },
+    {
+      name: 'render.title appends heading',
+      run() {
+        RT.Render.title('Hello World');
+        const h = expectElement('h2');
+        expectContains('textContent', h.textContent, 'Hello World');
+      }
+    },
+    {
+      name: 'render.title uses specified size',
+      run() {
+        RT.Render.title('Big', 'h1');
+        expectElement('h1');
+      }
+    },
+    {
+      name: 'render.subtitle appends muted paragraph',
+      run() {
+        RT.Render.subtitle('Sub text');
+        const p = expectElement('p');
+        expectContains('textContent', p.textContent, 'Sub text');
+        expectContains('class', p.className, 'text-muted');
+      }
+    },
+    {
+      name: 'render.paragraph appends paragraph',
+      run() {
+        RT.Render.paragraph('Some content');
+        const p = expectElement('p');
+        expectContains('textContent', p.textContent, 'Some content');
+      }
+    },
+    {
+      name: 'render.field appends label + input',
+      run() {
+        RT.Render.field('email', 'Email Address', 'email', 'you@example.com');
+        const label = expectElement('label');
+        const input = expectElement('input[type="email"]');
+        expectContains('label', label.textContent, 'Email Address');
+        expect('input name', input.name, 'email');
+        expectContains('placeholder', input.placeholder, 'you@example.com');
+      }
+    },
+    {
+      name: 'render.field required flag sets aria-required',
+      run() {
+        RT.Render.field('pw', 'Password', 'password', '', '', true);
+        const input = expectElement('input[type="password"]');
+        expect('required attr', input.required, true);
+      }
+    },
+    {
+      name: 'render.alert appends hidden alert div',
+      run() {
+        RT.Render.alert('my-alert', 'danger', '');
+        const div = expectElement('#my-alert');
+        expectContains('class', div.className, 'd-none');
+        expectContains('class', div.className, 'alert-danger');
+      }
+    },
+    {
+      name: 'render.alert with text shows immediately',
+      run() {
+        RT.Render.alert('err-msg', 'warning', 'Something went wrong');
+        const div = expectElement('#err-msg');
+        expect('d-none absent', div.classList.contains('d-none'), false);
+        expectContains('text', div.textContent, 'Something went wrong');
+      }
+    },
+    {
+      name: 'render.button appends button element',
+      run() {
+        RT.Render.button('Sign In', 'auth-check', 'primary', true);
+        const btn = expectElement('button');
+        expectContains('label', btn.textContent, 'Sign In');
+        expectContains('class', btn.className, 'btn-primary');
+        expectContains('class', btn.className, 'w-100');
+      }
+    },
+    {
+      name: 'render.button non-full-width has no w-100',
+      run() {
+        RT.Render.button('Back', 'lobby', 'outline-secondary', false);
+        const btn = expectElement('button');
+        expect('no w-100', btn.classList.contains('w-100'), false);
+      }
+    },
+    {
+      name: 'render.link appends anchor',
+      run() {
+        RT.Render.link('Forgot password?', 'forgot', '');
+        const a = expectElement('a');
+        expectContains('text', a.textContent, 'Forgot password?');
+        expectContains('class', a.className, 'text-info');
+      }
+    },
+    {
+      name: 'render.link with prefix shows prefix text',
+      run() {
+        RT.Render.link('Sign up', 'signup', "Don't have an account?");
+        const p = expectElement('p');
+        expectContains('text', p.textContent, "Don't have an account?");
+        expectContains('text', p.textContent, 'Sign up');
+      }
+    },
+    {
+      name: 'render.section appends uppercase label',
+      run() {
+        RT.Render.section('Personal Details');
+        const el = document.getElementById('pw-content').querySelector('div.text-uppercase');
+        if (!el) throw new Error('Expected uppercase section div');
+        expectContains('text', el.textContent, 'Personal Details');
+      }
+    },
+    {
+      name: 'render.divider appends <hr>',
+      run() {
+        RT.Render.divider();
+        expectElement('hr');
+      }
+    },
+    {
+      name: 'render.markdown renders bold text',
+      run() {
+        RT.Render.markdown('**Hello** world');
+        const div = expectElement('div.af-md');
+        expectMatch('contains bold', div.innerHTML, /<strong>/);
+      }
+    },
+    {
+      name: 'render.markdown renders heading',
+      run() {
+        RT.Render.markdown('# Big Title');
+        const div = expectElement('div.af-md');
+        expectElement('h1') || expectElement('h2');
+      }
+    },
+    {
+      name: 'render.* via runPayload (integration)',
+      async run() {
+        await RT.runPayload([
+          { action: 'render.clear', params: {} },
+          { action: 'render.title', params: { text: 'Via Payload' } },
+          { action: 'render.subtitle', params: { text: 'Sub' } },
+          { action: 'render.field', params: { name: 'email', label: 'Email', type: 'email', placeholder: 'test@example.com', autocomplete: 'email', required: true } },
+          { action: 'render.button', params: { label: 'Next', target: 'next-step', variant: 'primary', full: true } },
+        ]);
+        expectElement('h2');
+        expectElement('input[type="email"]');
+        expectElement('button');
+      }
+    },
+  ],
+
+  'display.*': [
+    {
+      name: 'display.text sets textContent',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<p id="out">old</p>';
+        RT.Display.text('#out', 'new value');
+        expect('text', document.getElementById('out').textContent, 'new value');
+      }
+    },
+    {
+      name: 'display.text escapes HTML',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<p id="out"></p>';
+        RT.Display.text('#out', '<script>alert(1)</script>');
+        expect('text', document.getElementById('out').textContent, '<script>alert(1)</script>');
+      }
+    },
+    {
+      name: 'display.safeHtml strips script tags',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<div id="out"></div>';
+        RT.Display.safeHtml('#out', '<p>Hi</p><script>evil()</script>');
+        expect('no script', document.getElementById('out').innerHTML.includes('<script>'), false);
+        expectContains('has p', document.getElementById('out').innerHTML, '<p>');
+      }
+    },
+    {
+      name: 'display.rawHtml injects HTML verbatim',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<div id="out"></div>';
+        RT.Display.rawHtml('#out', '<b>bold</b>');
+        expectContains('has b', document.getElementById('out').innerHTML, '<b>');
+      }
+    },
+    {
+      name: 'display.clear empties target',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<div id="out"><p>stuff</p></div>';
+        RT.Display.clear('#out');
+        expect('empty', document.getElementById('out').innerHTML, '');
+      }
+    },
+    {
+      name: 'display.markdown renders inline code',
+      run() {
+        document.getElementById('pw-content').innerHTML = '<div id="out"></div>';
+        RT.Display.markdown('#out', 'Use `npm install`');
+        expectContains('code', document.getElementById('out').innerHTML, '<code>');
+      }
+    },
+    {
+      name: 'display.value prints inventory key',
+      run() {
+        RT.Inventory.set('userName', 'Alice');
+        document.getElementById('pw-content').innerHTML = '<p id="out"></p>';
+        RT.Display.value('#out', 'userName');
+        expect('text', document.getElementById('out').textContent, 'Alice');
+      }
+    },
+  ],
+
+  'Inventory': [
+    {
+      name: 'set and get a value',
+      run() {
+        RT.Inventory.set('x', 42);
+        expect('get', RT.Inventory.get('x'), 42);
+      }
+    },
+    {
+      name: 'delete removes a key',
+      run() {
+        RT.Inventory.set('tmp', 'hello');
+        RT.Inventory.delete('tmp');
+        expect('deleted', RT.Inventory.get('tmp'), null);
+      }
+    },
+    {
+      name: 'merge updates multiple keys',
+      run() {
+        RT.Inventory.set('a', 1);
+        RT.Inventory.merge({ a: 2, b: 3 });
+        expect('a', RT.Inventory.get('a'), 2);
+        expect('b', RT.Inventory.get('b'), 3);
+      }
+    },
+    {
+      name: 'dump returns all keys',
+      run() {
+        RT.Inventory.clear();
+        RT.Inventory.set('k1', 'v1');
+        RT.Inventory.set('k2', 'v2');
+        const d = RT.Inventory.dump();
+        expect('k1', d.k1, 'v1');
+        expect('k2', d.k2, 'v2');
+      }
+    },
+    {
+      name: 'clear removes everything',
+      run() {
+        RT.Inventory.set('foo', 'bar');
+        RT.Inventory.clear();
+        const d = RT.Inventory.dump();
+        expect('empty', Object.keys(d).length, 0);
+      }
+    },
+  ],
+
+  'User': [
+    {
+      name: 'carry stores a rich item',
+      run() {
+        RT.User.carry('sword', { damage: 10 });
+        expect('has sword', RT.User.has('sword'), true);
+        const item = RT.User.inspect('sword');
+        expect('damage', item.damage, 10);
+        expect('_isItem', item._isItem, true);
+      }
+    },
+    {
+      name: 'drop removes item',
+      run() {
+        RT.User.carry('shield', { armor: 5 });
+        RT.User.drop('shield');
+        expect('has shield', RT.User.has('shield'), false);
+      }
+    },
+    {
+      name: 'has returns false for missing item',
+      run() {
+        expect('missing', RT.User.has('nonexistent'), false);
+      }
+    },
+    {
+      name: 'User delegates get/set to Inventory',
+      run() {
+        RT.User.set('score', 100);
+        expect('get', RT.User.get('score'), 100);
+      }
+    },
+  ],
+
+  'runPayload': [
+    {
+      name: 'runs empty payload without error',
+      async run() {
+        await RT.runPayload([]);
+      }
+    },
+    {
+      name: 'unknown action logs warning, does not throw',
+      async run() {
+        await RT.runPayload([{ action: 'fake.noSuchThing', params: { x: 1 } }]);
+      }
+    },
+    {
+      name: 'stores return value via into',
+      async run() {
+        RT.Inventory.clear();
+        // ui.toast returns undefined; use a function that returns a value
+        // Inventory.get returns a value we can store back
+        RT.Inventory.set('src', 'hello');
+        await RT.runPayload([{ action: 'Inventory.get', params: { key: 'src', into: 'dst' } }]);
+        expect('dst', RT.Inventory.get('dst'), 'hello');
+      }
+    },
+    {
+      name: 'inventory.set via payload',
+      async run() {
+        await RT.runPayload([{ action: 'inventory.set', params: { key: 'color', value: 'blue' } }]);
+        expect('color', RT.Inventory.get('color'), 'blue');
+      }
+    },
+    {
+      name: 'user.carry via payload',
+      async run() {
+        await RT.runPayload([{ action: 'user.carry', params: { itemId: 'gem', itemData: { value: 5 } } }]);
+        expect('has gem', RT.User.has('gem'), true);
+      }
+    },
+  ],
+
+  'Navigator': [
+    {
+      name: 'Navigator.back exists and is a function',
+      run() {
+        expect('type', typeof RT.Navigator.back, 'function');
+      }
+    },
+    {
+      name: 'Navigator.reload exists and is a function',
+      run() {
+        expect('type', typeof RT.Navigator.reload, 'function');
+      }
+    },
+    {
+      name: 'Navigator.goto is a function',
+      run() {
+        expect('type', typeof RT.Navigator.goto, 'function');
+      }
+    },
+  ],
+
+  'Markdown (unit)': [
+    {
+      name: 'renders **bold** correctly',
+      run() {
+        RT.Render.markdown('**bold text**');
+        expectMatch('strong', document.getElementById('pw-content').innerHTML, /<strong>/);
+      }
+    },
+    {
+      name: 'renders _italic_ correctly',
+      run() {
+        RT.Render.markdown('_italic text_');
+        expectMatch('em', document.getElementById('pw-content').innerHTML, /<em>/);
+      }
+    },
+    {
+      name: 'renders ~~strikethrough~~',
+      run() {
+        RT.Render.markdown('~~struck~~');
+        expectMatch('del', document.getElementById('pw-content').innerHTML, /<del>/);
+      }
+    },
+    {
+      name: 'renders unordered list',
+      run() {
+        RT.Render.markdown('- item one\n- item two');
+        expectElement('ul');
+        const items = document.getElementById('pw-content').querySelectorAll('li');
+        expect('li count', items.length, 2);
+      }
+    },
+    {
+      name: 'renders ordered list',
+      run() {
+        RT.Render.markdown('1. first\n2. second\n3. third');
+        expectElement('ol');
+        const items = document.getElementById('pw-content').querySelectorAll('li');
+        expect('li count', items.length, 3);
+      }
+    },
+    {
+      name: 'renders blockquote',
+      run() {
+        RT.Render.markdown('> A wise quote');
+        expectElement('blockquote');
+      }
+    },
+    {
+      name: 'renders horizontal rule ---',
+      run() {
+        RT.Render.markdown('---');
+        expectElement('hr');
+      }
+    },
+    {
+      name: 'renders fenced code block',
+      run() {
+        RT.Render.markdown('```js\nconst x = 1;\n```');
+        expectElement('pre');
+        expectElement('code');
+      }
+    },
+    {
+      name: 'renders setext h1',
+      run() {
+        RT.Render.markdown('Title\n=====');
+        expectElement('h1');
+      }
+    },
+    {
+      name: 'escapes HTML entities in text',
+      run() {
+        RT.Render.markdown('a < b & c > d');
+        expectMatch('escaped', document.getElementById('pw-content').innerHTML, /&lt;/);
+      }
+    },
+  ],
+
+};
+
+// ── Results state ────────────────────────────────────────────────────────────
+
+function makeResult(name) {
+  return { name, status: 'skip', err: null, domBefore: '', domAfter: '', ms: 0 };
+}
+
+function initResults() {
+  allResults = {};
+  for (const [suite, tests] of Object.entries(SUITES)) {
+    allResults[suite] = tests.map(t => makeResult(t.name));
+  }
+}
+
+// ── Runner ───────────────────────────────────────────────────────────────────
+
+async function runTest(suiteKey, testIdx) {
+  const test = SUITES[suiteKey][testIdx];
+  const res  = allResults[suiteKey][testIdx];
+
+  clearSandbox();
+  res.domBefore = sandboxHTML();
+  res.status = 'running';
+  renderSuiteItem(suiteKey);
+  renderTestRow(suiteKey, testIdx);
+
+  const sandbox = document.getElementById('sandbox');
+  const t0 = performance.now();
+  try {
+    // Pass RT and sandbox to both inline and external tests
+    await test.run(RT, sandbox);
+    res.status = 'pass';
+    res.err = null;
+  } catch (e) {
+    res.status = 'fail';
+    res.err = e.message || String(e);
+  } finally {
+    res.ms = Math.round(performance.now() - t0);
+    res.domAfter = sandboxHTML();
+    renderSuiteItem(suiteKey);
+    renderTestRow(suiteKey, testIdx);
+    if (activeTest === suiteKey + ':' + testIdx) renderDetail(suiteKey, testIdx);
+  }
+}
+
+async function runSuite(suiteKey) {
+  const tests = SUITES[suiteKey];
+  for (let i = 0; i < tests.length; i++) {
+    await runTest(suiteKey, i);
+  }
+}
+
+async function runAll() {
+  for (const suite of Object.keys(SUITES)) {
+    await runSuite(suite);
+    updateProgress();
+  }
+  updateStatusSummary();
+}
+
+// ── Rendering ────────────────────────────────────────────────────────────────
+
+const dotFor = { pass:'●', fail:'✕', skip:'○', running:'◌' };
+
+function renderSidebar() {
+  const list = document.getElementById('suite-list');
+  list.innerHTML = Object.keys(SUITES).map((s, i) =>
+    `<div class="suite-item${activeSuite === s ? ' active' : ''}" data-suite="${s}">
+      ${s}
+      <span class="suite-badge" id="badge-${i}"></span>
+    </div>`
+  ).join('');
+  list.querySelectorAll('.suite-item').forEach(el => {
+    el.addEventListener('click', () => {
+      activeSuite = el.dataset.suite;
+      renderSidebar();
+      renderTestList(activeSuite);
+    });
+  });
+}
+
+function renderSuiteItem(suiteKey) {
+  const idx = Object.keys(SUITES).indexOf(suiteKey);
+  const badge = document.getElementById('badge-' + idx);
+  if (!badge) return;
+  const results = allResults[suiteKey] ?? [];
+  const pass = results.filter(r => r.status === 'pass').length;
+  const fail = results.filter(r => r.status === 'fail').length;
+  const run  = results.filter(r => r.status === 'running').length;
+  if (run) { badge.textContent = '…'; badge.className = 'suite-badge running'; }
+  else if (fail) { badge.textContent = `${pass}/${results.length}`; badge.className = 'suite-badge fail'; }
+  else if (pass === results.length) { badge.textContent = pass; badge.className = 'suite-badge pass'; }
+  else { badge.textContent = `${pass}/${results.length}`; badge.className = 'suite-badge'; }
+}
+
+function renderTestList(suiteKey) {
+  document.getElementById('suite-title').textContent = suiteKey;
+  const panel = document.getElementById('test-panel');
+  const results = allResults[suiteKey] ?? [];
+  panel.innerHTML = results.map((r, i) =>
+    `<div class="test-row ${r.status}${activeTest === suiteKey+':'+i ? ' active' : ''}" data-idx="${i}">
+      <span class="test-dot">${dotFor[r.status] || '○'}</span>
+      <span class="test-name">${escHtml(r.name)}</span>
+      <span class="test-time">${r.ms ? r.ms + 'ms' : ''}</span>
+    </div>`
+  ).join('');
+  panel.querySelectorAll('.test-row').forEach(el => {
+    el.addEventListener('click', () => {
+      const i = +el.dataset.idx;
+      activeTest = suiteKey + ':' + i;
+      renderTestList(suiteKey);
+      renderDetail(suiteKey, i);
+    });
+  });
+}
+
+function renderTestRow(suiteKey, idx) {
+  if (activeSuite !== suiteKey) return;
+  renderTestList(suiteKey);
+}
+
+function renderDetail(suiteKey, idx) {
+  const r = allResults[suiteKey]?.[idx];
+  if (!r) return;
+  const panel = document.getElementById('detail-panel');
+  const statusColor = r.status === 'pass' ? 'var(--sol-green)' : r.status === 'fail' ? 'var(--sol-red)' : 'var(--sol-base01)';
+  panel.innerHTML = `
+    <h2>${escHtml(r.name)}</h2>
+    <div class="detail-section">
+      <div class="detail-label">Status</div>
+      <div style="color:${statusColor};font-weight:700;font-size:13px;">${r.status.toUpperCase()}${r.ms ? ' · ' + r.ms + 'ms' : ''}</div>
+    </div>
+    ${r.err ? `<div class="detail-section">
+      <div class="detail-label">Error</div>
+      <div class="code-block error">${escHtml(r.err)}</div>
+    </div>` : ''}
+    <div class="detail-section">
+      <div class="detail-label">DOM Before</div>
+      <div class="code-block">${escHtml(r.domBefore)}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">DOM After</div>
+      <div class="code-block ${r.status === 'pass' ? 'pass' : ''}">${escHtml(r.domAfter)}</div>
+    </div>
+  `;
+}
+
+function updateProgress() {
+  const all = Object.values(allResults).flat();
+  const done = all.filter(r => r.status !== 'skip' && r.status !== 'running').length;
+  const pct  = all.length ? Math.round(done / all.length * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function updateStatusSummary() {
+  const all = Object.values(allResults).flat();
+  const pass = all.filter(r => r.status === 'pass').length;
+  const fail = all.filter(r => r.status === 'fail').length;
+  const total = all.length;
+  const color = fail ? 'var(--sol-red)' : 'var(--sol-green)';
+  document.getElementById('status-bar').innerHTML =
+    `<span style="color:${color};font-weight:700;">${pass} passed</span> · ${fail} failed · ${total} total`;
+}
+
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Load external action plugin tests ────────────────────────────────────────
+
+async function loadActionTests() {
+  try {
+    const list = await fetch('/api/actions/tests').then(r => r.json());
+    const byNs = {};   // namespace → [{name, run}]
+
+    await Promise.allSettled(list.map(async ({ actionId, url }) => {
+      try {
+        const mod = await import(url + '?t=' + Date.now());
+        const tests = mod.tests ?? [];
+        const ns = actionId.split('.')[0];
+        if (!byNs[ns]) byNs[ns] = [];
+        byNs[ns].push(...tests);
+      } catch {}
+    }));
+
+    // Merge into SUITES grouped by namespace
+    for (const [ns, tests] of Object.entries(byNs)) {
+      const key = ns + '.* (plugins)';
+      SUITES[key] = tests;
+    }
+  } catch {}
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+initResults();
+activeSuite = Object.keys(SUITES)[0];
+renderSidebar();
+renderTestList(activeSuite);
+
+document.getElementById('btn-run-all').addEventListener('click', async () => {
+  if (!RT) {
+    try { await bootRuntime(); }
+    catch (e) { setStatus('Boot failed: ' + e.message); return; }
+    await loadActionTests();
+  }
+  initResults();
+  renderSidebar();
+  renderTestList(activeSuite);
+  document.getElementById('progress-bar').style.width = '0';
+  await runAll();
+  Object.keys(SUITES).forEach(renderSuiteItem);
+});
+
+document.getElementById('btn-run-suite').addEventListener('click', async () => {
+  if (!RT) {
+    try { await bootRuntime(); }
+    catch (e) { setStatus('Boot failed: ' + e.message); return; }
+  }
+  if (!activeSuite) return;
+  setStatus(`Running suite: ${activeSuite}…`);
+  await runSuite(activeSuite);
+  updateStatusSummary();
+  Object.keys(SUITES).forEach(renderSuiteItem);
+});
+
+// Auto-select first suite in sidebar
+document.getElementById('suite-list').querySelector('.suite-item')?.click();
+
+// Try to boot and load action tests silently on load
+bootRuntime().then(() => loadActionTests().then(() => {
+  initResults();
+  renderSidebar();
+  renderTestList(activeSuite);
+})).catch(() => {});
+</script>
+</body>
+</html>

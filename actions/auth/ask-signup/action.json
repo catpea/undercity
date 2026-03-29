@@ -1,0 +1,14 @@
+{
+  "id": "auth.askSignup",
+  "category": "auth",
+  "categoryLabel": "Authentication",
+  "label": "Ask — Create Account",
+  "desc": "Render the full Sign Up form (first/last name, email, password) into #pw-content.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "submitTarget", "label": "Submit → room",       "type": "room", "placeholder": "register-check" },
+    { "name": "loginTarget",  "label": "Already have one → room", "type": "room", "placeholder": "login" },
+    { "name": "title",        "label": "Title",    "type": "text", "default": "Create Account" },
+    { "name": "subtitle",     "label": "Subtitle", "type": "text", "default": "Join us — it only takes a moment." }
+  ]
+}

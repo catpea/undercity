@@ -1,0 +1,36 @@
+{
+  "id": "media.askFileUpload",
+  "category": "media",
+  "categoryLabel": "Media & Upload",
+  "icon": "film",
+  "color": "var(--sol-magenta)",
+  "label": "Ask for File Upload",
+  "desc": "Open generic file picker. Stores file metadata in inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "label",
+      "label": "Prompt label",
+      "type": "text",
+      "placeholder": "Upload a file"
+    },
+    {
+      "name": "accept",
+      "label": "Accept",
+      "type": "text",
+      "placeholder": "*/*"
+    },
+    {
+      "name": "multiple",
+      "label": "Multiple",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "into",
+      "label": "Store in var",
+      "type": "text",
+      "placeholder": "uploadedFile"
+    }
+  ]
+}

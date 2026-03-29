@@ -1,0 +1,20 @@
+{
+  "type": "PersonaLiveThing",
+  "label": "Persona",
+  "desc": "An AI persona that inhabits the room and responds to messages. Works offline with local models — no server needed.",
+  "icon": "robot",
+  "color": "var(--sol-violet)",
+  "config": [
+    { "name": "name",        "label": "Name",        "type": "text",     "placeholder": "Alex",                              "default": "Persona" },
+    { "name": "personality", "label": "Personality", "type": "textarea", "placeholder": "You are a helpful assistant.",     "default": "" },
+    { "name": "endpoint",    "label": "AI Endpoint", "type": "text",                                                         "default": "http://localhost:8191/v1/chat/completions" },
+    { "name": "model",       "label": "Model",       "type": "text",                                                         "default": "local" },
+    { "name": "replyInto",   "label": "Reply into",  "type": "text",     "placeholder": "aiReply",                          "default": "" }
+  ],
+  "defaultEvents": [
+    { "key": "onEnter",  "label": "Enter",   "fixed": true  },
+    { "key": "message",  "label": "Message", "fixed": false }
+  ],
+  "canAddEvents": false,
+  "builtIn": true
+}

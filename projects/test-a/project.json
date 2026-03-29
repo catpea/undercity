@@ -1,0 +1,456 @@
+{
+  "id": "test-a",
+  "name": "Test A",
+  "description": "Testing blog post generation!",
+  "graph": {
+    "nodes": [
+      {
+        "id": "abb32625",
+        "type": "room",
+        "label": "Start",
+        "x": -800,
+        "y": 400,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "input.text",
+              "params": {
+                "key": "firstName",
+                "label": "First Name",
+                "placeholder": "Bob",
+                "required": "true",
+                "autocomplete": "",
+                "spellcheck": "true"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": true
+        },
+        "things": []
+      },
+      {
+        "id": "c62c8c82",
+        "type": "room",
+        "label": "Phone Video",
+        "x": -600,
+        "y": 240,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "1f2e5e7a",
+        "type": "room",
+        "label": "As Is",
+        "x": -400,
+        "y": 80,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "3f99bc7f",
+        "type": "room",
+        "label": "Select Thumbnail Frame",
+        "x": -200,
+        "y": 200,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "2f919044",
+        "type": "room",
+        "label": "Audio To Text",
+        "x": -400,
+        "y": 400,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "14e49304",
+        "type": "room",
+        "label": "Summary/Preview",
+        "x": 0,
+        "y": 600,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "c1ccbe0e",
+        "type": "room",
+        "label": "Use PersonaLive",
+        "x": -400,
+        "y": 240,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "d639977d",
+        "type": "room",
+        "label": "Audio Recording",
+        "x": -600,
+        "y": 400,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "media.askAudioUpload",
+              "params": {
+                "label": "Upload Audio File",
+                "accept": "audio/*",
+                "into": "audioFile"
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "edd912c3",
+        "type": "room",
+        "label": "Upload Cover Image",
+        "x": -200,
+        "y": 600,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "65c4db6f",
+        "type": "room",
+        "label": "Just Text",
+        "x": -600,
+        "y": 600,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "fdb191dc",
+        "type": "room",
+        "label": "Upload Narration",
+        "x": -400,
+        "y": 600,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "ee8ff735",
+        "type": "room",
+        "label": "Upload Cover Image",
+        "x": -200,
+        "y": 400,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "f7934e86",
+        "type": "room",
+        "label": "Summary/Preview",
+        "x": 0,
+        "y": 400,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "f17823b9",
+        "type": "room",
+        "label": "Summary/Preview",
+        "x": 0,
+        "y": 200,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "66520aca",
+        "type": "room",
+        "label": "Post To Server",
+        "x": 240,
+        "y": 400,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "f1739af6",
+        "fromId": "abb32625",
+        "toId": "c62c8c82",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "5b6e8e4a",
+        "fromId": "c62c8c82",
+        "toId": "1f2e5e7a",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "db462a2c",
+        "fromId": "1f2e5e7a",
+        "toId": "3f99bc7f",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "b098052f",
+        "fromId": "c62c8c82",
+        "toId": "c1ccbe0e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "69b59f4f",
+        "fromId": "c1ccbe0e",
+        "toId": "3f99bc7f",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "d8728566",
+        "fromId": "abb32625",
+        "toId": "65c4db6f",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "623a0654",
+        "fromId": "abb32625",
+        "toId": "d639977d",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "8ac9d7a5",
+        "fromId": "d639977d",
+        "toId": "2f919044",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "1e65f35a",
+        "fromId": "2f919044",
+        "toId": "ee8ff735",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "9d98931d",
+        "fromId": "65c4db6f",
+        "toId": "fdb191dc",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "a0e37b4f",
+        "fromId": "fdb191dc",
+        "toId": "edd912c3",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "b28ea112",
+        "fromId": "3f99bc7f",
+        "toId": "f17823b9",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "d2da0b9e",
+        "fromId": "ee8ff735",
+        "toId": "f7934e86",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "1e1f35f4",
+        "fromId": "edd912c3",
+        "toId": "14e49304",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "aa88f0fc",
+        "fromId": "f17823b9",
+        "toId": "66520aca",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "4f83ab95",
+        "fromId": "f7934e86",
+        "toId": "66520aca",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "56b58a6d",
+        "fromId": "14e49304",
+        "toId": "66520aca",
+        "label": "",
+        "condition": ""
+      }
+    ]
+  },
+  "inventory": {
+    "schema": {}
+  },
+  "customActions": {},
+  "created": "2026-03-28T22:54:38.875Z",
+  "modified": "2026-03-29T21:07:37.691Z"
+}

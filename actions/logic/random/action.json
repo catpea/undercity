@@ -1,0 +1,36 @@
+{
+  "id": "logic.random",
+  "category": "logic",
+  "categoryLabel": "Logic",
+  "icon": "gear",
+  "color": "var(--sol-yellow)",
+  "label": "Random Number",
+  "desc": "Store a random number (integer or float) in inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "min",
+      "label": "Min",
+      "type": "number",
+      "default": 0
+    },
+    {
+      "name": "max",
+      "label": "Max",
+      "type": "number",
+      "default": 100
+    },
+    {
+      "name": "int",
+      "label": "Integer",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text",
+      "placeholder": "rng"
+    }
+  ]
+}

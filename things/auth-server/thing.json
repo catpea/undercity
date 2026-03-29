@@ -1,0 +1,17 @@
+{
+  "type": "AuthServerThing",
+  "label": "Auth Server",
+  "desc": "Handles login, signup, and token validation. Swap in TestAuthServerThing for offline development.",
+  "icon": "shield-lock",
+  "color": "var(--sol-blue)",
+  "config": [
+    { "name": "apiUrl",    "label": "API base URL", "type": "text", "placeholder": "https://api.example.com/auth" },
+    { "name": "tokenInto", "label": "Token into",   "type": "text", "placeholder": "authToken", "default": "authToken" }
+  ],
+  "defaultEvents": [
+    { "key": "onEnter", "label": "Enter", "fixed": true }
+  ],
+  "canAddEvents": true,
+  "builtIn": true,
+  "mockType": "TestAuthServerThing"
+}

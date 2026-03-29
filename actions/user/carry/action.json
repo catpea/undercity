@@ -1,0 +1,25 @@
+{
+  "id": "user.carry",
+  "category": "user",
+  "categoryLabel": "User",
+  "icon": "backpack",
+  "color": "var(--sol-cyan)",
+  "label": "Carry Form Result",
+  "desc": "Serialize a form into inventory so the user carries the answers.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "formSelector",
+      "label": "Form",
+      "type": "text",
+      "placeholder": "#my-form"
+    },
+    {
+      "name": "namespace",
+      "label": "Namespace",
+      "type": "text",
+      "placeholder": "loginForm",
+      "default": ""
+    }
+  ]
+}

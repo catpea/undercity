@@ -1,0 +1,22 @@
+{
+  "id": "http.delete",
+  "category": "http",
+  "categoryLabel": "HTTP",
+  "icon": "globe",
+  "color": "var(--sol-violet)",
+  "label": "HTTP DELETE",
+  "desc": "Send a DELETE request.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "url",
+      "label": "URL",
+      "type": "code"
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text"
+    }
+  ]
+}

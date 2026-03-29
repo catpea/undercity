@@ -1,0 +1,24 @@
+{
+  "id": "form.getField",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Get Field Value",
+  "desc": "Read a form field by name and optionally store in inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text",
+      "placeholder": "email"
+    },
+    {
+      "name": "into",
+      "label": "Into var",
+      "type": "text",
+      "placeholder": "email"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "form.validate",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Validate Form",
+  "desc": "Run HTML5 constraint validation and show Bootstrap invalid-feedback.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Form selector",
+      "type": "text",
+      "placeholder": "#my-form"
+    },
+    {
+      "name": "into",
+      "label": "Result var",
+      "type": "text",
+      "placeholder": "isValid"
+    }
+  ]
+}

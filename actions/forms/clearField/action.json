@@ -1,0 +1,17 @@
+{
+  "id": "form.clearField",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Clear Field",
+  "desc": "Reset a field to empty.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text"
+    }
+  ]
+}

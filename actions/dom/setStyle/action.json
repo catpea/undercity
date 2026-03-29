@@ -1,0 +1,29 @@
+{
+  "id": "dom.setStyle",
+  "category": "dom",
+  "categoryLabel": "DOM",
+  "icon": "image",
+  "color": "var(--sol-green)",
+  "label": "Set Inline Style",
+  "desc": "Set a CSS property directly.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Selector",
+      "type": "text"
+    },
+    {
+      "name": "prop",
+      "label": "Property",
+      "type": "text",
+      "placeholder": "color"
+    },
+    {
+      "name": "value",
+      "label": "Value",
+      "type": "text",
+      "placeholder": "#268bd2"
+    }
+  ]
+}

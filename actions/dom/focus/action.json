@@ -1,0 +1,17 @@
+{
+  "id": "dom.focus",
+  "category": "dom",
+  "categoryLabel": "DOM",
+  "icon": "image",
+  "color": "var(--sol-green)",
+  "label": "Focus Element",
+  "desc": "Move keyboard focus to a selector.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Selector",
+      "type": "text"
+    }
+  ]
+}

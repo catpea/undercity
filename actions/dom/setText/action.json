@@ -1,0 +1,24 @@
+{
+  "id": "dom.setText",
+  "category": "dom",
+  "categoryLabel": "DOM",
+  "icon": "image",
+  "color": "var(--sol-green)",
+  "label": "Set Text",
+  "desc": "Set the textContent of matching elements.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Selector",
+      "type": "text",
+      "placeholder": "#my-label"
+    },
+    {
+      "name": "text",
+      "label": "Text",
+      "type": "code",
+      "placeholder": "inventory.firstName"
+    }
+  ]
+}

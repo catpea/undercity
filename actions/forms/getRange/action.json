@@ -1,0 +1,22 @@
+{
+  "id": "form.getRange",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Get Range Slider",
+  "desc": "Read the current value of a range input.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text"
+    },
+    {
+      "name": "into",
+      "label": "Into var",
+      "type": "text"
+    }
+  ]
+}

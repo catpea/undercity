@@ -1,0 +1,11 @@
+{
+  "id": "user.clear",
+  "category": "user",
+  "categoryLabel": "User",
+  "icon": "backpack",
+  "color": "var(--sol-cyan)",
+  "label": "Clear Inventory",
+  "desc": "Wipe everything the user carries.",
+  "version": "1.0.0",
+  "params": []
+}

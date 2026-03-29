@@ -1,0 +1,11 @@
+{
+  "id": "nav.back",
+  "category": "navigation",
+  "categoryLabel": "Navigation",
+  "icon": "signpost",
+  "color": "var(--sol-blue)",
+  "label": "Go Back",
+  "desc": "Return to the previous room (browser history).",
+  "version": "1.0.0",
+  "params": []
+}

@@ -1,0 +1,23 @@
+{
+  "id": "ui.accordion",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Toggle Accordion",
+  "desc": "Open or close a Bootstrap accordion item.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Item selector",
+      "type": "text"
+    },
+    {
+      "name": "show",
+      "label": "Show",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}

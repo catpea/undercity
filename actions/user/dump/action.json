@@ -1,0 +1,11 @@
+{
+  "id": "user.dump",
+  "category": "user",
+  "categoryLabel": "User",
+  "icon": "backpack",
+  "color": "var(--sol-cyan)",
+  "label": "Dump Inventory to Console",
+  "desc": "console.log the full user inventory (debug).",
+  "version": "1.0.0",
+  "params": []
+}

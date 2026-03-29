@@ -1,0 +1,17 @@
+{
+  "id": "ui.tooltip",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Show Tooltip",
+  "desc": "Programmatically show a Bootstrap tooltip.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Target",
+      "type": "text"
+    }
+  ]
+}

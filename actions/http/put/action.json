@@ -1,0 +1,27 @@
+{
+  "id": "http.put",
+  "category": "http",
+  "categoryLabel": "HTTP",
+  "icon": "globe",
+  "color": "var(--sol-violet)",
+  "label": "HTTP PUT",
+  "desc": "PUT JSON body to a URL.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "url",
+      "label": "URL",
+      "type": "code"
+    },
+    {
+      "name": "body",
+      "label": "Body",
+      "type": "code"
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text"
+    }
+  ]
+}

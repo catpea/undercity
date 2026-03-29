@@ -1,0 +1,11 @@
+{
+  "id": "render.divider",
+  "category": "render",
+  "categoryLabel": "Page Builder",
+  "icon": "layout-text-window",
+  "color": "var(--sol-violet)",
+  "label": "Divider",
+  "desc": "Append a horizontal rule.",
+  "version": "1.0.0",
+  "params": []
+}

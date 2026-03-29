@@ -1,0 +1,24 @@
+{
+  "id": "http.get",
+  "category": "http",
+  "categoryLabel": "HTTP",
+  "icon": "globe",
+  "color": "var(--sol-violet)",
+  "label": "HTTP GET",
+  "desc": "Fetch JSON from a URL. Stores response in inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "url",
+      "label": "URL",
+      "type": "code",
+      "placeholder": "\"/api/user\""
+    },
+    {
+      "name": "into",
+      "label": "Store in",
+      "type": "text",
+      "placeholder": "result"
+    }
+  ]
+}

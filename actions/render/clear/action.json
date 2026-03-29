@@ -1,0 +1,11 @@
+{
+  "id": "render.clear",
+  "category": "render",
+  "categoryLabel": "Page Builder",
+  "icon": "layout-text-window",
+  "color": "var(--sol-violet)",
+  "label": "Clear Page",
+  "desc": "Empty #pw-content. Put this first in onEnter to rebuild on each visit.",
+  "version": "1.0.0",
+  "params": []
+}

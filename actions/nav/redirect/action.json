@@ -1,0 +1,28 @@
+{
+  "id": "nav.redirect",
+  "category": "navigation",
+  "categoryLabel": "Navigation",
+  "icon": "signpost",
+  "color": "var(--sol-blue)",
+  "label": "Redirect URL",
+  "desc": "Navigate to an absolute or relative URL.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "url",
+      "label": "URL",
+      "type": "text",
+      "placeholder": "https://…"
+    },
+    {
+      "name": "target",
+      "label": "Open in",
+      "type": "select",
+      "options": [
+        "_self",
+        "_blank"
+      ],
+      "default": "_self"
+    }
+  ]
+}

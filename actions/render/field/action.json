@@ -1,0 +1,59 @@
+{
+  "id": "render.field",
+  "category": "render",
+  "categoryLabel": "Page Builder",
+  "icon": "layout-text-window",
+  "color": "var(--sol-violet)",
+  "label": "Form Field",
+  "desc": "Append a labelled Bootstrap input field.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text",
+      "placeholder": "email"
+    },
+    {
+      "name": "label",
+      "label": "Label",
+      "type": "text",
+      "placeholder": "Email Address"
+    },
+    {
+      "name": "type",
+      "label": "Input type",
+      "type": "select",
+      "options": [
+        "text",
+        "email",
+        "password",
+        "tel",
+        "url",
+        "number",
+        "date",
+        "search"
+      ],
+      "default": "text"
+    },
+    {
+      "name": "placeholder",
+      "label": "Placeholder",
+      "type": "text",
+      "placeholder": "you@example.com"
+    },
+    {
+      "name": "autocomplete",
+      "label": "Autocomplete",
+      "type": "text",
+      "placeholder": "email",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "label": "Required",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}

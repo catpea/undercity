@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-af-icon-base="/icons/bootstrap/">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undercity IDE</title>
+
+  <!-- Import map — local packages and primitives, no bundler needed -->
+  <script type="importmap">
+  {
+    "imports": {
+      "framework":        "/src/lib/signal.js",
+      "state-machine":    "/src/lib/state-machine.js",
+      "scope":            "/src/lib/scope.js",
+      "undercity-parser":  "/packages/parser/index.js"
+    }
+  }
+  </script>
+
+  <!-- Bootstrap 5 (local) -->
+  <link rel="stylesheet" href="/lib/bootstrap/css/bootstrap.min.css">
+
+  <!-- Undercity IDE Dark Solarized Theme -->
+  <link rel="stylesheet" href="/src/ide/css/ide.css">
+  <script type="module" src="/src/ide/af-icons.js"></script>
+</head>
+<body>
+
+<div id="ide-shell">
+
+  <!-- ── Header bar ──────────────────────────────────────────────────── -->
+  <header id="ide-header">
+    <div class="ide-logo">Path<span>way</span> IDE</div>
+
+    <select id="project-select" title="Open a project"></select>
+    <button class="ide-btn" id="btn-new"      title="New project">New</button>
+    <button class="ide-btn" id="btn-save"     title="Save (Ctrl+S)"><af-icon name="floppy"></af-icon><span>Save</span></button>
+    <button class="ide-btn" id="btn-undo"     title="Undo (Ctrl+Z)"><af-icon name="arrow-counterclockwise"></af-icon></button>
+    <button class="ide-btn" id="btn-redo"     title="Redo (Ctrl+Y)"><af-icon name="arrow-clockwise"></af-icon></button>
+
+    <div class="ide-sep"></div>
+
+    <button class="ide-btn success" id="btn-generate" title="Generate Bootstrap output"><af-icon name="lightning-charge"></af-icon><span>Generate</span></button>
+    <button class="ide-btn primary" id="btn-preview"  title="Preview — generate &amp; open in new tab"><af-icon name="eye"></af-icon><span>Preview</span></button>
+
+    <div class="ide-spacer"></div>
+
+    <button class="ide-btn" id="btn-save-template" title="Save current project as a template"><af-icon name="bookmark-plus"></af-icon><span>Save as Template</span></button>
+    <button class="ide-btn danger" id="btn-reset" title="Reset — delete all projects &amp; generated files, clear browser state"><af-icon name="trash3"></af-icon><span>Reset</span></button>
+
+    <button class="ide-btn" id="btn-cmd"        title="Command palette (Ctrl+K)"><af-icon name="command"></af-icon><span>Command</span></button>
+    <button class="ide-btn" id="btn-ai-console" title="Open AI dungeon console"><af-icon name="robot"></af-icon><span>AI Console</span></button>
+    <button class="ide-btn" id="btn-fit-view"   title="Fit map to view"><af-icon name="arrows-angle-expand"></af-icon><span>Fit</span></button>
+  </header>
+
+  <!-- ── Main split ──────────────────────────────────────────────────── -->
+  <div id="ide-body">
+
+    <!-- TOP: Map Builder ─────────────────────────────────────────────── -->
+    <section id="map-pane">
+
+      <div id="map-toolbar">
+        <button class="map-tool active" data-tool="select"   title="Select / Move (V)"><af-icon name="cursor"></af-icon></button>
+        <button class="map-tool"        data-tool="room"     title="Add Room — Location (S)"><af-icon name="record-circle"></af-icon></button>
+        <button class="map-tool"        data-tool="diamond"  title="Add Diamond — Logic Joint (D)"><af-icon name="diamond"></af-icon></button>
+        <button class="map-tool"        data-tool="terminal" title="Add Terminal — End State (T)"><af-icon name="bullseye"></af-icon></button>
+        <div class="map-tool-sep"></div>
+        <button class="map-tool"        data-tool="connect"  title="Connect Rooms (C)"><af-icon name="diagram-3"></af-icon></button>
+        <button class="map-tool"        data-tool="delete"   title="Delete Node (Del)"><af-icon name="trash3"></af-icon></button>
+        <div class="map-tool-sep"></div>
+        <button class="map-tool" id="btn-export-map" title="Export map as MCP JSON"><af-icon name="box-arrow-up"></af-icon></button>
+        <span id="map-label">Click the map to place nodes</span>
+      </div>
+
+      <undercity-map id="undercity-map"></undercity-map>
+
+      <!-- ── Properties panel (anchored inside map-pane, never covers savant) -->
+      <aside id="props-panel">
+        <div id="props-header">
+          <span id="props-title">Properties</span>
+          <button id="props-close" title="Close"><af-icon name="x-lg"></af-icon></button>
+        </div>
+        <div id="props-body">
+          <p style="color:var(--text-muted);font-size:12px">Select a node to see its properties.</p>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- Resize handle -->
+    <div id="split-handle"></div>
+
+    <!-- BOTTOM: Savant ─────────────────────────────────────────────── -->
+    <section id="savant-pane">
+      <div id="savant-header">
+        <nav id="savant-breadcrumb" aria-label="Savant context">
+          <span class="bc-item bc-idle">No node selected</span>
+        </nav>
+        <div id="event-tabs"></div>
+      </div>
+      <div id="savant-body">
+        <div id="cat-pane"></div>
+        <div class="aw-handle" id="aw-h1" title="Drag to resize"></div>
+        <div id="act-pane">
+          <div id="act-list"></div>
+          <div id="act-preview">
+            <div id="act-preview-empty" class="act-preview-empty">Click an action to preview</div>
+            <div id="act-preview-body" style="display:none">
+              <div id="act-preview-name"></div>
+              <div id="act-preview-desc"></div>
+              <div id="act-preview-params"></div>
+              <button id="act-preview-add" class="ide-btn primary" style="width:100%;margin-top:6px">Add to Workflow</button>
+            </div>
+          </div>
+        </div>
+        <div class="aw-handle" id="aw-h2" title="Drag to resize"></div>
+        <div id="wf-pane">
+          <div id="wf-header">
+            <span id="wf-title">WORKFLOW  ·  ENTER</span>
+            <button id="wf-workspace-btn" class="wf-workspace-btn" title="Export workflow as MCP JSON"><af-icon name="box-arrow-up"></af-icon></button>
+            <button id="wf-help-btn" class="wf-help-btn" title="How workflows work" aria-expanded="false" aria-controls="wf-help-panel">?</button>
+          </div>
+          <div id="wf-help-panel" class="wf-help-panel" hidden>
+            <div class="wf-help-body">
+              <p><strong>Rooms Have Events. Events Have Steps. Steps Run When Events Trigger.</strong></p>
+              <p>Every room has lifecycle events: <em>Enter</em>, <em>Exit</em>, <em>Back</em>, <em>Reset</em>, <em>Unload</em>. When the user arrives at a room, its <strong>Enter</strong> event fires and every step in that workflow runs in order, top to bottom.</p>
+              <p>Steps are actions — small, focused operations like setting a field, reading from inventory, or navigating to another room. Add steps from the action library on the left, then drag the <code>⠿</code> handle to reorder them.</p>
+              <p>Use <strong>Basic</strong> mode for simple configuration, <strong>Configure</strong> for all params, and <strong>JSON</strong> to edit the raw step object.</p>
+            </div>
+          </div>
+          <div id="wf-steps"></div>
+        </div>
+        <div class="aw-handle" id="aw-h3" title="Drag to resize"></div>
+        <div id="chat-pane"></div>
+      </div>
+    </section>
+
+  </div><!-- #ide-body -->
+</div><!-- #ide-shell -->
+
+<!-- ── Context menu ──────────────────────────────────────────────── -->
+<div id="ctx-menu">
+  <div class="ctx-item" data-ctx="set-entry"><af-icon name="house-door"></af-icon><span>Set as Lobby (Entry)</span></div>
+  <div class="ctx-item" data-ctx="rename"><af-icon name="pencil-square"></af-icon><span>Rename</span></div>
+  <div class="ctx-item" data-ctx="duplicate"><af-icon name="copy"></af-icon><span>Duplicate</span></div>
+  <div class="ctx-item" data-ctx="copy"><af-icon name="clipboard"></af-icon><span>Copy  <span class="ctx-key">Ctrl+C</span></span></div>
+  <div class="ctx-item" data-ctx="cut"><af-icon name="scissors"></af-icon><span>Cut  <span class="ctx-key">Ctrl+X</span></span></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" data-ctx="delete"><af-icon name="trash3"></af-icon><span>Delete</span></div>
+</div>
+
+<!-- ── Welcome screen ────────────────────────────────────────────── -->
+<div id="welcome-modal">
+  <div class="welcome-box">
+    <button class="welcome-close" id="welcome-close" title="Close"><af-icon name="x-lg"></af-icon></button>
+    <div class="welcome-brand">
+      <div class="welcome-logo">Path<span>way</span></div>
+      <div class="welcome-tagline">Visual flow-based programming system</div>
+    </div>
+
+    <div class="welcome-cols">
+      <!-- Recent projects -->
+      <div class="welcome-col" id="welcome-recent-section">
+        <div class="welcome-col-title"><af-icon name="clock-history"></af-icon> Recent</div>
+        <div id="welcome-recent-list"></div>
+        <div class="welcome-hint">Or pick from the dropdown ↑</div>
+      </div>
+
+      <!-- New from template -->
+      <div class="welcome-col">
+        <div class="welcome-col-title"><af-icon name="grid-3x3-gap"></af-icon> New from Template</div>
+        <div id="welcome-template-list" class="welcome-tmpl-grid"></div>
+        <button class="ide-btn primary" id="welcome-new-btn" style="margin-top:10px;width:100%">
+          <af-icon name="plus-lg"></af-icon><span>New Project…</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Project modal — Template Gallery ──────────────────────── -->
+<div id="new-project-modal">
+
+  <!-- Step 1: Choose a template -->
+  <div class="modal-box modal-gallery" id="new-proj-step-gallery">
+    <div class="modal-title">Choose a Template</div>
+    <div id="template-gallery" class="tmpl-gallery">
+      <!-- Injected by JS -->
+      <div class="tmpl-loading">Loading templates…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="ide-btn" id="btn-new-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Name the project -->
+  <div class="modal-box" id="new-proj-step-name" style="display:none">
+    <button class="modal-back" id="btn-new-back"><af-icon name="arrow-left"></af-icon><span>Templates</span></button>
+    <div class="tmpl-selected-badge" id="tmpl-selected-badge"></div>
+    <div class="modal-title" style="margin-top:8px">Name Your Project</div>
+    <div class="modal-field">
+      <label class="modal-label">Project Name</label>
+      <input class="modal-input" id="new-proj-name" placeholder="My Auth Flow" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Project ID <small style="color:var(--text-muted)">(URL slug)</small></label>
+      <input class="modal-input" id="new-proj-id" placeholder="my-auth-flow" pattern="[a-z0-9\-]+" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Description <small style="color:var(--text-muted)">(optional)</small></label>
+      <input class="modal-input" id="new-proj-desc" placeholder="A short description of this project" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="ide-btn" id="btn-new-cancel-2">Cancel</button>
+      <button class="ide-btn primary" id="btn-new-confirm"><af-icon name="box-arrow-right"></af-icon><span>Create Project</span></button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Save as Template modal ──────────────────────────────────── -->
+<div id="save-template-modal">
+  <div class="modal-box">
+    <div class="modal-title">Save as Template</div>
+    <div class="modal-field">
+      <label class="modal-label">Template Name</label>
+      <input class="modal-input" id="tmpl-save-name" placeholder="My Auth Flow Template" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">ID <small style="color:var(--text-muted)">(slug)</small></label>
+      <input class="modal-input" id="tmpl-save-id" placeholder="my-auth-flow" pattern="[a-z0-9\-]+" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Description</label>
+      <input class="modal-input" id="tmpl-save-desc" placeholder="A template for auth flows" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Icon <small style="color:var(--text-muted)">(Bootstrap icon name)</small></label>
+      <input class="modal-input" id="tmpl-save-icon" placeholder="shield-lock" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Category</label>
+      <input class="modal-input" id="tmpl-save-category" value="custom" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="ide-btn" id="btn-tmpl-save-cancel">Cancel</button>
+      <button class="ide-btn primary" id="btn-tmpl-save-confirm"><af-icon name="bookmark-check"></af-icon><span>Save Template</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI Dungeon Console modal ──────────────────────────────────── -->
+<div id="ai-console-modal" style="
+  display:none; position:fixed; inset:0; z-index:8500;
+  background:rgba(0,43,54,.85); backdrop-filter:blur(6px);
+  align-items:center; justify-content:center;">
+  <div style="
+    background:var(--sol-base02); border:1px solid var(--border-em);
+    border-radius:12px; width:680px; max-height:80vh;
+    display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 16px 64px rgba(0,0,0,.6);">
+    <div style="padding:12px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+      <span style="font-size:13px;font-weight:800;color:var(--sol-cyan);display:inline-flex;align-items:center;gap:8px;"><af-icon name="robot"></af-icon><span>AI User — Undercity Dungeon</span></span>
+      <span style="font-size:11px;color:var(--text-muted);flex:1">The AI explores your dungeon and creates actions through commands.</span>
+      <button id="ai-console-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><af-icon name="x-lg"></af-icon></button>
+    </div>
+    <div id="ai-console-output" style="flex:1;overflow-y:auto;padding:14px 18px;font-family:'Fira Code','Consolas',monospace;font-size:12px;line-height:1.7;color:var(--sol-base0);background:var(--sol-base03);">
+      <div style="color:var(--sol-cyan)">═══════════════════════════════════════<br>PATHWAY DUNGEON  —  AI Interface<br>═══════════════════════════════════════</div>
+      <div style="color:var(--sol-green);margin-top:6px">Describe an action and I will add it to the system.<br>Type <b>help</b> for available commands.</div>
+      <div id="ai-console-log" style="margin-top:12px"></div>
+    </div>
+    <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--sol-base02);">
+      <span style="color:var(--sol-cyan);font-family:monospace;font-size:13px;line-height:36px">&gt;</span>
+      <input id="ai-console-input" style="flex:1;background:var(--sol-base03);border:1px solid var(--border);border-radius:6px;color:var(--sol-base1);font-family:'Fira Code',monospace;font-size:12px;padding:6px 10px;outline:none;" placeholder="describe video upload with thumbnail selector…" autocomplete="off">
+      <button id="ai-console-send" style="background:var(--sol-violet);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Command palette ────────────────────────────────────────────── -->
+<!-- Injected by CommandPalette class; styles in ide.css -->
+
+<!-- ── Toast area ────────────────────────────────────────────────── -->
+<div id="toast-area"></div>
+
+<!-- Bootstrap JS (local) -->
+<script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Main IDE (App class + command palette boot) -->
+<script type="module" src="/src/ide/app.js"></script>
+
+<!-- AI Console wiring -->
+<script type="module">
+import { API } from '/src/ide/project-api.js';
+
+const modal   = document.getElementById('ai-console-modal');
+const log     = document.getElementById('ai-console-log');
+const input   = document.getElementById('ai-console-input');
+const send    = document.getElementById('ai-console-send');
+const openBtn = document.getElementById('btn-ai-console');
+const close   = document.getElementById('ai-console-close');
+
+function icon(name) {
+  return `<af-icon name="${name}" style="margin-right:6px"></af-icon>`;
+}
+
+function appendLog(speaker, text, color = 'var(--sol-base0)') {
+  const line = document.createElement('div');
+  line.style.cssText = `color:${color};margin-bottom:4px`;
+  line.innerHTML = `<span style="color:var(--sol-base01)">[${speaker}]</span> ${esc(text)}`;
+  log.appendChild(line);
+  log.parentElement.scrollTop = log.parentElement.scrollHeight;
+}
+function appendSystem(html) {
+  const div = document.createElement('div');
+  div.style.cssText = 'color:var(--sol-cyan);margin:6px 0;font-style:italic';
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.parentElement.scrollTop = log.parentElement.scrollHeight;
+}
+
+openBtn.addEventListener('click', () => { modal.style.display = 'flex'; input.focus(); });
+close.addEventListener('click',   () => { modal.style.display = 'none'; });
+modal.addEventListener('click',   e  => { if (e.target === modal) modal.style.display = 'none'; });
+
+async function handleCommand(cmd) {
+  appendLog('user', cmd, 'var(--sol-base1)');
+  const lower = cmd.toLowerCase().trim();
+  if (lower === 'help')   { appendSystem('Commands: <b>describe &lt;action&gt;</b>, <b>inspect inventory</b>, <b>look</b>'); return; }
+  if (lower === 'look')   { const p = window.currentProject; appendSystem(p ? `You are in <b>${esc(p.name)}</b>. ${p.graph?.nodes?.length ?? 0} locations.` : 'No project open.'); return; }
+  if (lower === 'inspect inventory' || lower === 'inventory') {
+    const p = window.currentProject; const keys = Object.keys(p?.inventory?.schema ?? {});
+    appendSystem(keys.length ? 'Inventory: ' + keys.map(k=>`<b>${k}</b>`).join(', ') : 'Inventory is empty.'); return;
+  }
+  const thinking = Object.assign(document.createElement('div'), { style: 'color:var(--sol-base01);font-style:italic', textContent: '… thinking …' });
+  log.appendChild(thinking);
+  try {
+    const result = await API.generateAction(cmd);
+    thinking.remove();
+    if (result?.id && result?.label) {
+      window.ideSavant?.addCustomAction(result.id, result);
+      appendSystem(`${icon('check-circle')}Action created: <b>${esc(result.label)}</b>`);
+    } else {
+      appendLog('dungeon', JSON.stringify(result), 'var(--sol-base0)');
+    }
+  } catch (err) {
+    thinking.remove();
+    appendLog('dungeon', `Error: ${err.message}`, 'var(--sol-red)');
+  }
+}
+send.addEventListener('click', () => { const c = input.value.trim(); if (c) { input.value=''; handleCommand(c); } });
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send.click(); });
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+window.addEventListener('savant-ready', e => { window.ideSavant = e.detail; });
+</script>
+
+<!-- Command palette styles (inlined to avoid an extra round trip) -->
+<style>
+/* ── Command Palette ─────────────────────────────────────────────────────── */
+#cmd-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,43,54,.75); backdrop-filter: blur(4px);
+  align-items: flex-start; justify-content: center; padding-top: 80px;
+}
+#cmd-overlay.open { display: flex; }
+
+#cmd-modal {
+  background: var(--sol-base02, #073642);
+  border: 1px solid rgba(38,139,210,.4);
+  border-radius: 12px; width: 620px; max-width: 92vw;
+  box-shadow: 0 20px 80px rgba(0,0,0,.7);
+  overflow: hidden;
+}
+
+#cmd-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid rgba(38,139,210,.2);
+}
+#cmd-prompt { color: #2aa198; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+
+#cmd-input-wrap { position: relative; flex: 1; }
+#cmd-highlight, #cmd-input {
+  font: 14px/1.4 'Fira Code', 'Consolas', monospace;
+  padding: 6px 8px; width: 100%; box-sizing: border-box;
+}
+#cmd-highlight {
+  position: absolute; top: 0; left: 0; pointer-events: none;
+  color: transparent; white-space: pre; overflow: hidden;
+}
+#cmd-highlight .cmd-cmd-verb  { color: #2aa198; }
+#cmd-highlight .cmd-cmd-flag  { color: #b58900; }
+#cmd-highlight .cmd-cmd-arg   { color: #859900; }
+#cmd-input {
+  position: relative; background: transparent;
+  border: 1px solid rgba(38,139,210,.3); border-radius: 6px;
+  color: #839496; outline: none; caret-color: #2aa198;
+}
+#cmd-input:focus { border-color: #268bd2; }
+
+#cmd-results { max-height: 280px; overflow-y: auto; }
+.cmd-item {
+  display: flex; align-items: baseline; gap: 10px; padding: 8px 16px;
+  cursor: pointer; font-size: 13px;
+  border-left: 2px solid transparent;
+}
+.cmd-item:hover, .cmd-item.selected {
+  background: rgba(38,139,210,.12);
+  border-left-color: #268bd2;
+}
+.cmd-item-name { color: #2aa198; font-weight: 700; min-width: 160px; }
+.cmd-item-cat  { color: #657b83; font-size: 11px; min-width: 80px; }
+.cmd-item-desc { color: #839496; font-size: 12px; }
+
+#cmd-preview {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 16px; border-top: 1px solid rgba(38,139,210,.15);
+  background: rgba(0,43,54,.4); min-height: 42px;
+}
+.cmd-prev-usage { font: 12px/1.4 'Fira Code', monospace; color: #b58900; }
+.cmd-prev-desc  { font-size: 11px; color: #657b83; }
+</style>
+
+</body>
+</html>

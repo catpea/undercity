@@ -1,0 +1,12 @@
+{
+  "id": "display.markdown",
+  "category": "display",
+  "categoryLabel": "Display",
+  "label": "Print Markdown",
+  "desc": "Render a Markdown string as HTML inside a selector.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "selector", "label": "Target selector", "type": "text",     "placeholder": "#my-area" },
+    { "name": "content",  "label": "Markdown",        "type": "textarea", "placeholder": "**Bold** and _italic_" }
+  ]
+}

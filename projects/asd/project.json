@@ -1,0 +1,1031 @@
+{
+  "id": "asd",
+  "name": "asd",
+  "description": "A complete sign in · forgot password · sign up flow with diamond-routed logic.",
+  "icon": "shield-lock",
+  "category": "authentication",
+  "preview": "Lobby → Login / Signup / Forgot → Auth API checks → Dashboard",
+  "graph": {
+    "nodes": [
+      {
+        "id": "lobby",
+        "type": "room",
+        "label": "Welcome",
+        "x": -240,
+        "y": 280,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [
+            {
+              "action": "inventory.clear",
+              "params": {}
+            }
+          ],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "lobby",
+        "meta": {
+          "isEntry": true,
+          "appName": "MyApp",
+          "tagline": "Sign in to your account, create a new one, or reset your password.",
+          "icon": "shield-lock"
+        },
+        "things": []
+      },
+      {
+        "id": "login",
+        "type": "room",
+        "label": "Login",
+        "x": 80,
+        "y": 280,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Sign In",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.subtitle",
+              "params": {
+                "text": "Welcome back. Enter your credentials."
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "email",
+                "label": "Email",
+                "type": "email",
+                "placeholder": "you@example.com",
+                "autocomplete": "email",
+                "required": true
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "password",
+                "label": "Password",
+                "type": "password",
+                "placeholder": "••••••••",
+                "autocomplete": "current-password",
+                "required": true
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "login-alert",
+                "type": "danger"
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Sign In",
+                "target": "auth-check",
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Forgot password?",
+                "target": "forgot",
+                "prefix": ""
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Create an account",
+                "target": "signup",
+                "prefix": "No account?"
+              }
+            },
+            {
+              "action": "form.clearErrors",
+              "params": {}
+            }
+          ],
+          "onExit": [
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "email",
+                "into": "email"
+              }
+            },
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "password",
+                "into": "password"
+              }
+            }
+          ],
+          "onBack": [],
+          "onReset": [
+            {
+              "action": "inventory.clear",
+              "params": {}
+            }
+          ],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "description": "Collects email + password. Feeds into Auth Check diamond.",
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "auth-check",
+        "type": "diamond",
+        "label": "Auth Check",
+        "x": 520,
+        "y": 160,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": true
+              }
+            },
+            {
+              "action": "http.post",
+              "params": {
+                "url": "/api/auth/login",
+                "body": "{ email, password }",
+                "into": "authResult"
+              }
+            },
+            {
+              "action": "user.merge",
+              "params": {
+                "from": "authResult"
+              }
+            },
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": false
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [
+          {
+            "condition": "inventory.authenticated === true",
+            "target": "dashboard",
+            "label": "Authenticated"
+          },
+          {
+            "condition": "inventory.authError === 'wrong-password'",
+            "target": "login-error",
+            "label": "Wrong password"
+          },
+          {
+            "condition": "inventory.authError === 'not-found'",
+            "target": "signup",
+            "label": "User not found — prompt signup"
+          },
+          {
+            "condition": "true",
+            "target": "login-error",
+            "label": "Default error"
+          }
+        ],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "login-error",
+        "type": "room",
+        "label": "Login Error",
+        "x": 480,
+        "y": 400,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Sign In Failed",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "err-msg",
+                "type": "danger",
+                "text": "Incorrect email or password. Please try again."
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Try Again",
+                "target": "login",
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Forgot password?",
+                "target": "forgot",
+                "prefix": ""
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Create an account",
+                "target": "signup",
+                "prefix": "No account?"
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "dashboard",
+        "type": "terminal",
+        "label": "Dashboard",
+        "x": 720,
+        "y": 200,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "ui.toast",
+              "params": {
+                "msg": "Welcome back!",
+                "type": "success"
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "submit-review",
+        "meta": {
+          "reviewTitle": "Review & Submit",
+          "reviewMessage": "You are signed in. Please verify your details before submitting.",
+          "submitUrl": "/api/submit",
+          "submitLabel": "Submit",
+          "reviewFields": [
+            "email",
+            "firstName",
+            "lastName"
+          ],
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "forgot",
+        "type": "room",
+        "label": "Forgot Password",
+        "x": 600,
+        "y": -40,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Forgot Password",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.subtitle",
+              "params": {
+                "text": "We'll send a reset link to your inbox."
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "email",
+                "label": "Email Address",
+                "type": "email",
+                "placeholder": "you@example.com",
+                "autocomplete": "email",
+                "required": true
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "forgot-alert",
+                "type": "info"
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Send Reset Link",
+                "target": "reset-check",
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Back to Sign In",
+                "target": "login",
+                "prefix": "Remember it?"
+              }
+            },
+            {
+              "action": "form.clearErrors",
+              "params": {}
+            }
+          ],
+          "onExit": [
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "email",
+                "into": "email"
+              }
+            }
+          ],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "reset-check",
+        "type": "diamond",
+        "label": "Reset Check",
+        "x": 880,
+        "y": 280,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": true
+              }
+            },
+            {
+              "action": "http.post",
+              "params": {
+                "url": "/api/auth/forgot",
+                "body": "{ email }",
+                "into": "resetResult"
+              }
+            },
+            {
+              "action": "user.merge",
+              "params": {
+                "from": "resetResult"
+              }
+            },
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": false
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [
+          {
+            "condition": "inventory.resetSent === true",
+            "target": "reset-sent",
+            "label": "Email sent"
+          },
+          {
+            "condition": "inventory.authError === 'not-found'",
+            "target": "reset-nfe",
+            "label": "Email not found"
+          },
+          {
+            "condition": "true",
+            "target": "reset-nfe",
+            "label": "Default error"
+          }
+        ],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "reset-sent",
+        "type": "terminal",
+        "label": "Reset Email Sent",
+        "x": 1200,
+        "y": 280,
+        "payload": {
+          "onEnter": [],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "success",
+        "meta": {
+          "message": "Check your inbox — a password reset link is on its way.",
+          "nextLabel": "Back to Sign In",
+          "nextHref": "login.html",
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "reset-nfe",
+        "type": "room",
+        "label": "Reset — Not Found",
+        "x": 960,
+        "y": 440,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Email Not Found",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "nfe-msg",
+                "type": "warning",
+                "text": "We don't have an account for that email address."
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Try a different email",
+                "target": "forgot",
+                "variant": "outline-secondary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Create an account",
+                "target": "signup",
+                "prefix": "New here?"
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "signup",
+        "type": "room",
+        "label": "Signup",
+        "x": 200,
+        "y": 480,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Create Account",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.subtitle",
+              "params": {
+                "text": "Join us — it only takes a moment."
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "firstName",
+                "label": "First Name",
+                "type": "text",
+                "placeholder": "Jane",
+                "autocomplete": "given-name",
+                "required": true
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "lastName",
+                "label": "Last Name",
+                "type": "text",
+                "placeholder": "Doe",
+                "autocomplete": "family-name",
+                "required": true
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "email",
+                "label": "Email",
+                "type": "email",
+                "placeholder": "you@example.com",
+                "autocomplete": "email",
+                "required": true
+              }
+            },
+            {
+              "action": "render.field",
+              "params": {
+                "name": "password",
+                "label": "Password",
+                "type": "password",
+                "placeholder": "Min. 8 characters",
+                "autocomplete": "new-password",
+                "required": true
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "signup-alert",
+                "type": "danger"
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Create Account",
+                "target": "register-check",
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Sign in instead",
+                "target": "login",
+                "prefix": "Already have one?"
+              }
+            },
+            {
+              "action": "form.clearErrors",
+              "params": {}
+            }
+          ],
+          "onExit": [
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "firstName",
+                "into": "firstName"
+              }
+            },
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "lastName",
+                "into": "lastName"
+              }
+            },
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "email",
+                "into": "email"
+              }
+            },
+            {
+              "action": "form.getField",
+              "params": {
+                "name": "password",
+                "into": "password"
+              }
+            }
+          ],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "register-check",
+        "type": "diamond",
+        "label": "Register Check",
+        "x": 720,
+        "y": 600,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": true
+              }
+            },
+            {
+              "action": "http.post",
+              "params": {
+                "url": "/api/auth/register",
+                "body": "{ firstName, lastName, email, password }",
+                "into": "registerResult"
+              }
+            },
+            {
+              "action": "user.merge",
+              "params": {
+                "from": "registerResult"
+              }
+            },
+            {
+              "action": "ui.loading",
+              "params": {
+                "show": false
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [
+          {
+            "condition": "inventory.registered === true",
+            "target": "dashboard",
+            "label": "Registration success"
+          },
+          {
+            "condition": "inventory.authError === 'email-exists'",
+            "target": "signup-error",
+            "label": "Email already registered"
+          },
+          {
+            "condition": "true",
+            "target": "signup-error",
+            "label": "Default error"
+          }
+        ],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      },
+      {
+        "id": "signup-error",
+        "type": "room",
+        "label": "Signup Error",
+        "x": 200,
+        "y": 640,
+        "payload": {
+          "onEnter": [
+            {
+              "action": "render.clear",
+              "params": {}
+            },
+            {
+              "action": "render.title",
+              "params": {
+                "text": "Registration Failed",
+                "size": "h2"
+              }
+            },
+            {
+              "action": "render.alert",
+              "params": {
+                "id": "reg-err",
+                "type": "danger",
+                "text": "This email address is already registered."
+              }
+            },
+            {
+              "action": "render.button",
+              "params": {
+                "label": "Try a different email",
+                "target": "signup",
+                "variant": "outline-secondary",
+                "full": true
+              }
+            },
+            {
+              "action": "render.link",
+              "params": {
+                "text": "Sign in instead",
+                "target": "login",
+                "prefix": "Already have one?"
+              }
+            }
+          ],
+          "onExit": [],
+          "onBack": [],
+          "onReset": [],
+          "onUnload": []
+        },
+        "routes": [],
+        "template": "blank",
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e0a",
+        "fromId": "lobby",
+        "toId": "login",
+        "label": "Sign In",
+        "condition": ""
+      },
+      {
+        "id": "e0b",
+        "fromId": "lobby",
+        "toId": "signup",
+        "label": "Create Account",
+        "condition": ""
+      },
+      {
+        "id": "e0c",
+        "fromId": "lobby",
+        "toId": "forgot",
+        "label": "Forgot password",
+        "condition": ""
+      },
+      {
+        "id": "e2",
+        "fromId": "login",
+        "toId": "auth-check",
+        "label": "Submit",
+        "condition": ""
+      },
+      {
+        "id": "e3",
+        "fromId": "login",
+        "toId": "forgot",
+        "label": "Forgot password",
+        "condition": ""
+      },
+      {
+        "id": "e4",
+        "fromId": "login",
+        "toId": "signup",
+        "label": "Create account",
+        "condition": ""
+      },
+      {
+        "id": "e5",
+        "fromId": "auth-check",
+        "toId": "dashboard",
+        "label": "Authenticated",
+        "condition": ""
+      },
+      {
+        "id": "e6",
+        "fromId": "auth-check",
+        "toId": "login-error",
+        "label": "Wrong password",
+        "condition": ""
+      },
+      {
+        "id": "e7",
+        "fromId": "auth-check",
+        "toId": "signup",
+        "label": "Not found",
+        "condition": ""
+      },
+      {
+        "id": "e8",
+        "fromId": "login-error",
+        "toId": "login",
+        "label": "Retry",
+        "condition": ""
+      },
+      {
+        "id": "e8b",
+        "fromId": "login-error",
+        "toId": "forgot",
+        "label": "Forgot password",
+        "condition": ""
+      },
+      {
+        "id": "e8c",
+        "fromId": "login-error",
+        "toId": "signup",
+        "label": "Create account",
+        "condition": ""
+      },
+      {
+        "id": "e9",
+        "fromId": "forgot",
+        "toId": "reset-check",
+        "label": "Submit",
+        "condition": ""
+      },
+      {
+        "id": "e10",
+        "fromId": "forgot",
+        "toId": "login",
+        "label": "Back to login",
+        "condition": ""
+      },
+      {
+        "id": "e11",
+        "fromId": "reset-check",
+        "toId": "reset-sent",
+        "label": "Email sent",
+        "condition": ""
+      },
+      {
+        "id": "e12",
+        "fromId": "reset-check",
+        "toId": "reset-nfe",
+        "label": "Not found",
+        "condition": ""
+      },
+      {
+        "id": "e13",
+        "fromId": "reset-nfe",
+        "toId": "signup",
+        "label": "Create account",
+        "condition": ""
+      },
+      {
+        "id": "e13b",
+        "fromId": "reset-nfe",
+        "toId": "forgot",
+        "label": "Try again",
+        "condition": ""
+      },
+      {
+        "id": "e14",
+        "fromId": "signup",
+        "toId": "register-check",
+        "label": "Submit",
+        "condition": ""
+      },
+      {
+        "id": "e15",
+        "fromId": "signup",
+        "toId": "login",
+        "label": "Back to login",
+        "condition": ""
+      },
+      {
+        "id": "e16",
+        "fromId": "register-check",
+        "toId": "dashboard",
+        "label": "Success",
+        "condition": ""
+      },
+      {
+        "id": "e17",
+        "fromId": "register-check",
+        "toId": "signup-error",
+        "label": "Email exists",
+        "condition": ""
+      },
+      {
+        "id": "e18",
+        "fromId": "signup-error",
+        "toId": "signup",
+        "label": "Try again",
+        "condition": ""
+      },
+      {
+        "id": "e19",
+        "fromId": "signup-error",
+        "toId": "login",
+        "label": "Sign in instead",
+        "condition": ""
+      }
+    ]
+  },
+  "inventory": {
+    "schema": {
+      "email": {
+        "type": "string",
+        "default": "",
+        "label": "User email address"
+      },
+      "password": {
+        "type": "string",
+        "default": "",
+        "label": "Password"
+      },
+      "firstName": {
+        "type": "string",
+        "default": "",
+        "label": "First name"
+      },
+      "lastName": {
+        "type": "string",
+        "default": "",
+        "label": "Last name"
+      },
+      "authenticated": {
+        "type": "boolean",
+        "default": false,
+        "label": "Authenticated?"
+      },
+      "authError": {
+        "type": "string",
+        "default": "",
+        "label": "Auth error code"
+      },
+      "resetSent": {
+        "type": "boolean",
+        "default": false,
+        "label": "Reset email sent?"
+      },
+      "registered": {
+        "type": "boolean",
+        "default": false,
+        "label": "Signup succeeded?"
+      }
+    }
+  },
+  "customActions": {},
+  "created": "2026-03-28T22:59:29.675Z",
+  "modified": "2026-03-29T12:21:06.704Z"
+}

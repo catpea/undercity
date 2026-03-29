@@ -1,0 +1,24 @@
+{
+  "id": "form.serialize",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "clipboard-check",
+  "color": "var(--sol-yellow)",
+  "label": "Serialize Form",
+  "desc": "Collect all fields of a form into an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Form selector",
+      "type": "text",
+      "placeholder": "#my-form"
+    },
+    {
+      "name": "into",
+      "label": "Into var",
+      "type": "text",
+      "placeholder": "formData"
+    }
+  ]
+}

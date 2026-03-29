@@ -1,0 +1,24 @@
+{
+  "id": "event.emit",
+  "category": "events",
+  "categoryLabel": "Events",
+  "icon": "broadcast",
+  "color": "var(--sol-cyan)",
+  "label": "Emit Event",
+  "desc": "Broadcast a named event on the flow event bus.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "event",
+      "label": "Event name",
+      "type": "text",
+      "placeholder": "user-ready"
+    },
+    {
+      "name": "data",
+      "label": "Payload",
+      "type": "code",
+      "placeholder": "{ id: inventory.userId }"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "form.bindField",
+  "category": "forms",
+  "categoryLabel": "Forms",
+  "icon": "link-45deg",
+  "color": "var(--sol-yellow)",
+  "label": "Bind Field to Inventory",
+  "desc": "Synchronize a form field with an inventory key. Sets the field immediately when this step runs, then automatically keeps both in sync: typing in the field updates inventory, and inventory changes update the field.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "name",
+      "label": "Field name",
+      "type": "text",
+      "placeholder": "email"
+    },
+    {
+      "name": "key",
+      "label": "Inventory key",
+      "type": "inventory-key",
+      "placeholder": "userEmail"
+    }
+  ]
+}

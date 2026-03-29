@@ -1,0 +1,17 @@
+{
+  "id": "user.delete",
+  "category": "user",
+  "categoryLabel": "User",
+  "icon": "backpack",
+  "color": "var(--sol-cyan)",
+  "label": "Delete Inventory Item",
+  "desc": "Remove a key from the user's inventory.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "key",
+      "label": "Key",
+      "type": "text"
+    }
+  ]
+}

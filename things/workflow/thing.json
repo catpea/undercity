@@ -1,0 +1,15 @@
+{
+  "type": "WorkflowThing",
+  "label": "Workflow",
+  "desc": "A scriptable service. Add Savant workflows for each event it listens to. Like Apple Savant Services.",
+  "icon": "gear-wide-connected",
+  "color": "var(--sol-green)",
+  "config": [
+    { "name": "name", "label": "Name", "type": "text", "placeholder": "My Service" }
+  ],
+  "defaultEvents": [
+    { "key": "onEnter", "label": "Enter", "fixed": true }
+  ],
+  "canAddEvents": true,
+  "builtIn": true
+}

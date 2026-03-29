@@ -1,0 +1,11 @@
+{
+  "name": "undercity-parser",
+  "version": "1.0.0",
+  "description": "Top-down descent parser for Undercity's bash-like command DSL",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./lexer": "./lexer.js"
+  }
+}

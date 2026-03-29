@@ -1,0 +1,5 @@
+{
+  "description": "Undercity action plugin directory. Each subdirectory is a category; each sub-subdirectory is an action plugin containing action.json (metadata) and optionally action.js (runtime implementation).",
+  "version": "1.0.0",
+  "note": "Load via GET /api/actions/plugins — the server scans this directory and returns all action.json files merged by category."
+}

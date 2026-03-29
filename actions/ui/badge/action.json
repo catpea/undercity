@@ -1,0 +1,22 @@
+{
+  "id": "ui.badge",
+  "category": "ui",
+  "categoryLabel": "UI Feedback",
+  "icon": "chat-dots",
+  "color": "var(--sol-green)",
+  "label": "Set Badge",
+  "desc": "Update text content of a badge element.",
+  "version": "1.0.0",
+  "params": [
+    {
+      "name": "selector",
+      "label": "Badge selector",
+      "type": "text"
+    },
+    {
+      "name": "text",
+      "label": "Text",
+      "type": "code"
+    }
+  ]
+}
