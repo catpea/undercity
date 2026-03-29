@@ -1,6 +1,6 @@
 {
   "name": "undercity",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Visual flow IDE — MUD-style logic graph builder with Bootstrap code generation",
   "type": "module",
   "main": "server.js",
@@ -11,7 +11,6 @@
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-
   "author": "catpea (https://github.com/catpea)",
   "license": "MIT",
   "repository": {
@@ -26,5 +25,4 @@
     "type": "github",
     "url": "https://github.com/sponsors/catpea"
   }
-
 }
