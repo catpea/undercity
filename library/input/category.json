@@ -1,0 +1,7 @@
+{
+  "id":          "input",
+  "name":        "Input",
+  "icon":        "pencil-square",
+  "color":       "var(--sol-blue)",
+  "description": "Smart inline form inputs, each two-way bound to Inventory."
+}

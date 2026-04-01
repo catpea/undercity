@@ -1,0 +1,16 @@
+{
+  "id":      "input.text",
+  "icon":    "input-cursor-text",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Text",
+  "desc":    "Render a single-line text field on the page. Two-way bound to an inventory key — as the user types, inventory updates instantly.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",          "label": "Inventory key",  "type": "text",    "placeholder": "firstName" },
+    { "name": "label",        "label": "Label",          "type": "text",    "placeholder": "First Name" },
+    { "name": "placeholder",  "label": "Placeholder",    "type": "text",    "placeholder": "Type here…" },
+    { "name": "required",     "label": "Required",       "type": "boolean", "default": false },
+    { "name": "autocomplete", "label": "Autocomplete",   "type": "text",    "placeholder": "given-name", "default": "" },
+    { "name": "spellcheck",   "label": "Spell check",    "type": "boolean", "default": false }
+  ]
+}

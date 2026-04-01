@@ -1,0 +1,15 @@
+{
+  "id":      "input.password",
+  "icon":    "key",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Password",
+  "desc":    "Render a masked password field. Optional strength meter gives the user live feedback as they type. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",           "label": "Inventory key",       "type": "text",    "placeholder": "password" },
+    { "name": "label",         "label": "Label",               "type": "text",    "placeholder": "Password" },
+    { "name": "placeholder",   "label": "Placeholder",         "type": "text",    "placeholder": "Enter password" },
+    { "name": "required",      "label": "Required",            "type": "boolean", "default": true },
+    { "name": "strengthMeter", "label": "Show strength meter", "type": "boolean", "default": false }
+  ]
+}

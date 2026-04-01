@@ -1,0 +1,15 @@
+{
+  "id":      "input.date",
+  "icon":    "calendar-date",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Date",
+  "desc":    "Render a calendar date picker. Optional earliest and latest date constraints. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "birthDate" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "Date of Birth" },
+    { "name": "min",      "label": "Earliest date", "type": "text",    "placeholder": "1900-01-01", "default": "" },
+    { "name": "max",      "label": "Latest date",   "type": "text",    "placeholder": "2099-12-31", "default": "" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

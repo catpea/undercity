@@ -84,7 +84,7 @@ export async function generateProject(proj, outDir, reg = defaultRegistry) {
   await writeFile(join(outDir, 'js', 'runtime.js'), runtimeSrc, 'utf8');
   files.push('js/runtime.js');
 
-  await copyFile(join(ROOT, 'public', 'js', 'af-icons.js'), join(outDir, 'js', 'af-icons.js'));
+  await copyFile(join(ROOT, 'src', 'ide', 'af-icons.js'), join(outDir, 'js', 'af-icons.js'));
   files.push('js/af-icons.js');
 
   // HTML pages — all nodes get a page (diamonds get a routing-only page)

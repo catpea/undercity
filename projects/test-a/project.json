@@ -8,19 +8,15 @@
         "id": "abb32625",
         "type": "room",
         "label": "Start",
-        "x": -800,
+        "x": -880,
         "y": 400,
         "payload": {
           "onEnter": [
             {
-              "action": "input.text",
+              "action": "display.markdown",
               "params": {
-                "key": "firstName",
-                "label": "First Name",
-                "placeholder": "Bob",
-                "required": "true",
-                "autocomplete": "",
-                "spellcheck": "true"
+                "selector": "#pw-main",
+                "content": "# Hello"
               }
             },
             {
@@ -48,7 +44,7 @@
         "type": "room",
         "label": "Phone Video",
         "x": -600,
-        "y": 240,
+        "y": 200,
         "payload": {
           "onEnter": [],
           "onExit": [],
@@ -68,7 +64,7 @@
         "type": "room",
         "label": "As Is",
         "x": -400,
-        "y": 80,
+        "y": 120,
         "payload": {
           "onEnter": [],
           "onExit": [],
@@ -110,7 +106,15 @@
         "x": -400,
         "y": 400,
         "payload": {
-          "onEnter": [],
+          "onEnter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
           "onExit": [],
           "onBack": [],
           "onReset": [],
@@ -148,7 +152,7 @@
         "type": "room",
         "label": "Use PersonaLive",
         "x": -400,
-        "y": 240,
+        "y": 280,
         "payload": {
           "onEnter": [],
           "onExit": [],
@@ -172,11 +176,9 @@
         "payload": {
           "onEnter": [
             {
-              "action": "media.askAudioUpload",
+              "action": "display.clear",
               "params": {
-                "label": "Upload Audio File",
-                "accept": "audio/*",
-                "into": "audioFile"
+                "selector": ""
               }
             }
           ],
@@ -217,9 +219,17 @@
         "type": "room",
         "label": "Just Text",
         "x": -600,
-        "y": 600,
+        "y": 520,
         "payload": {
-          "onEnter": [],
+          "onEnter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
           "onExit": [],
           "onBack": [],
           "onReset": [],
@@ -452,5 +462,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-03-29T21:07:37.691Z"
+  "modified": "2026-04-01T02:06:22.576Z"
 }

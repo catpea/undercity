@@ -21,7 +21,7 @@
  *   app.use(MyPlugin);
  */
 
-import { ActionsPlugin }   from '/actions/index.js';
+import library             from '/library/index.js';
 import { Emitter }         from '/src/lib/signal.js';
 import { Scope }           from '/src/lib/scope.js';
 import { normalizeIconName, renderAfIcon } from '/src/lib/icons.js';
@@ -98,6 +98,25 @@ class App extends Emitter {
   /** Register (or replace) an action category in the Savant. Used by category plugins. */
   registerActions(catId, def) {
     this.#savant?.registerCategory(catId, def);
+  }
+
+  /**
+   * Register a category from the new library/ format.
+   * meta: { id, name, icon, color, description }
+   * actionsMap: { [actionId]: { label, desc, params, run, ... } }
+   */
+  registerCategory(meta, actionsMap) {
+    const actions = {};
+    for (const [id, def] of Object.entries(actionsMap)) {
+      const { run: _run, ...rest } = def;
+      actions[id] = rest;
+    }
+    this.#savant?.registerCategory(meta.id, {
+      label:   meta.name,
+      icon:    meta.icon,
+      color:   meta.color,
+      actions,
+    });
   }
 
   /** List all registered commands. */
@@ -1312,7 +1331,7 @@ class App extends Emitter {
 
   async boot() {
     this.#initSavant();
-    this.use(ActionsPlugin);
+    this.use(library);
     this.#initSplitResize();
     this.#initSavantResize();
     this.#initPalette();

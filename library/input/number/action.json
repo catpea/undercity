@@ -1,0 +1,17 @@
+{
+  "id":      "input.number",
+  "icon":    "123",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Number",
+  "desc":    "Render a numeric field with optional minimum, maximum, and step constraints. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",         "label": "Inventory key", "type": "text",    "placeholder": "age" },
+    { "name": "label",       "label": "Label",         "type": "text",    "placeholder": "Age" },
+    { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "25" },
+    { "name": "min",         "label": "Minimum",       "type": "number",  "default": null },
+    { "name": "max",         "label": "Maximum",       "type": "number",  "default": null },
+    { "name": "step",        "label": "Step",          "type": "number",  "default": 1 },
+    { "name": "required",    "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

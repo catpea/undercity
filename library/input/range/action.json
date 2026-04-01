@@ -1,0 +1,16 @@
+{
+  "id":      "input.range",
+  "icon":    "sliders",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Numeric Range",
+  "desc":    "Render a slider for choosing a value within a range. Shows the current value as a live read-out beside the slider. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",       "label": "Inventory key",      "type": "text",    "placeholder": "quality" },
+    { "name": "label",     "label": "Label",              "type": "text",    "placeholder": "Quality (1 – 10)" },
+    { "name": "min",       "label": "Minimum",            "type": "number",  "default": 0 },
+    { "name": "max",       "label": "Maximum",            "type": "number",  "default": 100 },
+    { "name": "step",      "label": "Step",               "type": "number",  "default": 1 },
+    { "name": "showValue", "label": "Show current value", "type": "boolean", "default": true }
+  ]
+}

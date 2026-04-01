@@ -1,0 +1,16 @@
+{
+  "id":      "input.longText",
+  "icon":    "textarea",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Long Text",
+  "desc":    "Render a multi-line text area for longer answers, messages, or notes. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",         "label": "Inventory key", "type": "text",    "placeholder": "bio" },
+    { "name": "label",       "label": "Label",         "type": "text",    "placeholder": "Tell us about yourself" },
+    { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "Write here…" },
+    { "name": "rows",        "label": "Rows",          "type": "number",  "default": 4 },
+    { "name": "required",    "label": "Required",      "type": "boolean", "default": false },
+    { "name": "spellcheck",  "label": "Spell check",   "type": "boolean", "default": true }
+  ]
+}

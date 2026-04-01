@@ -1,0 +1,13 @@
+{
+  "id":      "input.week",
+  "icon":    "calendar-week",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Week",
+  "desc":    "Render a week-of-year picker. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "weekNumber" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "Select a Week" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

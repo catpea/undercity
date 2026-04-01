@@ -1,0 +1,11 @@
+{
+  "id":      "room.take",
+  "icon":    "bag-plus",
+  "color":   "var(--sol-orange)",
+  "label":   "Take Form",
+  "desc":    "Package all input fields in this room into a single inventory item.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "into", "label": "Carry as", "type": "text", "placeholder": "loginForm" }
+  ]
+}

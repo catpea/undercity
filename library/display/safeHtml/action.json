@@ -1,0 +1,12 @@
+{
+  "id":      "display.safeHtml",
+  "icon":    "shield-check",
+  "color":   "var(--sol-cyan)",
+  "label":   "Print Safe HTML",
+  "desc":    "Sanitize and inject HTML — script/event attributes stripped.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "selector", "label": "Target selector", "type": "text",     "placeholder": "#my-area" },
+    { "name": "html",     "label": "HTML",            "type": "textarea", "placeholder": "<b>Bold</b>" }
+  ]
+}

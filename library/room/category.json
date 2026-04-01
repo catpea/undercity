@@ -1,0 +1,7 @@
+{
+  "id":          "room",
+  "name":        "Room",
+  "icon":        "broadcast",
+  "color":       "var(--sol-orange)",
+  "description": "Core room behaviours: emit events, show nav, take a form."
+}

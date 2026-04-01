@@ -1,0 +1,12 @@
+{
+  "id":      "room.showNav",
+  "icon":    "signpost-split",
+  "color":   "var(--sol-orange)",
+  "label":   "Show Navigation Buttons",
+  "desc":    "Render Bootstrap navigation buttons for every room connected from this one.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "variant", "label": "Button style", "type": "select",  "options": ["primary","outline-info","secondary","outline-secondary","success","outline-primary"], "default": "primary" },
+    { "name": "full",    "label": "Full width",   "type": "boolean", "default": true }
+  ]
+}

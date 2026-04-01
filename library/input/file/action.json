@@ -1,0 +1,15 @@
+{
+  "id":      "input.file",
+  "icon":    "file-earmark-arrow-up",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For File",
+  "desc":    "Render a file picker for any file type. File metadata (name, size, type, url) is stored directly in inventory when the user selects a file.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key",  "type": "text",    "placeholder": "document" },
+    { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Upload Document" },
+    { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "*/*", "default": "*/*" },
+    { "name": "multiple", "label": "Allow multiple", "type": "boolean", "default": false },
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false }
+  ]
+}

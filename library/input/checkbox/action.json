@@ -1,0 +1,13 @@
+{
+  "id":      "input.checkbox",
+  "icon":    "check-square",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask With Checkbox",
+  "desc":    "Render a single checkbox — ideal for \"I agree to the Terms of Service\" or optional feature toggles. Bound to an inventory key as true or false.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "agreedToTerms" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "I agree to the Terms of Service" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

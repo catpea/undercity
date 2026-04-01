@@ -1,0 +1,7 @@
+{
+  "id": "example-category",
+  "name": "Example Category",
+  "icon": "bootstrap-icon",
+  "color": "var(--sol-yellow)",
+  "description": "Useful actions for example category."
+}

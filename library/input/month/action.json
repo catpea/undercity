@@ -1,0 +1,13 @@
+{
+  "id":      "input.month",
+  "icon":    "calendar-month",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Month",
+  "desc":    "Render a month-and-year picker. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "billingMonth" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "Billing Month" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

@@ -47,7 +47,7 @@ export function createServer({ projDir = DEFAULT_PROJ, genDir = DEFAULT_GENDIR }
   app.use('/packages',      express.static(join(ROOT, 'packages')));
   app.use('/src',           express.static(join(ROOT, 'src')));
   app.use('/generated',     express.static(genDir));
-  app.use('/actions',       express.static(join(ROOT, 'actions')));
+  app.use('/library',       express.static(join(ROOT, 'library')));
   app.use('/',              express.static(join(ROOT, 'public')));
 
   // API routes

@@ -1,0 +1,15 @@
+{
+  "id":      "input.datetimeLocal",
+  "icon":    "calendar-event",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Date & Time",
+  "desc":    "Render a combined date and time picker. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "scheduledAt" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "Scheduled Date & Time" },
+    { "name": "min",      "label": "Earliest",      "type": "text",    "placeholder": "", "default": "" },
+    { "name": "max",      "label": "Latest",        "type": "text",    "placeholder": "", "default": "" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

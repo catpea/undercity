@@ -1,0 +1,14 @@
+{
+  "id":      "input.image",
+  "icon":    "image",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Image",
+  "desc":    "Render an image picker with an inline preview so the user can confirm their choice before continuing. Image metadata (name, size, type, url) is stored in inventory.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key",  "type": "text",    "placeholder": "profilePhoto" },
+    { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Profile Photo" },
+    { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "image/*", "default": "image/*" },
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false }
+  ]
+}

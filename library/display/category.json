@@ -1,0 +1,7 @@
+{
+  "id":          "display",
+  "name":        "Display",
+  "icon":        "type",
+  "color":       "var(--sol-cyan)",
+  "description": "Display inventory values as text, markdown, or HTML."
+}

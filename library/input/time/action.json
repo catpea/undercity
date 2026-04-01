@@ -1,0 +1,15 @@
+{
+  "id":      "input.time",
+  "icon":    "clock",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Time",
+  "desc":    "Render a time picker (HH:MM). Optional earliest and latest time constraints. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "appointmentTime" },
+    { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "Appointment Time" },
+    { "name": "min",      "label": "Earliest time", "type": "text",    "placeholder": "09:00", "default": "" },
+    { "name": "max",      "label": "Latest time",   "type": "text",    "placeholder": "17:00", "default": "" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

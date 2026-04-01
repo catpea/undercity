@@ -1,0 +1,14 @@
+{
+  "id":      "input.url",
+  "icon":    "link-45deg",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Web Address",
+  "desc":    "Render a URL field. The browser validates the format before submission. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",         "label": "Inventory key", "type": "text",    "placeholder": "website" },
+    { "name": "label",       "label": "Label",         "type": "text",    "placeholder": "Website" },
+    { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "https://example.com" },
+    { "name": "required",    "label": "Required",      "type": "boolean", "default": false }
+  ]
+}

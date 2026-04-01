@@ -1,5 +1,19 @@
 # Undercity — AGENTS.md
 
+## DO NOT INSTALL NPM DEPENDENCIES
+
+npm packages are unsafe and should not be installed
+
+## PUSH ARCHITECTURE
+
+use Signal, combineLatest, Scope, Events, Disposable, CompositeDisposable, Repeater and similar
+
+See src/lib/signal.js src/lib/scope.js
+
+## USE WEB COMPONENTS
+
+Use web-components/custom-elements to create reusable and protable code
+
 ## The MUD Agent Model
 
 Undercity's architecture is grounded in the **Multi-User Dungeon (MUD) metaphor**:

@@ -1,0 +1,14 @@
+{
+  "id":      "input.email",
+  "icon":    "envelope",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Email Address",
+  "desc":    "Render an email field with built-in format validation and browser autocomplete suggestions. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",         "label": "Inventory key", "type": "text",    "placeholder": "email" },
+    { "name": "label",       "label": "Label",         "type": "text",    "placeholder": "Email Address" },
+    { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "you@example.com" },
+    { "name": "required",    "label": "Required",      "type": "boolean", "default": true }
+  ]
+}

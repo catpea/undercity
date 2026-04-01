@@ -1,0 +1,15 @@
+{
+  "id":      "input.tel",
+  "icon":    "telephone",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Phone Number",
+  "desc":    "Render a telephone number field with format guidance and mobile-friendly numeric keyboard. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",         "label": "Inventory key",   "type": "text",    "placeholder": "phone" },
+    { "name": "label",       "label": "Label",           "type": "text",    "placeholder": "Phone Number" },
+    { "name": "placeholder", "label": "Placeholder",     "type": "text",    "placeholder": "+1 (555) 000-0000" },
+    { "name": "pattern",     "label": "Pattern (regex)", "type": "text",    "placeholder": "", "default": "" },
+    { "name": "required",    "label": "Required",        "type": "boolean", "default": false }
+  ]
+}

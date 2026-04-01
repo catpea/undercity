@@ -1,0 +1,13 @@
+{
+  "id":      "input.color",
+  "icon":    "palette",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask For Color",
+  "desc":    "Render a color swatch picker. The hex value is shown beside the swatch so the user always knows what they picked. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",     "label": "Inventory key", "type": "text", "placeholder": "brandColor" },
+    { "name": "label",   "label": "Label",         "type": "text", "placeholder": "Brand Color" },
+    { "name": "default", "label": "Default color", "type": "text", "placeholder": "#268bd2", "default": "#268bd2" }
+  ]
+}

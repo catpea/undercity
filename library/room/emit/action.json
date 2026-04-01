@@ -1,0 +1,12 @@
+{
+  "id":      "room.emit",
+  "icon":    "broadcast",
+  "color":   "var(--sol-orange)",
+  "label":   "Emit Room Event",
+  "desc":    "Broadcast a named event inside this room. All Things inhabiting the room hear it immediately and can react.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "event", "label": "Event name", "type": "text", "placeholder": "message" },
+    { "name": "data",  "label": "Data",       "type": "json", "default": "{}" }
+  ]
+}

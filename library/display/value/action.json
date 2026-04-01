@@ -1,0 +1,12 @@
+{
+  "id":      "display.value",
+  "icon":    "database",
+  "color":   "var(--sol-cyan)",
+  "label":   "Show Inventory Value",
+  "desc":    "Print an inventory key's value as text into a selector.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "selector", "label": "Target selector", "type": "text", "placeholder": "#name-label" },
+    { "name": "key",      "label": "Inventory key",   "type": "text", "placeholder": "firstName" }
+  ]
+}

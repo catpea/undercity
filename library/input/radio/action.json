@@ -1,0 +1,14 @@
+{
+  "id":      "input.radio",
+  "icon":    "ui-radios",
+  "color":   "var(--sol-blue)",
+  "label":   "Ask With Radio Buttons",
+  "desc":    "Render a group of mutually exclusive radio buttons. The user picks exactly one option. Two-way bound to an inventory key.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "plan" },
+    { "name": "label",    "label": "Group label",   "type": "text",    "placeholder": "Choose a Plan" },
+    { "name": "options",  "label": "Options (CSV)", "type": "text",    "placeholder": "Starter,Professional,Enterprise" },
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+  ]
+}
