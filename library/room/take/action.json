@@ -3,9 +3,9 @@
   "icon":    "bag-plus",
   "color":   "var(--sol-orange)",
   "label":   "Take Form",
-  "desc":    "Package all input fields in this room into a single inventory item.",
+  "desc":    "Trigger a FormThing's Take event, causing its Input and Display actions to render on the page. The form's fields are live-bound to Inventory from that moment on.",
   "version": "1.0.0",
   "params": [
-    { "name": "into", "label": "Carry as", "type": "text", "placeholder": "loginForm" }
+    { "name": "form", "label": "Form", "type": "text", "placeholder": "Form1" }
   ]
 }

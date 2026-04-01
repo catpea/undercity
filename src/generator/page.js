@@ -232,12 +232,17 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
     ...things.map(t => {
       const evEntries = Object.entries(t.events ?? {})
         .filter(([key]) => !_LIFECYCLE_KEYS.has(key))   // room events only
-        .map(([key, steps]) =>
-          `    Room.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
-      Inventory.set('_event', { name: event, data, thing: ${JSON.stringify(t.id)}, room });
+        .map(([key, steps]) => {
+          // FormThing's 'take' event: only fire when room.take targets this thing's id
+          // (or when no specific form is targeted, for backwards compat).
+          const guard = (t.type === 'FormThing' && key === 'take')
+            ? `      if (data?.form && data.form !== ${JSON.stringify(t.id)}) return;\n`
+            : '';
+          return `    Room.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
+${guard}      Inventory.set('_event', { name: event, data, thing: ${JSON.stringify(t.id)}, room });
       await runPayload(${JSON.stringify(steps, null, 6)});
-    });`
-        ).join('\n');
+    });`;
+        }).join('\n');
 
       // Collect thing lifecycle payloads for inline execution
       if (t.events?.onEnter?.length) thingOnEnterBlocks.push(t.events.onEnter);

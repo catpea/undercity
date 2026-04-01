@@ -8,22 +8,14 @@
         "id": "abb32625",
         "type": "room",
         "label": "Start",
-        "x": -880,
+        "x": -760,
         "y": 400,
         "payload": {
           "onEnter": [
             {
-              "action": "display.markdown",
+              "action": "room.take",
               "params": {
-                "selector": "#pw-main",
-                "content": "# Hello"
-              }
-            },
-            {
-              "action": "room.showNav",
-              "params": {
-                "variant": "primary",
-                "full": true
+                "form": ""
               }
             }
           ],
@@ -37,7 +29,27 @@
         "meta": {
           "isEntry": true
         },
-        "things": []
+        "things": [
+          {
+            "id": "ba689f52",
+            "type": "FormThing",
+            "config": {
+              "name": "Form2"
+            },
+            "events": {
+              "onEnter": [],
+              "take": [
+                {
+                  "action": "display.markdown",
+                  "params": {
+                    "selector": "#pw-main",
+                    "content": "Yikes, you took the form!"
+                  }
+                }
+              ]
+            }
+          }
+        ]
       },
       {
         "id": "c62c8c82",
@@ -152,7 +164,7 @@
         "type": "room",
         "label": "Use PersonaLive",
         "x": -400,
-        "y": 280,
+        "y": 240,
         "payload": {
           "onEnter": [],
           "onExit": [],
@@ -219,7 +231,7 @@
         "type": "room",
         "label": "Just Text",
         "x": -600,
-        "y": 520,
+        "y": 600,
         "payload": {
           "onEnter": [
             {
@@ -462,5 +474,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-01T02:06:22.576Z"
+  "modified": "2026-04-01T03:04:46.410Z"
 }

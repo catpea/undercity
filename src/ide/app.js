@@ -681,15 +681,16 @@ class App extends Emitter {
       const lib  = THING_LIBRARY[t.type] ?? {};
       const icon = lib.icon  ?? 'box';
       const col  = lib.color ?? 'var(--text-muted)';
-      const lbl  = lib.label ?? t.type;
+      const lbl  = t.config?.name || lib.label || t.type;
       const cfg  = Object.entries(t.config ?? {})
+        .filter(([k]) => k !== 'name')
         .map(([k, v]) => `<span class="thing-cfg-item"><b>${escHtml(k)}</b>: ${escHtml(String(v))}</span>`)
         .join('');
       return `
         <div class="thing-card" data-thing-id="${escAttr(t.id)}">
           <div class="thing-card-head" style="--thing-color:${col}">
             <i class="bi bi-${icon}"></i>
-            <span class="thing-card-label">${escHtml(lbl)}</span>
+            <span class="thing-card-label" title="Double-click to rename">${escHtml(lbl)}</span>
             <div class="thing-card-actions">
               <button class="thing-btn thing-edit" title="Edit workflows">⚙</button>
               <button class="thing-btn thing-remove" title="Remove">×</button>
@@ -725,6 +726,43 @@ class App extends Emitter {
         const t = node.things.peek().find(x => x.id === id);
         if (t) this.#openThingConfig(node, t);
       }
+    });
+
+    section.querySelector('#things-list').addEventListener('dblclick', e => {
+      const labelEl = e.target.closest('.thing-card-label');
+      if (!labelEl) return;
+      const card = labelEl.closest('.thing-card');
+      const id   = card?.dataset.thingId;
+      const t    = node.things.peek().find(x => x.id === id);
+      if (!t) return;
+
+      const prev = t.config?.name || labelEl.textContent;
+      const input = document.createElement('input');
+      input.className = 'thing-label-input';
+      input.value = prev;
+      labelEl.replaceWith(input);
+      input.select();
+      input.focus();
+
+      const commit = () => {
+        const name = input.value.trim() || prev;
+        const newLabel = document.createElement('span');
+        newLabel.className = 'thing-card-label';
+        newLabel.title = 'Double-click to rename';
+        newLabel.textContent = name;
+        input.replaceWith(newLabel);
+        if (name !== prev) {
+          node.updateThing(id, { config: { ...(t.config ?? {}), name } });
+          this.#savant?.updateThingName(name);
+          this.markDirty();
+        }
+      };
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', e2 => {
+        if (e2.key === 'Enter')  { e2.preventDefault(); input.blur(); }
+        if (e2.key === 'Escape') { input.value = prev;  input.blur(); }
+      });
     });
   }
 
@@ -1220,6 +1258,7 @@ class App extends Emitter {
     const container = document.getElementById('savant-pane');
     this.#savant = new Savant(container);
 
+    this.#savant.on('thing:exit', parentNode => this.#openPropsPanel(parentNode));
     this.#savant.on('toast', ({ msg, type }) => this.toast(msg, type));
     this.#savant.on('customActionsChanged', () => this.markDirty());
     this.#savant.on('payload:changed',      () => this.markDirty());

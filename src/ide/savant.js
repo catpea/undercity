@@ -59,6 +59,7 @@ export class Savant extends Emitter {
   #nodeScope  = new Scope(); // reset when node changes
   #node       = null;
   #thingCtx   = null;  // { thingDef, parentNode } — set when editing a Thing
+  #thingNameSig = null; // Signal<string> for the active thing's display name
   #event      = 'onEnter';
   #category   = null;
   #customActions = {};  // id → def (AI-generated or project-level)
@@ -134,6 +135,7 @@ export class Savant extends Emitter {
   setNode(node) {
     this.#nodeScope.dispose();
     this.#thingCtx = null;
+    this.#thingNameSig = null;
     this.#node = node;
     this.#event = 'onEnter';
     this.#updateBreadcrumb();
@@ -167,6 +169,9 @@ export class Savant extends Emitter {
    */
   setThing(thingDef, parentNode) {
     this.#thingCtx = { thingDef, parentNode };
+    this.#thingNameSig = new Signal(
+      thingDef.config?.name || THING_LIBRARY[thingDef.type]?.label || thingDef.type
+    );
     this.#nodeScope.dispose();
     this.#node = this.#makeThingProxy(thingDef, parentNode);
     this.#event = 'onEnter';
@@ -185,25 +190,61 @@ export class Savant extends Emitter {
 
   #updateBreadcrumb() {
     if (!this.#breadcrumb) return;
+    this.#breadcrumb.innerHTML = '';
+
     if (!this.#node) {
-      this.#breadcrumb.innerHTML = '<span class="bc-item bc-idle">No node selected</span>';
+      const idle = document.createElement('span');
+      idle.className = 'bc-item bc-idle';
+      idle.textContent = 'No node selected';
+      this.#breadcrumb.appendChild(idle);
       return;
     }
+
     if (this.#node._isThing && this.#thingCtx) {
       const { thingDef, parentNode } = this.#thingCtx;
-      const roomLabel = parentNode.label?.value ?? parentNode.label ?? 'Room';
-      const thingLabel   = THING_LIBRARY[thingDef.type]?.label ?? thingDef.type;
-      this.#breadcrumb.innerHTML =
-        `<span class="bc-item bc-room">${escH(roomLabel)}</span>` +
-        `<span class="bc-sep">/</span>` +
-        `<span class="bc-item bc-thing">${escH(thingLabel)}</span>`;
+      const roomLabel  = parentNode.label?.value ?? parentNode.label ?? 'Room';
+      const thingLabel = this.#thingNameSig?.value
+        ?? thingDef.config?.name
+        ?? THING_LIBRARY[thingDef.type]?.label
+        ?? thingDef.type;
+
+      const roomBtn = document.createElement('button');
+      roomBtn.className = 'bc-item bc-room bc-link';
+      roomBtn.textContent = roomLabel;
+      roomBtn.addEventListener('click', () => {
+        this.setNode(parentNode);
+        this.emit('thing:exit', parentNode);
+      });
+
+      const sep = document.createElement('span');
+      sep.className = 'bc-sep';
+      sep.textContent = '/';
+
+      const thingSpan = document.createElement('span');
+      thingSpan.className = 'bc-item bc-thing';
+      thingSpan.textContent = thingLabel;
+
+      this.#breadcrumb.append(roomBtn, sep, thingSpan);
     } else {
       const label = this.#node.label?.value ?? this.#node.label ?? 'Room';
       const type  = this.#node.type ?? '';
-      this.#breadcrumb.innerHTML =
-        `<span class="bc-item bc-room">${escH(label)}</span>` +
-        `<span class="bc-type">${type}</span>`;
+
+      const roomSpan = document.createElement('span');
+      roomSpan.className = 'bc-item bc-room';
+      roomSpan.textContent = label;
+
+      const typeSpan = document.createElement('span');
+      typeSpan.className = 'bc-type';
+      typeSpan.textContent = type;
+
+      this.#breadcrumb.append(roomSpan, typeSpan);
     }
+  }
+
+  /** Update the active thing's display name. Refreshes the breadcrumb live. */
+  updateThingName(name) {
+    if (this.#thingNameSig) this.#thingNameSig.value = name;
+    this.#updateBreadcrumb();
   }
 
   /** Wrap a thingDef so it looks like a GraphNode to the Savant. */

@@ -239,6 +239,13 @@ undercity-map {
 .bc-sep     { color: var(--text-muted); font-weight: 400; }
 .bc-type    { color: var(--text-muted); font-size: 10px; margin-left: 4px; }
 .bc-idle    { color: var(--text-muted); font-weight: 400; font-style: italic; }
+.bc-link {
+  background: none; border: none; padding: 0; margin: 0;
+  font: inherit; font-weight: 700; color: var(--sol-cyan);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: transparent;
+}
+.bc-link:hover { text-decoration-color: var(--sol-cyan); }
 
 /* Divider between breadcrumb and event tabs */
 #savant-breadcrumb::after {
@@ -911,6 +918,20 @@ undercity-map {
   font-weight: 700;
   flex: 1;
   color: var(--text);
+  cursor: default;
+}
+.thing-card-label:hover { color: var(--sol-cyan); }
+.thing-label-input {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--bg-deep, var(--sol-base03));
+  border: 1px solid var(--sol-cyan);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 0 4px;
+  outline: none;
+  min-width: 0;
 }
 .thing-card-actions { display: flex; gap: 4px; }
 .thing-btn {

@@ -779,7 +779,7 @@ export const Media = (() => {
 // ── Room ──────────────────────────────────────────────────────────────────────
 // Room.emit() broadcasts a named event to all Things in the current room.
 // Room.showNav() renders Bootstrap navigation buttons for connected rooms.
-// Room.take()    packages all form inputs into an inventory item (User.carry).
+// Room.take()    fires the 'take' event on a FormThing, causing it to render its inputs.
 export const Room = {
   emit(eventName, data) {
     const room = User.location;
@@ -856,29 +856,16 @@ export const Room = {
   },
 
   /**
-   * Package all [data-pw-input] fields in this room into a single inventory
-   * item that the user carries to the next room.
-   * For file/image inputs the value is read directly from Inventory (set on change).
+   * Trigger a FormThing's 'take' event, causing it to render its Input/Display
+   * workflow on the page. The form's inputs are two-way bound to Inventory and
+   * update reactively as the user fills them.
    *
-   * @param {string} into  Inventory key to carry the form data under
+   * @param {string} form  ID of the FormThing instance to take (e.g. 'Form1').
+   *                       If omitted, fires the 'take' event to all listeners.
    */
-  take(into) {
-    const data = {};
-    document.querySelectorAll('[data-pw-input]').forEach(el => {
-      const key = el.dataset.pwInput;
-      if (!key) return;
-      if (el.type === 'checkbox') {
-        data[key] = el.checked;
-      } else if (el.type === 'file') {
-        // File inputs store their value in Inventory at change-time
-        data[key] = Inventory.get(key) ?? null;
-      } else {
-        data[key] = el.value;
-        // Keep inventory in sync too
-        Inventory.set(key, el.value);
-      }
-    });
-    User.carry(into, data);
+  take(form) {
+    const room = User.location;
+    Bus.emit('room:' + room + ':take', { event: 'take', data: { form: form ?? null }, room });
   },
 };
 
@@ -1397,6 +1384,16 @@ export const Things = (() => {
 
 // ── Built-in Thing classes ─────────────────────────────────────────────────────
 
+/** FormThing — a form container. Its 'take' event workflow runs when room.take targets it.
+ *  Input and Display actions placed in the Take event render only on demand. */
+class FormThing {
+  constructor(id, config) {
+    this.id     = id;
+    this.config = config ?? {};
+    this.name   = this.config.name ?? id;
+  }
+}
+
 /** WorkflowThing — a scriptable service. All behaviour is defined in event workflows.
  *  The class itself is a thin wrapper; the real logic lives in the event payload arrays. */
 class WorkflowThing {
@@ -1523,6 +1520,7 @@ class TestAuthServerThing {
 
 // ── Thing registry (maps type name → class) ────────────────────────────────────
 const _THING_REGISTRY = {
+  FormThing,
   WorkflowThing,
   PersonaLiveThing,
   AuthServerThing,

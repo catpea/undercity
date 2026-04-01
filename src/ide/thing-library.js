@@ -18,6 +18,20 @@
 
 export const THING_LIBRARY = {
 
+  FormThing: {
+    label: 'Form',
+    desc:  'A form container. Add Input and Display actions to the Take event — they render only when room.take targets this form.',
+    icon:  'ui-checks',
+    color: 'var(--sol-indigo)',
+    config: [
+      { name: 'name', label: 'Name', type: 'text', placeholder: 'LoginForm' },
+    ],
+    defaultEvents: [
+      { key: 'take', label: 'Take', fixed: true },
+    ],
+    canAddEvents: false,
+  },
+
   WorkflowThing: {
     label: 'Workflow',
     desc:  'A scriptable service. Wire Savant workflows to any room event.',
