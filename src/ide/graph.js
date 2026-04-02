@@ -33,6 +33,24 @@ export const NodeType = Object.freeze({
   TERMINAL: 'terminal',
 });
 
+// ── Legacy payload migration ───────────────────────────────────────────────────
+// Converts old on-prefixed keys (onEnter, onExit, …) to the canonical short forms.
+const _LEGACY_KEY_MAP = { onEnter:'Enter', onExit:'Exit', onBack:'Back', onReset:'Reset', onUnload:'Unload' };
+
+function _migratePayload(p) {
+  if (!p) return p;
+  let changed = false;
+  const out = { ...p };
+  for (const [old, cur] of Object.entries(_LEGACY_KEY_MAP)) {
+    if (old in out && !(cur in out)) {
+      out[cur] = out[old];
+      delete out[old];
+      changed = true;
+    }
+  }
+  return changed ? out : p;
+}
+
 // ── GraphNode ─────────────────────────────────────────────────────────────────
 export class GraphNode {
   /** @type {string} */           id;
@@ -40,7 +58,7 @@ export class GraphNode {
   /** @type {Signal<string>} */   label;
   /** @type {Signal<number>} */   x;
   /** @type {Signal<number>} */   y;
-  /** @type {Signal<object>} */   payload;   // { onEnter, onExit, onBack, onReset, onUnload }
+  /** @type {Signal<object>} */   payload;   // { Enter, Exit, Back, Reset, Unload, ...customEvents }
   /** @type {Signal<object[]>} */ routes;    // diamond: [{ condition, target, label }]
   /** @type {string|null} */      template;
   /** @type {object} */           meta;
@@ -54,13 +72,15 @@ export class GraphNode {
     this.label    = new Signal(data.label   ?? (this.type === NodeType.DIAMOND ? 'Logic Check' : 'Room'));
     this.x        = new Signal(data.x       ?? 200);
     this.y        = new Signal(data.y       ?? 200);
-    this.payload  = new Signal(data.payload ?? {
-      onEnter: [], onExit: [], onBack: [], onReset: [], onUnload: [],
-    });
+    this.payload  = new Signal(_migratePayload(data.payload ?? {
+      Enter: [], Exit: [], Back: [], Reset: [], Unload: [],
+    }));
     this.routes   = new Signal(data.routes  ?? []);
     this.template = data.template ?? null;
     this.meta     = { ...(data.meta ?? {}) };
-    this.things   = new Signal(data.things  ?? []);
+    this.things   = new Signal((data.things ?? []).map(t =>
+      t.events ? { ...t, events: _migratePayload(t.events) } : t
+    ));
   }
 
   /** Ensure all five lifecycle buckets exist; preserve any custom event keys. */
@@ -68,11 +88,11 @@ export class GraphNode {
     const p = this.payload.peek();
     const out = {
       ...p,
-      onEnter:  p.onEnter  ?? [],
-      onExit:   p.onExit   ?? [],
-      onBack:   p.onBack   ?? [],
-      onReset:  p.onReset  ?? [],
-      onUnload: p.onUnload ?? [],
+      Enter:  p.Enter  ?? [],
+      Exit:   p.Exit   ?? [],
+      Back:   p.Back   ?? [],
+      Reset:  p.Reset  ?? [],
+      Unload: p.Unload ?? [],
     };
     this.payload.value = out;
     return out;

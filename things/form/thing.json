@@ -1,15 +1,15 @@
 {
   "type": "FormThing",
   "label": "Form",
-  "desc": "A form container. Add Input and Display actions to the Take event — they render only when room.take targets this form.",
+  "desc": "A form container. Add Input and Display actions to the Take event — they render only when an Emit Event targets this form.",
   "icon": "ui-checks",
   "color": "var(--sol-indigo)",
   "config": [
     { "name": "name", "label": "Name", "type": "text", "placeholder": "LoginForm" }
   ],
   "defaultEvents": [
-    { "key": "take", "label": "Take", "fixed": true }
+    { "key": "take", "label": "Take", "fixed": false }
   ],
-  "canAddEvents": false,
+  "canAddEvents": true,
   "builtIn": true
 }

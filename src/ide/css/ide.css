@@ -320,6 +320,22 @@ undercity-map {
   outline: none;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--sol-green) 25%, transparent);
 }
+/* Label span inside renameable event tabs — text cursor hints double-click rename */
+.evt-tab-label { cursor: pointer; }
+/* Inline rename input — cyan to distinguish from the green "add event" input */
+.evt-tab-rename-input {
+  background: var(--bg);
+  border: 1px solid var(--sol-cyan);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 2px 5px;
+  width: 90px;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sol-cyan) 25%, transparent);
+}
 /* × remove button inside custom event tabs */
 .evt-tab-remove {
   margin-left: 5px;
@@ -918,7 +934,7 @@ undercity-map {
   font-weight: 700;
   flex: 1;
   color: var(--text);
-  cursor: default;
+  cursor: pointer;
 }
 .thing-card-label:hover { color: var(--sol-cyan); }
 .thing-label-input {

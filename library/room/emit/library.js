@@ -5,7 +5,7 @@ export function run(params, ctx) {
   const emitter = new Emitter();
 
   try {
-    ctx.room.emit(params.event, params.data);
+    ctx.room.emit(params.event, params.at ?? '*', params.data ?? {});
     emitter.emit('done');
   } catch (err) {
     emitter.emit('error', err);

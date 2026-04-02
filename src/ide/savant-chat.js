@@ -42,7 +42,7 @@ const PATHWAY_TOOL = {
               y:         { type: 'number',  description: 'Y position (100-800)' },
               entry:     { type: 'boolean', description: 'Mark as entry/lobby node' },
               node:      { type: 'string',  description: 'Target node label/id for addStep/setLabel/setEntry. Omit to use the currently selected room.' },
-              event:     { type: 'string',  description: 'Event name for addStep: onEnter|onExit|onBack|onReset|onUnload (default: onEnter)' },
+              event:     { type: 'string',  description: 'Event name for addStep: Enter|Exit|Back|Reset|Unload (default: Enter)' },
               condition: { type: 'string',  description: 'JS condition for addEdge on diamond nodes' },
               step: {
                 type: 'object',
@@ -448,7 +448,7 @@ export class SavantChat {
             return {
               ...c,
               node:  modelNode ?? this.#nodeLabel ?? c.node,
-              event: c.event  ?? this.#eventKey  ?? 'onEnter',
+              event: c.event  ?? this.#eventKey  ?? 'Enter',
             };
           });
         } catch (e) {

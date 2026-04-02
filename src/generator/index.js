@@ -3,13 +3,14 @@
  *
  * generateProject(proj, outDir, reg?) is the single entry point. It:
  *   1. Creates the output directory structure
- *   2. Writes runtime.js (with plugin runtime extensions)
- *   3. Writes one HTML page per non-diamond node
+ *   2. Copies static runtime ESM modules to js/runtime/
+ *   3. Writes js/runtime/config.js and js/runtime/extensions.js (generated)
+ *   4. Writes one HTML page per non-diamond node
  *      • The entry node's page is written as index.html (static-hosting friendly)
  *      • Diamond nodes get a routing-only page so navigation never 404s
- *   4. Writes flow.css (with plugin CSS extensions)
- *   5. Copies Bootstrap dist files
- *   6. Runs all plugin afterGenerate hooks
+ *   5. Writes flow.css (with plugin CSS extensions)
+ *   6. Copies Bootstrap dist files
+ *   7. Runs all plugin afterGenerate hooks
  *
  * Generated file tree:
  *   generated/<id>/
@@ -18,22 +19,23 @@
  *     <diamond-id>.html   × N  (routing pages — spinner + auto-route)
  *     icons/*.svg         ← Bootstrap icon subset used by the generated app
  *     js/af-icons.js      ← <af-icon> web component
- *     js/runtime.js
+ *     js/runtime/         ← static ESM modules (copied as-is)
+ *       index.js, config.js, extensions.js, bus.js, inventory.js, ...
  *     css/flow.css
  *     css/transitions.css (if multipage plugin enabled)
  *     lib/bootstrap.min.css
  *     lib/bootstrap.bundle.min.js
  */
 
-import { writeFile, mkdir, copyFile } from 'fs/promises';
-import { join, dirname }              from 'path';
-import { fileURLToPath }              from 'url';
+import { writeFile, mkdir, copyFile, readdir } from 'fs/promises';
+import { join, dirname }                        from 'path';
+import { fileURLToPath }                        from 'url';
 
-import { buildRuntime }  from './runtime.js';
-import { buildNodePage } from './page.js';
-import { buildFlowCSS }  from './css.js';
-import { normalizeIconName } from '../lib/icons.js';
-import { registry as defaultRegistry } from '../../plugins/index.js';
+import { buildRuntimeConfig, buildRuntimeExtensions } from './runtime.js';
+import { buildNodePage }                              from './page.js';
+import { buildFlowCSS }                               from './css.js';
+import { normalizeIconName }                          from '../lib/icons.js';
+import { registry as defaultRegistry }                from '../../plugins/index.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT  = join(__dir, '..', '..');
@@ -71,18 +73,27 @@ export async function generateProject(proj, outDir, reg = defaultRegistry) {
   const files = [];
 
   // Create output directories
-  await mkdir(join(outDir, 'js'),  { recursive: true });
-  await mkdir(join(outDir, 'css'), { recursive: true });
-  await mkdir(join(outDir, 'lib'), { recursive: true });
-  await mkdir(join(outDir, 'icons'), { recursive: true });
+  await mkdir(join(outDir, 'js', 'runtime'), { recursive: true });
+  await mkdir(join(outDir, 'css'),           { recursive: true });
+  await mkdir(join(outDir, 'lib'),           { recursive: true });
+  await mkdir(join(outDir, 'icons'),         { recursive: true });
 
-  // runtime.js
-  const runtimeSrc = buildRuntime(
-    proj, nodes, edges,
-    reg.runtimeExtensions(proj)
-  );
-  await writeFile(join(outDir, 'js', 'runtime.js'), runtimeSrc, 'utf8');
-  files.push('js/runtime.js');
+  // Copy static runtime ESM modules (all .js files in src/generator/runtime/)
+  const runtimeSrcDir = join(__dir, 'runtime');
+  const runtimeFiles  = (await readdir(runtimeSrcDir)).filter(f => f.endsWith('.js'));
+  for (const f of runtimeFiles) {
+    await copyFile(join(runtimeSrcDir, f), join(outDir, 'js', 'runtime', f));
+    files.push(`js/runtime/${f}`);
+  }
+
+  // Write the two generated files (project-specific)
+  const configSrc = buildRuntimeConfig(proj, nodes);
+  await writeFile(join(outDir, 'js', 'runtime', 'config.js'), configSrc, 'utf8');
+  files.push('js/runtime/config.js');
+
+  const extSrc = buildRuntimeExtensions(reg.runtimeExtensions(proj));
+  await writeFile(join(outDir, 'js', 'runtime', 'extensions.js'), extSrc, 'utf8');
+  files.push('js/runtime/extensions.js');
 
   await copyFile(join(ROOT, 'src', 'ide', 'af-icons.js'), join(outDir, 'js', 'af-icons.js'));
   files.push('js/af-icons.js');

@@ -79,8 +79,8 @@ export function buildNodePage(proj, node, nodes, edges, registry) {
   if (node.type === 'diamond') return buildDiamondPage(proj, node, nodes, edges);
 
   const outEdges   = edges.filter(e => e.fromId === node.id);
-  const onEnter    = node.payload?.onEnter ?? [];
-  const onExit     = node.payload?.onExit  ?? [];
+  const onEnter    = node.payload?.Enter ?? [];
+  const onExit     = node.payload?.Exit  ?? [];
   const isEntry    = node.meta?.isEntry    ?? false;
   const isTerminal = node.type === 'terminal';
 
@@ -136,7 +136,7 @@ export function buildNodePage(proj, node, nodes, edges, registry) {
  */
 function buildDiamondPage(proj, node, nodes, edges) {
   const outEdges = edges.filter(e => e.fromId === node.id);
-  const onEnter  = node.payload?.onEnter ?? [];
+  const onEnter  = node.payload?.Enter ?? [];
   const routes   = node.routes  ?? [];
 
   const bodyContent = `  <!-- Diamond routing page: shows spinner while evaluating conditions -->
@@ -155,7 +155,7 @@ function buildDiamondPage(proj, node, nodes, edges) {
   </main>`;
 
   const scriptContent = `  <script type="module">
-    import { Inventory, Navigator, Actions, Bus, runPayload, route, History, User, Display, Render, Media } from './js/runtime.js';
+    import { Inventory, Navigator, Actions, Bus, runPayload, route, History, User, Display, Render, Media } from './js/runtime/index.js';
 
     const TIMEOUT_MS = 30000;
     let timedOut = false;
@@ -166,7 +166,7 @@ function buildDiamondPage(proj, node, nodes, edges) {
     }, TIMEOUT_MS);
 
     try {
-      // Run the diamond's onEnter payload (typically an API call), then route
+      // Run the diamond's Enter payload (typically an API call), then route
       await runPayload(${JSON.stringify(onEnter, null, 4)});
       if (!timedOut) {
         clearTimeout(timer);
@@ -203,7 +203,7 @@ function buildPageContent(proj, node, outEdges, nodes, registry) {
 // ── Inline script block ───────────────────────────────────────────────────────
 
 // Lifecycle event keys that are NOT room-event listeners
-const _LIFECYCLE_KEYS = new Set(['onEnter', 'onExit', 'onBack', 'onReset', 'onUnload']);
+const _LIFECYCLE_KEYS = new Set(['Enter', 'Exit', 'Back', 'Reset', 'Unload']);
 
 function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, navEntries = []) {
   // goTo_* helpers built later (after things are processed, to include thing onExit)
@@ -222,9 +222,9 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
   // and collect lifecycle payloads to run inline at the right time.
   const things = node.things ?? [];
 
-  // thing onEnter payloads — run before the room's own onEnter
+  // thing Enter payloads — run before the room's own Enter
   const thingOnEnterBlocks = [];
-  // thing onExit payloads  — run inside each goTo_* helper (before navigate)
+  // thing Exit payloads  — run inside each goTo_* helper (before navigate)
   const thingOnExitPayloads = [];
 
   const thingsBlock = things.length === 0 ? '' : [
@@ -233,27 +233,26 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
       const evEntries = Object.entries(t.events ?? {})
         .filter(([key]) => !_LIFECYCLE_KEYS.has(key))   // room events only
         .map(([key, steps]) => {
-          // FormThing's 'take' event: only fire when room.take targets this thing's id
-          // (or when no specific form is targeted, for backwards compat).
-          const guard = (t.type === 'FormThing' && key === 'take')
-            ? `      if (data?.form && data.form !== ${JSON.stringify(t.id)}) return;\n`
-            : '';
-          return `    Room.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
+          // matchTarget handles null/'*'/exact/wildcard — one call covers all cases.
+          // Pass both the human name and the internal UUID so either can be targeted.
+          const thingName = t.config?.name ?? t.id;
+          const guard = `      if (!matchTarget(target, ${JSON.stringify(thingName)}, ${JSON.stringify(t.id)})) return;\n`;
+          return `    Room.on(${JSON.stringify(key)}, async ({ event, data, room, target }) => {
 ${guard}      Inventory.set('_event', { name: event, data, thing: ${JSON.stringify(t.id)}, room });
       await runPayload(${JSON.stringify(steps, null, 6)});
     });`;
         }).join('\n');
 
       // Collect thing lifecycle payloads for inline execution
-      if (t.events?.onEnter?.length) thingOnEnterBlocks.push(t.events.onEnter);
-      if (t.events?.onExit?.length)  thingOnExitPayloads.push(t.events.onExit);
+      if (t.events?.Enter?.length) thingOnEnterBlocks.push(t.events.Enter);
+      if (t.events?.Exit?.length)  thingOnExitPayloads.push(t.events.Exit);
 
       return `    Things.register(${JSON.stringify(t.id)}, createThing(${JSON.stringify(t.type)}, ${JSON.stringify(t.id)}, ${JSON.stringify(t.config ?? {})}));
 ${evEntries}`;
     }),
   ].join('\n');
 
-  // thing onEnter inline calls (one await per thing that has onEnter)
+  // thing Enter inline calls (one await per thing that has Enter)
   const thingOnEnterCode = thingOnEnterBlocks
     .map(steps => `    await runPayload(${JSON.stringify(steps, null, 4)});`)
     .join('\n');
@@ -275,8 +274,8 @@ ${thingOnExitCode}
 
   const hasThings = things.length > 0;
   const importLine = hasThings
-    ? `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Things, createThing, Input } from './js/runtime.js';`
-    : `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Input } from './js/runtime.js';`;
+    ? `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Things, createThing, Input, matchTarget } from './js/runtime/index.js';`
+    : `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Input } from './js/runtime/index.js';`;
 
   // _PW_NAV: array of { id, label, call } for room.showNav()
   // call references the goTo_* helpers defined above, so it's generated as code.
@@ -293,13 +292,13 @@ ${navEntries.map(e => {
   return `  <script type="module">
     ${importLine}
 
-${!isTerminal ? `    // Navigation helpers — registered BEFORE onEnter so they're available during payload
+${!isTerminal ? `    // Navigation helpers — registered BEFORE Enter so they're available during payload
 ${namedNavWithThings}
 ${pwNavCode}` : ''}
 ${thingsBlock ? `\n${thingsBlock}` : ''}
 ${roomListeners ? `\n    // Room-event listeners\n${roomListeners}` : ''}
-${thingOnEnterCode ? `\n    // Thing onEnter payloads\n${thingOnEnterCode}` : ''}
-    // Room onEnter payload
+${thingOnEnterCode ? `\n    // Thing Enter payloads\n${thingOnEnterCode}` : ''}
+    // Room Enter payload
     await runPayload(${JSON.stringify(onEnter, null, 4)});
   </script>`;
 }

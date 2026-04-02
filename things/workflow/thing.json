@@ -8,7 +8,7 @@
     { "name": "name", "label": "Name", "type": "text", "placeholder": "My Service" }
   ],
   "defaultEvents": [
-    { "key": "onEnter", "label": "Enter", "fixed": true }
+    { "key": "Enter", "label": "Enter", "fixed": true }
   ],
   "canAddEvents": true,
   "builtIn": true

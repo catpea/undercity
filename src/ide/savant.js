@@ -60,7 +60,7 @@ export class Savant extends Emitter {
   #node       = null;
   #thingCtx   = null;  // { thingDef, parentNode } — set when editing a Thing
   #thingNameSig = null; // Signal<string> for the active thing's display name
-  #event      = 'onEnter';
+  #event      = 'Enter';
   #category   = null;
   #customActions = {};  // id → def (AI-generated or project-level)
   #chat       = null;
@@ -137,7 +137,7 @@ export class Savant extends Emitter {
     this.#thingCtx = null;
     this.#thingNameSig = null;
     this.#node = node;
-    this.#event = 'onEnter';
+    this.#event = 'Enter';
     this.#updateBreadcrumb();
     if (node) {
       this.#nodeScope.add(
@@ -173,8 +173,21 @@ export class Savant extends Emitter {
       thingDef.config?.name || THING_LIBRARY[thingDef.type]?.label || thingDef.type
     );
     this.#nodeScope.dispose();
+
+    // Seed library default events only when the thing has never had events set.
+    // Once any events exist (including renamed ones), leave them untouched.
+    const existing = thingDef.events ?? {};
+    if (Object.keys(existing).length === 0) {
+      const seeded = Object.fromEntries(
+        getThingEvents(thingDef.type).map(({ key }) => [key, []])
+      );
+      thingDef.events = seeded;
+      parentNode.updateThing(thingDef.id, { events: seeded });
+    }
+
     this.#node = this.#makeThingProxy(thingDef, parentNode);
-    this.#event = 'onEnter';
+    // Default to first event key — don't assume 'Enter' exists on every Thing.
+    this.#event = Object.keys(thingDef.events)[0] ?? 'Enter';
     this.#updateBreadcrumb();
     // Push: re-render whenever the thing's payload signal changes
     this.#nodeScope.add(
@@ -354,13 +367,13 @@ export class Savant extends Emitter {
   // ── Event tabs ─────────────────────────────────────────────────────────────
 
   static #LIFECYCLE = [
-    { key: 'onEnter',  label: 'Enter'  },
-    { key: 'onExit',   label: 'Exit'   },
-    { key: 'onBack',   label: 'Back'   },
-    { key: 'onReset',  label: 'Reset'  },
-    { key: 'onUnload', label: 'Unload' },
+    { key: 'Enter',  label: 'Enter'  },
+    { key: 'Exit',   label: 'Exit'   },
+    { key: 'Back',   label: 'Back'   },
+    { key: 'Reset',  label: 'Reset'  },
+    { key: 'Unload', label: 'Unload' },
   ];
-  static #LIFECYCLE_KEYS = new Set(['onEnter','onExit','onBack','onReset','onUnload']);
+  static #LIFECYCLE_KEYS = new Set(['Enter','Exit','Back','Reset','Unload']);
 
   #buildEventTabs() {
     const container = this.#eventTabs;
@@ -369,20 +382,11 @@ export class Savant extends Emitter {
     if (!this.#node) { this.#updateEventTabsUI(); return; }
 
     if (this.#node._isThing) {
-      // Thing mode — show defaultEvents from THING_LIBRARY, plus any custom keys
-      const thingType   = this.#node._thingType;
-      const defaultEvts = getThingEvents(thingType);
-      const payload     = this.#node.payload.peek();
-
-      for (const { key, label, fixed } of defaultEvts) {
-        container.appendChild(this.#makeTab(key, label, !fixed));
-      }
-      // Extra event keys not in defaultEvents
-      const defaultKeys = new Set(defaultEvts.map(e => e.key));
+      // All thing events are regular payload keys — defaults are seeded in setThing()
+      // so they behave exactly like custom events: renameable, removable, exact-case.
+      const payload = this.#node.payload.peek();
       for (const key of Object.keys(payload)) {
-        if (!defaultKeys.has(key)) {
-          container.appendChild(this.#makeTab(key, key, true));
-        }
+        container.appendChild(this.#makeTab(key, key, true));
       }
       if (this.#node._canAddEvents) {
         container.appendChild(this.#makeAddTabBtn());
@@ -464,9 +468,16 @@ export class Savant extends Emitter {
     btn.type = 'button';
     btn.className = 'evt-tab position-relative' + (key === this.#event ? ' active' : '');
     btn.dataset.event = key;
-    btn.textContent = label;
     btn.addEventListener('click', () => this.setEvent(key));
+
     if (removable) {
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'evt-tab-label';
+      labelSpan.title = 'Double-click to rename';
+      labelSpan.textContent = label;
+      labelSpan.addEventListener('dblclick', e => { e.preventDefault(); this.#spawnTabRename(btn); });
+      btn.appendChild(labelSpan);
+
       const x = document.createElement('span');
       x.className = 'evt-tab-remove';
       x.textContent = '×';
@@ -476,19 +487,78 @@ export class Savant extends Emitter {
         const p = { ...this.#node.payload.peek() };
         delete p[key];
         if (this.#node._isThing && this.#thingCtx) {
-          // Persist the change into the parent node's things array
           const { thingDef, parentNode } = this.#thingCtx;
           thingDef.events = p;
           parentNode.updateThing(thingDef.id, { events: p });
         }
-        // Setting .value fires the subscription → #buildEventTabs + #renderWorkflow
         this.#node.payload.value = p;
         this.emit('payload:changed');
-        if (this.#event === key) this.setEvent('onEnter');
+        if (this.#event === key) {
+          // Fall back to first remaining key; 'Enter' only if nothing else exists.
+          const fallback = Object.keys(p)[0] ?? 'Enter';
+          this.setEvent(fallback);
+        }
       });
       btn.appendChild(x);
+    } else {
+      btn.textContent = label;
     }
+
     return btn;
+  }
+
+  #spawnTabRename(btn) {
+    // Only one inline rename at a time
+    if (this.#eventTabs.querySelector('.evt-tab-rename-input')) return;
+    const key       = btn.dataset.event;
+    const labelSpan = btn.querySelector('.evt-tab-label');
+    if (!labelSpan) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'evt-tab-rename-input';
+    input.value = key;
+    input.spellcheck = false;
+    labelSpan.replaceWith(input);
+    input.select();
+
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      const raw    = save ? input.value.trim().replace(/\s+/g, '_') : '';
+      const newKey = (save && raw) ? raw : key;
+
+      // Restore label span (whether renamed or cancelled)
+      const newSpan = document.createElement('span');
+      newSpan.className = 'evt-tab-label';
+      newSpan.title = 'Double-click to rename';
+      newSpan.textContent = newKey;
+      newSpan.addEventListener('dblclick', e => { e.preventDefault(); this.#spawnTabRename(btn); });
+      if (input.parentNode) input.replaceWith(newSpan);
+
+      if (save && newKey !== key) {
+        // Update active event BEFORE payload.value triggers #buildEventTabs(),
+        // so the rebuilt tabs correctly mark the renamed tab as active.
+        if (this.#event === key) this.#event = newKey;
+        const p = { ...this.#node.payload.peek() };
+        p[newKey] = p[key] ?? [];
+        delete p[key];
+        if (this.#node._isThing && this.#thingCtx) {
+          const { thingDef, parentNode } = this.#thingCtx;
+          thingDef.events = p;
+          parentNode.updateThing(thingDef.id, { events: p });
+        }
+        this.#node.payload.value = p;   // fires #buildEventTabs + #renderWorkflow
+        this.emit('payload:changed');
+      }
+    };
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); finish(true); }
+      if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
   }
 
   #updateEventTabsUI() {
@@ -500,9 +570,9 @@ export class Savant extends Emitter {
       // Remove old badge
       btn.querySelector('.evt-badge')?.remove();
 
-      // Count steps for this event (routes count for onEnter on diamonds)
+      // Count steps for this event (routes count for Enter on diamonds)
       let count = 0;
-      if (this.#node?.type === 'diamond' && key === 'onEnter') {
+      if (this.#node?.type === 'diamond' && key === 'Enter') {
         count = (this.#node.routes?.peek() ?? []).length;
       } else {
         count = (payload[key] ?? []).length;
@@ -517,7 +587,7 @@ export class Savant extends Emitter {
       }
     });
     if (this.#wfTitle) {
-      const map = { onEnter:'ENTER', onExit:'EXIT', onBack:'BACK', onReset:'RESET', onUnload:'UNLOAD' };
+      const map = { Enter:'ENTER', Exit:'EXIT', Back:'BACK', Reset:'RESET', Unload:'UNLOAD' };
       this.#wfTitle.textContent = `WORKFLOW  ·  ${map[this.#event] ?? this.#event}`;
     }
   }
@@ -665,7 +735,7 @@ export class Savant extends Emitter {
       return;
     }
 
-    if (this.#node.type === 'diamond' && this.#event === 'onEnter') {
+    if (this.#node.type === 'diamond' && this.#event === 'Enter') {
       // Show routes editor for diamonds
       this.#renderRoutesEditor();
       return;

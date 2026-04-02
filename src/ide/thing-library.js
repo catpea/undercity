@@ -20,16 +20,16 @@ export const THING_LIBRARY = {
 
   FormThing: {
     label: 'Form',
-    desc:  'A form container. Add Input and Display actions to the Take event — they render only when room.take targets this form.',
+    desc:  'A form container. Add Input and Display actions to the Take event — they render only when an Emit Event targets this form.',
     icon:  'ui-checks',
     color: 'var(--sol-indigo)',
     config: [
       { name: 'name', label: 'Name', type: 'text', placeholder: 'LoginForm' },
     ],
     defaultEvents: [
-      { key: 'take', label: 'Take', fixed: true },
+      { key: 'take', label: 'Take', fixed: false },
     ],
-    canAddEvents: false,
+    canAddEvents: true,
   },
 
   WorkflowThing: {
@@ -41,7 +41,7 @@ export const THING_LIBRARY = {
       { name: 'name', label: 'Name', type: 'text', placeholder: 'My Service' },
     ],
     defaultEvents: [
-      { key: 'onEnter', label: 'Enter', fixed: true },
+      { key: 'Enter', label: 'Enter', fixed: true },
     ],
     canAddEvents: true,
   },
@@ -59,7 +59,7 @@ export const THING_LIBRARY = {
       { name: 'replyInto',   label: 'Reply into',  type: 'text',     placeholder: 'aiReply',                         default: '' },
     ],
     defaultEvents: [
-      { key: 'onEnter', label: 'Enter',   fixed: true  },
+      { key: 'Enter', label: 'Enter',   fixed: true  },
       { key: 'message', label: 'Message', fixed: false },
     ],
     canAddEvents: false,
@@ -75,7 +75,7 @@ export const THING_LIBRARY = {
       { name: 'tokenInto', label: 'Token into', type: 'text', placeholder: 'authToken', default: 'authToken' },
     ],
     defaultEvents: [
-      { key: 'onEnter', label: 'Enter', fixed: true },
+      { key: 'Enter', label: 'Enter', fixed: true },
     ],
     canAddEvents: true,
   },
@@ -90,7 +90,7 @@ export const THING_LIBRARY = {
       { name: 'alwaysSucceed', label: 'Always succeed', type: 'boolean', default: true },
     ],
     defaultEvents: [
-      { key: 'onEnter', label: 'Enter', fixed: true },
+      { key: 'Enter', label: 'Enter', fixed: true },
     ],
     canAddEvents: true,
   },
@@ -99,5 +99,5 @@ export const THING_LIBRARY = {
 
 /** Returns the defaultEvents array for a given thing type. */
 export function getThingEvents(type) {
-  return THING_LIBRARY[type]?.defaultEvents ?? [{ key: 'onEnter', label: 'Enter', fixed: true }];
+  return THING_LIBRARY[type]?.defaultEvents ?? [{ key: 'Enter', label: 'Enter', fixed: true }];
 }

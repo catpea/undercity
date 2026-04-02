@@ -1339,7 +1339,7 @@ class App extends Emitter {
             const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
             if (!node) throw new Error(`addStep: node "${cmd.node}" not found`);
             if (!cmd.step) continue;
-            const event = cmd.event ?? 'onEnter';
+            const event = cmd.event ?? 'Enter';
             node.addStep(event, cmd.step);
           } else if (cmd.cmd === 'setLabel') {
             const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);

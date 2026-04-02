@@ -11,39 +11,44 @@
         "x": -760,
         "y": 400,
         "payload": {
-          "onEnter": [
+          "Enter": [
             {
-              "action": "room.take",
+              "action": "room.emit",
               "params": {
-                "form": ""
+                "event": "Take",
+                "at": "Form5",
+                "data": "{}"
               }
             }
           ],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": [],
+          "Test": []
         },
         "routes": [],
         "template": null,
         "meta": {
-          "isEntry": true
+          "isEntry": true,
+          "appName": "Test A",
+          "tagline": "Testing All The Things",
+          "icon": "gear"
         },
         "things": [
           {
-            "id": "ba689f52",
+            "id": "5cd7992f",
             "type": "FormThing",
             "config": {
-              "name": "Form2"
+              "name": "Form1"
             },
             "events": {
-              "onEnter": [],
-              "take": [
+              "Take": [
                 {
                   "action": "display.markdown",
                   "params": {
                     "selector": "#pw-main",
-                    "content": "Yikes, you took the form!"
+                    "content": "# Fffffff"
                   }
                 }
               ]
@@ -58,11 +63,19 @@
         "x": -600,
         "y": 200,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -78,11 +91,11 @@
         "x": -400,
         "y": 120,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -98,11 +111,11 @@
         "x": -200,
         "y": 200,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -118,7 +131,7 @@
         "x": -400,
         "y": 400,
         "payload": {
-          "onEnter": [
+          "Enter": [
             {
               "action": "room.showNav",
               "params": {
@@ -127,10 +140,10 @@
               }
             }
           ],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -146,11 +159,11 @@
         "x": 0,
         "y": 600,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -166,11 +179,11 @@
         "x": -400,
         "y": 240,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -186,18 +199,25 @@
         "x": -600,
         "y": 400,
         "payload": {
-          "onEnter": [
+          "Enter": [
             {
               "action": "display.clear",
               "params": {
                 "selector": ""
               }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
             }
           ],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -213,11 +233,11 @@
         "x": -200,
         "y": 600,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -233,7 +253,7 @@
         "x": -600,
         "y": 600,
         "payload": {
-          "onEnter": [
+          "Enter": [
             {
               "action": "room.showNav",
               "params": {
@@ -242,10 +262,10 @@
               }
             }
           ],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -261,11 +281,11 @@
         "x": -400,
         "y": 600,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -281,11 +301,11 @@
         "x": -200,
         "y": 400,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -299,11 +319,11 @@
         "x": 0,
         "y": 400,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -317,11 +337,11 @@
         "x": 0,
         "y": 200,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -335,11 +355,11 @@
         "x": 240,
         "y": 400,
         "payload": {
-          "onEnter": [],
-          "onExit": [],
-          "onBack": [],
-          "onReset": [],
-          "onUnload": []
+          "Enter": [],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -474,5 +494,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-01T03:04:46.410Z"
+  "modified": "2026-04-02T02:10:44.875Z"
 }
