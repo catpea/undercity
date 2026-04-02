@@ -13,6 +13,7 @@ import { Room }      from './room.js';
 import { Things }    from './things.js';
 import { Input }     from './input.js';
 import { User }      from './user.js';
+import { Debug }     from './debug.js';
 import { _NS, registerNamespace } from './registry.js';
 
 // ── Populate namespace map ─────────────────────────────────────────────────────
@@ -42,6 +43,8 @@ Object.assign(_NS, {
   Things, things: Things,
   // Input — 18 smart reactive form inputs (two-way bound to Inventory)
   Input, input: Input,
+  // Debug — developer tools (inventory dump, diagnostics)
+  Debug, debug: Debug,
   // "http" maps to Actions (which contains .get, .post, .fetch)
   http: Actions,
 });

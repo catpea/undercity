@@ -1,0 +1,9 @@
+{
+  "id":      "debug.inventoryDump",
+  "icon":    "table",
+  "color":   "var(--sol-yellow)",
+  "label":   "Inventory Dump",
+  "desc":    "Render a live table of every key in the current Inventory — shows type, raw value, and a visual preview for files, images, audio, and video.",
+  "version": "1.0.0",
+  "params":  []
+}

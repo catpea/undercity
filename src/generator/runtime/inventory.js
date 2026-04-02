@@ -35,6 +35,9 @@ export const Inventory = (() => {
   const KEY = `undercity2_inv_${PROJ_ID}`;
   let _data = { ...DEFAULTS };
   const _sigs = new Map();           // Map<key, _Signal>
+  let   _rev  = 0;                   // monotonic write counter
+  const _revSig = new _Signal(0);    // fires on every write to any key
+  const _bump = () => { _revSig.value = ++_rev; };
 
   function _sig(key) {
     if (!_sigs.has(key)) _sigs.set(key, new _Signal(_data[key] ?? null));
@@ -49,10 +52,10 @@ export const Inventory = (() => {
   return {
     // ── Core read/write ────────────────────────────────────────────────────────
     get(key)        { return key ? _data[key] : { ..._data }; },
-    set(key, value) { _data[key] = value; _save(); _sig(key).value = value; },
-    merge(obj)      { Object.assign(_data, obj); _save(); for (const [k, v] of Object.entries(obj)) _sig(k).value = v; },
-    delete(key)     { delete _data[key]; _save(); _sig(key).value = undefined; },
-    clear()         { _data = { ...DEFAULTS }; _save(); for (const [, s] of _sigs) s.value = null; },
+    set(key, value) { _data[key] = value; _save(); _sig(key).value = value; _bump(); },
+    merge(obj)      { Object.assign(_data, obj); _save(); for (const [k, v] of Object.entries(obj)) _sig(k).value = v; _bump(); },
+    delete(key)     { delete _data[key]; _save(); _sig(key).value = undefined; _bump(); },
+    clear()         { _data = { ...DEFAULTS }; _save(); for (const [, s] of _sigs) s.value = null; _bump(); },
 
     // ── Push API (signals) ─────────────────────────────────────────────────────
     /** Get (or create) the live Signal for a key. */
@@ -67,6 +70,15 @@ export const Inventory = (() => {
 
     /** Map of all currently active Signals. */
     get signals() { return new Map(_sigs); },
+
+    /**
+     * Subscribe to ALL inventory changes (any key).
+     * fn({ ...data }) fires immediately with the full snapshot, then on every write.
+     * Returns { dispose() } — call dispose() to stop receiving updates.
+     */
+    subscribeAll(fn) {
+      return _revSig.subscribe(() => fn({ ..._data }));
+    },
 
     // ── Utilities ──────────────────────────────────────────────────────────────
     check(expr)  { try { const inventory = _data; return !!eval(expr); } catch { return false; } },

@@ -1,37 +1,64 @@
 // ── Display ───────────────────────────────────────────────────────────────────
-// Writes content into EXISTING elements already on the page.
-// Works on arbitrary CSS selectors — does not create new DOM elements.
-import { Inventory }                    from './inventory.js';
-import { _renderMd, _sanitizeHtml }     from './md-renderer.js';
+// Appends content into the current card — a form builder, not an HTML editor.
+// Content flows naturally into the page; no CSS selectors needed.
+// Use Display.divider() to close the current card and begin a new section.
+//
+// All display methods create named web components so that generated page source
+// is readable and self-documenting.
+import { _renderMd, _sanitizeHtml }             from './md-renderer.js';
+import { _pwCardBody, _pwContainer, _pwInsert } from './page-helpers.js';
 
 export const Display = {
-  /** Set plain text (safe, no HTML interpretation). */
-  text(selector, text) {
-    document.querySelectorAll(selector).forEach(el => { el.textContent = String(text ?? ''); });
+
+  /** Append plain text as <af-display-text>. */
+  text(text) {
+    const el = document.createElement('af-display-text');
+    el.setAttribute('content', String(text ?? ''));
+    _pwCardBody().appendChild(el);
   },
-  /** Render Markdown into a selector (wraps content in div.af-md). */
-  markdown(selector, content) {
-    const html = _renderMd(String(content ?? ''));
-    document.querySelectorAll(selector).forEach(el => {
-      el.innerHTML = `<div class="af-md">${html}</div>`;
-    });
+
+  /** Append rendered Markdown as <af-display-markdown>. */
+  markdown(content) {
+    const el = document.createElement('af-display-markdown');
+    el.setAttribute('html', _renderMd(String(content ?? '')));
+    _pwCardBody().appendChild(el);
   },
-  /** Inject sanitized HTML (strips scripts/event-handlers). */
-  safeHtml(selector, html) {
-    const safe = _sanitizeHtml(String(html ?? ''));
-    document.querySelectorAll(selector).forEach(el => { el.innerHTML = safe; });
+
+  /** Append sanitized HTML (scripts stripped) as <af-display-safe-html>. */
+  safeHtml(html) {
+    const el = document.createElement('af-display-safe-html');
+    el.setAttribute('html', _sanitizeHtml(String(html ?? '')));
+    _pwCardBody().appendChild(el);
   },
-  /** Inject raw trusted HTML directly (no sanitization). */
-  rawHtml(selector, html) {
-    document.querySelectorAll(selector).forEach(el => { el.innerHTML = String(html ?? ''); });
+
+  /** Append raw trusted HTML as <af-display-raw-html>. */
+  rawHtml(html) {
+    const el = document.createElement('af-display-raw-html');
+    el.setAttribute('html', String(html ?? ''));
+    _pwCardBody().appendChild(el);
   },
-  /** Empty the contents of a selector. */
-  clear(selector) {
-    document.querySelectorAll(selector).forEach(el => { el.innerHTML = ''; });
+
+  /** Reactively render the current value of an Inventory key as <af-display-value>. */
+  value(key) {
+    const el = document.createElement('af-display-value');
+    el.setAttribute('key', String(key ?? ''));
+    _pwCardBody().appendChild(el);
   },
-  /** Print an inventory key's value as text into a selector. */
-  value(selector, key) {
-    const v = Inventory.get(key);
-    Display.text(selector, v ?? '');
+
+  /** Remove all content cards — call at the top of Enter to rebuild the page. */
+  clear() {
+    const root  = _pwContainer();
+    const cards = [...root.querySelectorAll(':scope > .card:not(#pw-nav-card)')];
+    cards.forEach(c => c.remove());
+  },
+
+  /** Close the current card and open a new one — divides content into sections. */
+  divider() {
+    const card = document.createElement('div');
+    card.className = 'card mb-3';
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    card.appendChild(body);
+    _pwInsert(_pwContainer(), card);
   },
 };

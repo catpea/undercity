@@ -24,7 +24,7 @@
 import library             from '/library/index.js';
 import { Emitter }         from '/src/lib/signal.js';
 import { Scope }           from '/src/lib/scope.js';
-import { normalizeIconName, renderAfIcon } from '/src/lib/icons.js';
+import { normalizeIconName } from '/src/lib/icons.js';
 import { Graph, NodeType } from '/src/ide/graph.js';
 import { THING_LIBRARY }  from '/src/ide/thing-library.js';
 import '/src/ide/undercity-map.js';
@@ -343,7 +343,7 @@ class App extends Emitter {
 
   fitView() { this.#mapBuilder?.fitView(); }
 
-  /** Export current map as MCP JSON (addNode + addEdge commands) and copy to clipboard. */
+  /** Export current map as MCP JSON (addNode + addEdge + addAction commands) and copy to clipboard. */
   #exportMapMcp() {
     const nodes = [...this.#graph.nodes.values()];
     const edges = [...this.#graph.edges.values()];
@@ -376,12 +376,166 @@ class App extends Emitter {
       cmds.push(cmd);
     }
 
+    // addAction commands — one per step in every node's payload events
+    for (const n of nodes) {
+      const nodeLabel = n.label?.value ?? n.label ?? n.id;
+      const payload   = n.payload?.peek?.() ?? n.payload ?? {};
+      for (const [event, steps] of Object.entries(payload)) {
+        if (!Array.isArray(steps)) continue;
+        for (const step of steps) {
+          if (!step?.action) continue;
+          const cmd = { cmd: 'addAction', node: nodeLabel, event, action: step.action };
+          if (step.params && Object.keys(step.params).length > 0) cmd.params = step.params;
+          cmds.push(cmd);
+        }
+      }
+    }
+
     const json = JSON.stringify(cmds, null, 2);
     navigator.clipboard.writeText(json).then(() => {
       this.toast(`Copied ${cmds.length} MCP commands to clipboard`, 'info');
     }).catch(() => {
       const win = window.open('', '_blank', 'width=700,height=520');
       if (win) { win.document.write(`<pre style="font:13px monospace;padding:16px">${json.replace(/</g,'&lt;')}</pre>`); }
+    });
+  }
+
+  /** Export current map as Markdown instructions an AI can read and reproduce. */
+  #exportMapMarkdown() {
+    const nodes    = [...this.#graph.nodes.values()];
+    const edges    = [...this.#graph.edges.values()];
+    const proj     = this.#project;
+    const projName = proj?.name ?? proj?.id ?? 'Untitled Project';
+    const lines    = [];
+
+    lines.push(`# ${projName} — Map Blueprint`);
+    lines.push('');
+    lines.push('This document describes the structure and logic of an Undercity MUD map.');
+    lines.push('An AI assistant can use these instructions to recreate the map exactly.');
+    lines.push('');
+
+    // ── Rooms / nodes ──────────────────────────────────────────────────────────
+    lines.push('## Rooms');
+    lines.push('');
+    lines.push('Each room is a node on the map. Type can be `room`, `diamond` (logic branch), or `terminal` (end state).');
+    lines.push('');
+
+    for (const n of nodes) {
+      const label   = n.label?.value ?? n.label ?? n.id;
+      const type    = n.type ?? 'room';
+      const isEntry = n.meta?.isEntry ? ' *(entry point)*' : '';
+      const tmpl    = n.template ? ` — template: \`${n.template}\`` : '';
+      lines.push(`### ${label}${isEntry}`);
+      lines.push(`- **Type:** ${type}${tmpl}`);
+
+      // Navigation edges out of this node
+      const out = edges.filter(e => e.fromId === n.id);
+      if (out.length > 0) {
+        lines.push('- **Exits:**');
+        for (const e of out) {
+          const toNode  = nodes.find(nd => nd.id === e.toId);
+          const toLabel = toNode ? (toNode.label?.value ?? toNode.label ?? toNode.id) : e.toId;
+          const edgeLabel = e.label?.value ? ` — \`${e.label.value}\`` : '';
+          const cond      = e.condition?.value ? ` *(condition: ${e.condition.value})*` : '';
+          lines.push(`  - → ${toLabel}${edgeLabel}${cond}`);
+        }
+      }
+
+      // Actions / payload
+      const payload = n.payload?.peek?.() ?? n.payload ?? {};
+      const events  = Object.entries(payload).filter(([, steps]) => Array.isArray(steps) && steps.length > 0);
+      if (events.length > 0) {
+        lines.push('- **Actions:**');
+        for (const [event, steps] of events) {
+          lines.push(`  - **${event}** event:`);
+          for (const step of steps) {
+            if (!step?.action) continue;
+            const paramStr = step.params && Object.keys(step.params).length > 0
+              ? ' — params: ' + Object.entries(step.params).map(([k, v]) => `\`${k}=${JSON.stringify(v)}\``).join(', ')
+              : '';
+            lines.push(`    - \`${step.action}\`${paramStr}`);
+          }
+        }
+      }
+
+      // Things (FormThing, WorkflowThing, etc.)
+      const things = n.things?.peek?.() ?? [];
+      if (things.length > 0) {
+        lines.push('- **Things:**');
+        for (const t of things) {
+          const tName = t.config?.name ?? t.id;
+          lines.push(`  - \`${t.type}\` — **${tName}** (id: \`${t.id}\`)`);
+          const tEvents = Object.entries(t.events ?? {}).filter(([, steps]) => Array.isArray(steps) && steps.length > 0);
+          for (const [evt, steps] of tEvents) {
+            lines.push(`    - **${evt}** event:`);
+            for (const step of steps) {
+              if (!step?.action) continue;
+              const ps = step.params && Object.keys(step.params).length > 0
+                ? ' — ' + Object.entries(step.params).map(([k, v]) => `\`${k}=${JSON.stringify(v)}\``).join(', ')
+                : '';
+              lines.push(`      - \`${step.action}\`${ps}`);
+            }
+          }
+        }
+      }
+
+      lines.push('');
+    }
+
+    // ── MCP commands to recreate the map ───────────────────────────────────────
+    lines.push('## How to Recreate This Map (MCP Commands)');
+    lines.push('');
+    lines.push('Paste the following JSON array into the AI chat to rebuild this map from scratch:');
+    lines.push('');
+    lines.push('```json');
+
+    const cmds = [];
+    for (const n of nodes) {
+      const label = n.label?.value ?? n.label ?? n.id;
+      const cmd   = { cmd: 'addNode', type: n.type ?? 'room', label };
+      if (n.meta?.isEntry) cmd.entry = true;
+      if (n.template)      cmd.template = n.template;
+      cmds.push(cmd);
+    }
+    for (const e of edges) {
+      const from = nodes.find(n => n.id === e.fromId);
+      const to   = nodes.find(n => n.id === e.toId);
+      if (!from || !to) continue;
+      const cmd  = {
+        cmd:  'addEdge',
+        from: from.label?.value ?? from.label ?? from.id,
+        to:   to.label?.value   ?? to.label   ?? to.id,
+      };
+      if (e.label?.value)     cmd.label     = e.label.value;
+      if (e.condition?.value) cmd.condition = e.condition.value;
+      cmds.push(cmd);
+    }
+    for (const n of nodes) {
+      const nodeLabel = n.label?.value ?? n.label ?? n.id;
+      const payload   = n.payload?.peek?.() ?? n.payload ?? {};
+      for (const [event, steps] of Object.entries(payload)) {
+        if (!Array.isArray(steps)) continue;
+        for (const step of steps) {
+          if (!step?.action) continue;
+          const cmd = { cmd: 'addAction', node: nodeLabel, event, action: step.action };
+          if (step.params && Object.keys(step.params).length > 0) cmd.params = step.params;
+          cmds.push(cmd);
+        }
+      }
+    }
+
+    lines.push(JSON.stringify(cmds, null, 2));
+    lines.push('```');
+    lines.push('');
+    lines.push('---');
+    lines.push(`*Exported from Undercity IDE — ${new Date().toISOString()}*`);
+
+    const md = lines.join('\n');
+    navigator.clipboard.writeText(md).then(() => {
+      this.toast('Copied Markdown blueprint to clipboard', 'info');
+    }).catch(() => {
+      const win = window.open('', '_blank', 'width=800,height=600');
+      if (win) { win.document.write(`<pre style="font:13px monospace;padding:16px;white-space:pre-wrap">${md.replace(/</g,'&lt;')}</pre>`); }
     });
   }
 
@@ -707,8 +861,9 @@ class App extends Emitter {
     if (!section) return;
 
     section.querySelector('#thing-add-btn').addEventListener('click', () => {
-      const sel = section.querySelector('#thing-type-select').value;
-      const t   = node.addThing({ type: sel });
+      const sel   = section.querySelector('#thing-type-select').value;
+      const label = THING_LIBRARY[sel]?.label ?? sel;
+      const t     = node.addThing({ type: sel, config: { name: label } });
       this.markDirty();
       this.#openThingConfig(node, t);
       // #renderThingsList will fire via the node.things subscription
@@ -840,7 +995,7 @@ class App extends Emitter {
         const templates = await API.listTemplates();
         tmplEl.innerHTML = templates.slice(0, 6).map(t => `
           <div class="welcome-tmpl-card" data-tid="${escAttr(t.id)}">
-            <div class="welcome-tmpl-icon">${renderAfIcon(normalizeIconName(t.icon, 'stars'))}</div>
+            <div class="welcome-tmpl-icon"><af-icon name="${normalizeIconName(t.icon, 'stars')}"></af-icon></div>
             <div class="welcome-tmpl-name">${escHtml(t.name)}</div>
           </div>`).join('');
         tmplEl.querySelectorAll('.welcome-tmpl-card').forEach(card => {
@@ -874,8 +1029,10 @@ class App extends Emitter {
     $('btn-generate').addEventListener('click', () => this.generateProject());
     $('btn-fit-view').addEventListener('click', () => this.fitView());
 
-    // Export map as MCP JSON (addNode + addEdge commands)
+    // Export map as MCP JSON (addNode + addEdge + addAction commands)
     $('btn-export-map')?.addEventListener('click', () => this.#exportMapMcp());
+    // Export map as Markdown AI instructions
+    $('btn-export-markdown')?.addEventListener('click', () => this.#exportMapMarkdown());
     $('btn-cmd')?.addEventListener('click', () => this.#palette?.open());
 
     // Undo / Redo buttons
@@ -982,7 +1139,7 @@ class App extends Emitter {
           card.dataset.tmplId = tmpl.id;
           const iconName = normalizeIconName(tmpl.icon, 'stars');
           card.innerHTML = `
-            <div class="tmpl-card-icon">${renderAfIcon(iconName)}</div>
+            <div class="tmpl-card-icon"><af-icon name="${iconName}"></af-icon></div>
             <div class="tmpl-card-name">${escHtml(tmpl.name)}</div>
             <div class="tmpl-card-desc">${escHtml(tmpl.description)}</div>`;
           card.addEventListener('click', () => selectTemplate(tmpl));
@@ -999,7 +1156,7 @@ class App extends Emitter {
       $('new-proj-step-gallery').style.display = 'none';
       $('new-proj-step-name').style.display = '';
       $('tmpl-selected-badge').innerHTML =
-        `<span class="tmpl-badge">${renderAfIcon(normalizeIconName(tmpl.icon, 'stars'))}<span>${escHtml(tmpl.name)}</span></span>`;
+        `<span class="tmpl-badge"><af-icon name="${normalizeIconName(tmpl.icon, 'stars')}"></af-icon><span>${escHtml(tmpl.name)}</span></span>`;
       $('new-proj-name').value = '';
       $('new-proj-id').value = '';
       if ($('new-proj-desc')) $('new-proj-desc').value = '';
@@ -1335,6 +1492,13 @@ class App extends Emitter {
             const edge = this.#graph.addEdge(fromNode.id, toNode.id);
             if (cmd.label) edge.label.value = cmd.label;
             if (cmd.condition) edge.condition.value = cmd.condition;
+          } else if (cmd.cmd === 'addAction') {
+            // addAction is the export-side name; addStep is the original internal form
+            const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+            if (!node) throw new Error(`addAction: node "${cmd.node}" not found`);
+            if (!cmd.action) continue;
+            const event = cmd.event ?? 'Enter';
+            node.addStep(event, { action: cmd.action, params: cmd.params ?? {} });
           } else if (cmd.cmd === 'addStep') {
             const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
             if (!node) throw new Error(`addStep: node "${cmd.node}" not found`);
@@ -1417,7 +1581,7 @@ function escHtml(str) {
 }
 
 function buttonLabel(iconName, label) {
-  return `${renderAfIcon(iconName)}<span>${escHtml(label)}</span>`;
+  return `<af-icon name="${iconName}"></af-icon><span>${escHtml(label)}</span>`;
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────────────

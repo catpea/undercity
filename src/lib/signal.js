@@ -148,6 +148,38 @@ export class Repeater {
   }
 }
 
+export class DisposableEventBinder {
+  #domListener;
+  /**
+   * @param {HTMLElement} element - the element to bind to
+   * @param {String} event - the event to minitor
+   * @param {Function} domListener - the listener to execute
+   * @param {Object} [options]
+   *   options.html = true → bind to innerHTML
+   *   options.autorun = true (default) → initialize with current value
+   */
+  constructor(element, event, domListener, options = {}) {
+    this.element = element;
+    this.event = event;
+    this.#domListener = domListener;
+    this.options = Object.assign({ html: false, autorun: true }, options);
+    this.isDisposed = false;
+
+    this.element.addEventListener(this.event, this.#domListener);
+  }
+
+  dispose() {
+    if (this.isDisposed) {
+      console.warn("Binder already disposed.");
+      return;
+    }
+    this.element.removeEventListener(this.event, this.#domListener);
+
+    this.isDisposed = true;
+  }
+}
+
+
 /** DOM addEventListener returning a Disposable. */
 export function on(target, type, handler, opts) {
   target.addEventListener(type, handler, opts);

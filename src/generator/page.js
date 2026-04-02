@@ -30,7 +30,11 @@ function pageShell({ proj, node, headExtra = '', bodyContent, scriptContent }) {
   <title>${escHtml(node.label)} — ${escHtml(proj.name)}</title>
   <link rel="stylesheet" href="lib/bootstrap.min.css">
   <link rel="stylesheet" href="css/flow.css">
+  <script type="importmap">
+  {"imports":{"framework":"./js/signal.js","scope":"./js/scope.js"}}
+  </script>
   <script type="module" src="js/af-icons.js"></script>
+  <script type="module" src="js/components.js"></script>
 ${headExtra}</head>
 <body class="pw-page d-flex flex-column min-vh-100" data-node="${node.id}">
 
@@ -213,7 +217,6 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
     .filter(([key]) => !_LIFECYCLE_KEYS.has(key))
     .map(([key, steps]) =>
       `    Room.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
-      Inventory.set('_event', { name: event, data, room });
       await runPayload(${JSON.stringify(steps, null, 6)});
     });`
     ).join('\n');
@@ -227,28 +230,38 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
   // thing Exit payloads  — run inside each goTo_* helper (before navigate)
   const thingOnExitPayloads = [];
 
+  // Helper: sanitize a thing name into a valid JS identifier for use as a const name
+  const toVarName = name => (name ?? '').replace(/[^a-zA-Z0-9_$]/g, '_') || '_thing';
+
   const thingsBlock = things.length === 0 ? '' : [
-    `    // Instantiate Things inhabiting this room`,
+    `    // Things inhabiting this room`,
     ...things.map(t => {
+      const thingName = t.config?.name ?? 'Thing';
+      const varName   = toVarName(thingName);
+
+      // Extra config beyond 'name' (e.g. personality, apiUrl, tokenInto)
+      const { name: _n, ...extraConfig } = t.config ?? {};
+      const configArg = Object.keys(extraConfig).length
+        ? `, ${JSON.stringify(extraConfig)}`
+        : '';
+
+      // Instantiation line — clean OOP, UUID is a quiet second argument
+      const instantiation = `    const ${varName} = new ${t.type}(${JSON.stringify(thingName)}, ${JSON.stringify(t.id)}${configArg});`;
+
+      // Event listeners — target guard is baked into thing.on(), no manual matchTarget
       const evEntries = Object.entries(t.events ?? {})
-        .filter(([key]) => !_LIFECYCLE_KEYS.has(key))   // room events only
-        .map(([key, steps]) => {
-          // matchTarget handles null/'*'/exact/wildcard — one call covers all cases.
-          // Pass both the human name and the internal UUID so either can be targeted.
-          const thingName = t.config?.name ?? t.id;
-          const guard = `      if (!matchTarget(target, ${JSON.stringify(thingName)}, ${JSON.stringify(t.id)})) return;\n`;
-          return `    Room.on(${JSON.stringify(key)}, async ({ event, data, room, target }) => {
-${guard}      Inventory.set('_event', { name: event, data, thing: ${JSON.stringify(t.id)}, room });
+        .filter(([key]) => !_LIFECYCLE_KEYS.has(key))
+        .map(([key, steps]) =>
+          `    ${varName}.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
       await runPayload(${JSON.stringify(steps, null, 6)});
-    });`;
-        }).join('\n');
+    });`
+        ).join('\n');
 
       // Collect thing lifecycle payloads for inline execution
       if (t.events?.Enter?.length) thingOnEnterBlocks.push(t.events.Enter);
       if (t.events?.Exit?.length)  thingOnExitPayloads.push(t.events.Exit);
 
-      return `    Things.register(${JSON.stringify(t.id)}, createThing(${JSON.stringify(t.type)}, ${JSON.stringify(t.id)}, ${JSON.stringify(t.config ?? {})}));
-${evEntries}`;
+      return `${instantiation}\n${evEntries}`;
     }),
   ].join('\n');
 
@@ -257,48 +270,43 @@ ${evEntries}`;
     .map(steps => `    await runPayload(${JSON.stringify(steps, null, 4)});`)
     .join('\n');
 
-  // Rebuild goTo_* helpers to also run thing onExit payloads
-  const thingOnExitCode = thingOnExitPayloads
-    .map(steps => `      await runPayload(${JSON.stringify(steps)});`)
-    .join('\n');
-
-  const namedNavWithThings = outEdges.map(e => {
-    const fn = `goTo_${e.toId.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    return `    async function ${fn}() {
-${thingOnExitCode}
-      await runPayload(${JSON.stringify(onExit)});
-      Navigator.goto('${e.toId}');
-    }
-    window.${fn} = ${fn};`;
-  }).join('\n');
-
-  const hasThings = things.length > 0;
-  const importLine = hasThings
-    ? `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Things, createThing, Input, matchTarget } from './js/runtime/index.js';`
+  // Build a minimal import list — only pull in the Thing classes actually used on this page
+  const thingTypes = [...new Set(things.map(t => t.type))];
+  const importLine = things.length > 0
+    ? `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Things, Input, ${thingTypes.join(', ')} } from './js/runtime/index.js';`
     : `import { Inventory, Navigator, Actions, Bus, runPayload, route, User, Media, Room, Input } from './js/runtime/index.js';`;
 
-  // _PW_NAV: array of { id, label, call } for room.showNav()
-  // call references the goTo_* helpers defined above, so it's generated as code.
-  const pwNavCode = navEntries.length === 0 ? '' : `
-    // Navigation map for room.showNav() — one entry per connected room
-    window._PW_NAV = [
-${navEntries.map(e => {
-    const fn = `goTo_${e.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    const label = String(e.label ?? e.id);
-    return `      { id: ${JSON.stringify(e.id)}, label: ${JSON.stringify(label)}, call: () => typeof ${fn} === 'function' ? ${fn}() : Navigator.goto(${JSON.stringify(e.id)}) },`;
-  }).join('\n')}
-    ];`;
+  // Room.exits() — declare all exits in one call.
+  // The onExit callback runs thing Exit payloads then the room Exit payload.
+  let exitsCode = '';
+  if (navEntries.length > 0) {
+    // Right-align labels for readability
+    const maxLen  = Math.max(...navEntries.map(e => String(e.label ?? e.id).length));
+    const entries = navEntries
+      .map(e => {
+        const label = String(e.label ?? e.id);
+        const pad   = ' '.repeat(maxLen - label.length);
+        return `      { id: ${JSON.stringify(e.id)}, label: ${JSON.stringify(label)}${pad} }`;
+      })
+      .join(',\n');
+
+    const exitSteps = [
+      ...thingOnExitPayloads.map(steps => `      await runPayload(${JSON.stringify(steps)});`),
+      ...(onExit.length ? [`      await runPayload(${JSON.stringify(onExit)});`] : []),
+    ];
+
+    const onExitArg = exitSteps.length
+      ? `, async () => {\n${exitSteps.join('\n')}\n    }`
+      : '';
+
+    exitsCode = `    Room.exits([\n${entries},\n    ]${onExitArg});`;
+  }
 
   return `  <script type="module">
     ${importLine}
 
-${!isTerminal ? `    // Navigation helpers — registered BEFORE Enter so they're available during payload
-${namedNavWithThings}
-${pwNavCode}` : ''}
-${thingsBlock ? `\n${thingsBlock}` : ''}
-${roomListeners ? `\n    // Room-event listeners\n${roomListeners}` : ''}
-${thingOnEnterCode ? `\n    // Thing Enter payloads\n${thingOnEnterCode}` : ''}
-    // Room Enter payload
+${!isTerminal && exitsCode ? `${exitsCode}\n` : ''}${thingsBlock ? `\n${thingsBlock}\n` : ''}${roomListeners ? `\n    // Room event listeners\n${roomListeners}\n` : ''}${thingOnEnterCode ? `\n    // Thing Enter payloads\n${thingOnEnterCode}\n` : ''}
+    // Enter
     await runPayload(${JSON.stringify(onEnter, null, 4)});
   </script>`;
 }

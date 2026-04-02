@@ -1,56 +1,16 @@
 // library/input/text/library.js
-import { Emitter, on } from 'framework';
-import { Scope }       from 'scope';
-
-const TAG = 'uc-input-text';
-
-if (!customElements.get(TAG)) {
-  customElements.define(TAG, class extends HTMLElement {
-    #scope = new Scope();
-
-    connectedCallback() {
-      const { params, ctx } = this;
-
-      const label       = document.createElement('label');
-      label.textContent = params.label ?? '';
-
-      const input         = document.createElement('input');
-      input.type          = 'text';
-      input.name          = params.key;
-      input.placeholder   = params.placeholder ?? '';
-      input.required      = params.required    ?? false;
-      input.spellcheck    = params.spellcheck  ?? false;
-      if (params.autocomplete != null) {
-        input.setAttribute('autocomplete', params.autocomplete);
-      }
-
-      this.append(label, input);
-
-      // Push: Inventory → DOM
-      this.#scope.add(
-        ctx.inventory.subscribe(inv => {
-          const v = String(inv[params.key] ?? '');
-          if (input.value !== v) input.value = v;
-        })
-      );
-
-      // Push: DOM → Inventory
-      this.#scope.add(
-        on(input, 'input', () => {
-          ctx.inventory.value = { ...ctx.inventory.value, [params.key]: input.value };
-        })
-      );
-    }
-
-    disconnectedCallback() {
-      this.#scope.dispose();
-    }
-  });
-}
+import { Emitter } from 'framework';
+import './af-ask-for-text.js';
 
 export function run(params, ctx) {
   const emitter = new Emitter();
-  const el      = Object.assign(document.createElement(TAG), { params, ctx });
+  const el = document.createElement('af-ask-for-text');
+  if (params.key)          el.setAttribute('key',          params.key);
+  if (params.label)        el.setAttribute('label',        params.label);
+  if (params.placeholder)  el.setAttribute('placeholder',  params.placeholder);
+  if (params.required)     el.setAttribute('required',     '');
+  if (params.autocomplete) el.setAttribute('autocomplete', params.autocomplete);
+  if (params.spellcheck)   el.setAttribute('spellcheck',   'true');
   emitter.emit('render', el);
   emitter.emit('done');
   return emitter;

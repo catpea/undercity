@@ -1,0 +1,9 @@
+{
+  "id":      "display.divider",
+  "icon":    "layout-three-columns",
+  "color":   "var(--sol-cyan)",
+  "label":   "Divider",
+  "desc":    "Close the current card section and open a new one.",
+  "version": "1.0.0",
+  "params":  []
+}

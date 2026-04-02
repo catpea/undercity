@@ -1,17 +1,12 @@
 // library/display/rawHtml/library.js
 import { Emitter } from 'framework';
+import './af-display-raw-html.js';
 
 export function run(params, ctx) {
   const emitter = new Emitter();
-
-  try {
-    const el = document.querySelector(params.selector);
-    if (!el) throw new Error(`display.rawHtml: selector not found: ${params.selector}`);
-    el.innerHTML = params.html ?? '';
-    emitter.emit('done');
-  } catch (err) {
-    emitter.emit('error', err);
-  }
-
+  const el = document.createElement('af-display-raw-html');
+  el.setAttribute('html', String(params.html ?? ''));
+  emitter.emit('render', el);
+  emitter.emit('done');
   return emitter;
 }

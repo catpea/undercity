@@ -16,7 +16,7 @@
  * Plugins may register additional templates via the PluginRegistry.
  */
 
-import { renderAfIcon } from '../lib/icons.js';
+import { normalizeIconName } from '../lib/icons.js';
 
 /** Escape a string for safe placement in an HTML attribute value. */
 export function escAttr(str) {
@@ -263,7 +263,7 @@ export function successHTML(node) {
   const meta = node.meta ?? {};
   return `<div class="card col-md-6 mx-auto text-center">
       <div class="card-body">
-        <div class="mb-3 fs-1 d-inline-flex" aria-hidden="true">${renderAfIcon('check-circle')}</div>
+        <div class="mb-3 fs-1 d-inline-flex" aria-hidden="true"><af-icon name="check-circle"></af-icon></div>
         <h2 class="pw-heading">${escHtml(node.label)}</h2>
         <p class="text-muted mt-2 mb-4">${escHtml(meta.message ?? 'You have successfully completed this step.')}</p>
         ${meta.nextLabel
@@ -282,7 +282,7 @@ export function errorHTML(node, outEdges = []) {
 
   return `<div class="card col-md-6 mx-auto text-center">
       <div class="card-body">
-        <div class="mb-3 fs-1 d-inline-flex" aria-hidden="true">${renderAfIcon('exclamation-triangle')}</div>
+        <div class="mb-3 fs-1 d-inline-flex" aria-hidden="true"><af-icon name="exclamation-triangle"></af-icon></div>
         <h2 class="pw-heading text-danger">${escHtml(node.label)}</h2>
         <p class="text-muted mt-2 mb-4" id="error-msg">${escHtml(meta.message ?? 'Something went wrong.')}</p>
         <button type="button" class="btn btn-outline-secondary" ${backFn}>Go Back</button>
@@ -312,7 +312,7 @@ export function submitReviewHTML(node, outEdges = []) {
   return `<div class="card col-lg-6 col-md-8 mx-auto">
       <div class="card-body">
       <div class="text-center mb-4">
-        <div class="fs-1 mb-2 d-inline-flex" aria-hidden="true">${renderAfIcon('clipboard-check')}</div>
+        <div class="fs-1 mb-2 d-inline-flex" aria-hidden="true"><af-icon name="clipboard-check"></af-icon></div>
         <h2 class="pw-heading">${escHtml(reviewTitle)}</h2>
         <p class="text-muted small mb-0">${escHtml(reviewMsg)}</p>
       </div>
@@ -325,7 +325,7 @@ export function submitReviewHTML(node, outEdges = []) {
 
       <div class="d-flex flex-column flex-sm-row gap-2">
         <button type="button" id="pw-btn-restart" class="btn btn-outline-secondary flex-sm-fill d-inline-flex align-items-center justify-content-center gap-2">
-          ${renderAfIcon('pencil-square')}
+          <af-icon name="pencil-square"></af-icon>
           <span>Edit / Start Over</span>
         </button>
         <button type="button" id="pw-btn-submit" class="btn btn-primary flex-sm-fill fw-semibold">
@@ -432,7 +432,8 @@ export function lobbyHTML(node = {}, outEdges = [], nodes = []) {
   const meta    = node.meta ?? {};
   const title   = escHtml(meta.appName ?? node.label ?? 'Welcome');
   const tagline = escHtml(meta.tagline ?? meta.description ?? '');
-  const icon    = renderAfIcon(meta.icon, { class: 'pw-lobby-glyph' }, 'stars');
+  const iconName = normalizeIconName(meta.icon, 'stars');
+  const icon     = `<af-icon name="${iconName}" class="pw-lobby-glyph"></af-icon>`;
 
   // Classify edges into primary, secondary, and tertiary (links)
   const isPrimary   = e => /sign.in|log.?in|start|begin|continue|enter/i.test(e.label ?? '');

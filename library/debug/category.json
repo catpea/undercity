@@ -1,0 +1,7 @@
+{
+  "id":          "debug",
+  "name":        "Debug",
+  "icon":        "bug",
+  "color":       "var(--sol-yellow)",
+  "description": "Developer tools — inspect runtime state, dump inventory, and diagnose issues."
+}

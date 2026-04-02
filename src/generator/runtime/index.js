@@ -15,7 +15,7 @@ export { Display }                  from './display.js';
 export { Render }                   from './render.js';
 export { Media }                    from './media.js';
 export { matchTarget, Room }        from './room.js';
-export { Things, createThing }      from './things.js';
+export { Things, FormThing, WorkflowThing, PersonaLiveThing, AuthServerThing, TestAuthServerThing } from './things.js';
 export { Input }                    from './input.js';
 export { registerNamespace, route, runPayload } from './runner.js';
 

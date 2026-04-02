@@ -73,10 +73,11 @@ export async function generateProject(proj, outDir, reg = defaultRegistry) {
   const files = [];
 
   // Create output directories
-  await mkdir(join(outDir, 'js', 'runtime'), { recursive: true });
-  await mkdir(join(outDir, 'css'),           { recursive: true });
-  await mkdir(join(outDir, 'lib'),           { recursive: true });
-  await mkdir(join(outDir, 'icons'),         { recursive: true });
+  await mkdir(join(outDir, 'js', 'runtime'),    { recursive: true });
+  await mkdir(join(outDir, 'js', 'components'), { recursive: true });
+  await mkdir(join(outDir, 'css'),              { recursive: true });
+  await mkdir(join(outDir, 'lib'),              { recursive: true });
+  await mkdir(join(outDir, 'icons'),            { recursive: true });
 
   // Copy static runtime ESM modules (all .js files in src/generator/runtime/)
   const runtimeSrcDir = join(__dir, 'runtime');
@@ -96,7 +97,33 @@ export async function generateProject(proj, outDir, reg = defaultRegistry) {
   files.push('js/runtime/extensions.js');
 
   await copyFile(join(ROOT, 'src', 'ide', 'af-icons.js'), join(outDir, 'js', 'af-icons.js'));
-  files.push('js/af-icons.js');
+  await copyFile(join(ROOT, 'src', 'lib', 'signal.js'),  join(outDir, 'js', 'signal.js'));
+  await copyFile(join(ROOT, 'src', 'lib', 'scope.js'),   join(outDir, 'js', 'scope.js'));
+  files.push('js/af-icons.js', 'js/signal.js', 'js/scope.js');
+
+  // Web components — collect all af-*.js from library/*/*/
+  // Copy each to js/components/ and generate a barrel js/components.js
+  const libraryDir     = join(ROOT, 'library');
+  const componentFiles = [];
+  const categories     = (await readdir(libraryDir, { withFileTypes: true }))
+    .filter(d => d.isDirectory()).map(d => d.name);
+  for (const cat of categories) {
+    const catDir = join(libraryDir, cat);
+    const actions = (await readdir(catDir, { withFileTypes: true }).catch(() => []))
+      .filter(d => d.isDirectory()).map(d => d.name);
+    for (const act of actions) {
+      const actDir = join(catDir, act);
+      const entries = (await readdir(actDir).catch(() => [])).filter(f => /^af-.+\.js$/.test(f));
+      for (const f of entries) {
+        await copyFile(join(actDir, f), join(outDir, 'js', 'components', f));
+        componentFiles.push(f);
+        files.push(`js/components/${f}`);
+      }
+    }
+  }
+  const barrelSrc = componentFiles.map(f => `import './components/${f}';`).join('\n') + '\n';
+  await writeFile(join(outDir, 'js', 'components.js'), barrelSrc, 'utf8');
+  files.push('js/components.js');
 
   // HTML pages — all nodes get a page (diamonds get a routing-only page)
   for (const node of nodes) {

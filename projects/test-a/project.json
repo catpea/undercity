@@ -13,10 +13,17 @@
         "payload": {
           "Enter": [
             {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
               "action": "room.emit",
               "params": {
                 "event": "Take",
-                "at": "Form5",
+                "at": "Form*",
                 "data": "{}"
               }
             }
@@ -24,8 +31,7 @@
           "Exit": [],
           "Back": [],
           "Reset": [],
-          "Unload": [],
-          "Test": []
+          "Unload": []
         },
         "routes": [],
         "template": null,
@@ -45,10 +51,14 @@
             "events": {
               "Take": [
                 {
-                  "action": "display.markdown",
+                  "action": "input.text",
                   "params": {
-                    "selector": "#pw-main",
-                    "content": "# Fffffff"
+                    "key": "title",
+                    "label": "Title",
+                    "placeholder": "",
+                    "required": "true",
+                    "autocomplete": "",
+                    "spellcheck": "true"
                   }
                 }
               ]
@@ -88,7 +98,7 @@
         "id": "1f2e5e7a",
         "type": "room",
         "label": "As Is",
-        "x": -400,
+        "x": -520,
         "y": 120,
         "payload": {
           "Enter": [],
@@ -108,7 +118,7 @@
         "id": "3f99bc7f",
         "type": "room",
         "label": "Select Thumbnail Frame",
-        "x": -200,
+        "x": -440,
         "y": 200,
         "payload": {
           "Enter": [],
@@ -153,31 +163,11 @@
         "things": []
       },
       {
-        "id": "14e49304",
-        "type": "room",
-        "label": "Summary/Preview",
-        "x": 0,
-        "y": 600,
-        "payload": {
-          "Enter": [],
-          "Exit": [],
-          "Back": [],
-          "Reset": [],
-          "Unload": []
-        },
-        "routes": [],
-        "template": null,
-        "meta": {
-          "isEntry": false
-        },
-        "things": []
-      },
-      {
         "id": "c1ccbe0e",
         "type": "room",
         "label": "Use PersonaLive",
-        "x": -400,
-        "y": 240,
+        "x": -520,
+        "y": 280,
         "payload": {
           "Enter": [],
           "Exit": [],
@@ -201,9 +191,11 @@
         "payload": {
           "Enter": [
             {
-              "action": "display.clear",
+              "action": "room.emit",
               "params": {
-                "selector": ""
+                "event": "Take",
+                "at": "Form*",
+                "data": "{}"
               }
             },
             {
@@ -224,16 +216,54 @@
         "meta": {
           "isEntry": false
         },
-        "things": []
+        "things": [
+          {
+            "id": "3832b62d",
+            "type": "FormThing",
+            "config": {
+              "name": "Form"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.file",
+                  "params": {
+                    "key": "audio",
+                    "label": "Upload Raw Audio",
+                    "accept": "*/*",
+                    "multiple": false,
+                    "required": false
+                  }
+                }
+              ]
+            }
+          }
+        ]
       },
       {
-        "id": "edd912c3",
+        "id": "65c4db6f",
         "type": "room",
-        "label": "Upload Cover Image",
-        "x": -200,
+        "label": "Just Text",
+        "x": -600,
         "y": 600,
         "payload": {
-          "Enter": [],
+          "Enter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            },
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "at": "Form*",
+                "data": "{}"
+              }
+            }
+          ],
           "Exit": [],
           "Back": [],
           "Reset": [],
@@ -244,16 +274,51 @@
         "meta": {
           "isEntry": false
         },
-        "things": []
+        "things": [
+          {
+            "id": "dd006f52",
+            "type": "FormThing",
+            "config": {
+              "name": "FormX"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.longText",
+                  "params": {
+                    "key": "poem",
+                    "label": "Enter poem text",
+                    "placeholder": "",
+                    "rows": "16",
+                    "required": "true",
+                    "spellcheck": true
+                  }
+                },
+                {
+                  "action": "debug.inventoryDump",
+                  "params": {}
+                }
+              ]
+            }
+          }
+        ]
       },
       {
-        "id": "65c4db6f",
+        "id": "fdb191dc",
         "type": "room",
-        "label": "Just Text",
-        "x": -600,
+        "label": "Upload Narration",
+        "x": -400,
         "y": 600,
         "payload": {
           "Enter": [
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "at": "Form*",
+                "data": "{}"
+              }
+            },
             {
               "action": "room.showNav",
               "params": {
@@ -272,33 +337,90 @@
         "meta": {
           "isEntry": false
         },
-        "things": []
-      },
-      {
-        "id": "fdb191dc",
-        "type": "room",
-        "label": "Upload Narration",
-        "x": -400,
-        "y": 600,
-        "payload": {
-          "Enter": [],
-          "Exit": [],
-          "Back": [],
-          "Reset": [],
-          "Unload": []
-        },
-        "routes": [],
-        "template": null,
-        "meta": {
-          "isEntry": false
-        },
-        "things": []
+        "things": [
+          {
+            "id": "647a4632",
+            "type": "FormThing",
+            "config": {
+              "name": "Form"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.file",
+                  "params": {
+                    "key": "audio",
+                    "label": "Upload Audio",
+                    "accept": "*/*",
+                    "multiple": false,
+                    "required": "true"
+                  }
+                }
+              ]
+            }
+          }
+        ]
       },
       {
         "id": "ee8ff735",
         "type": "room",
         "label": "Upload Cover Image",
         "x": -200,
+        "y": 520,
+        "payload": {
+          "Enter": [
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "at": "Form*",
+                "data": "{}"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": [
+          {
+            "id": "d5dd9baa",
+            "type": "FormThing",
+            "config": {
+              "name": "Form"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.image",
+                  "params": {
+                    "key": "cover",
+                    "label": "Cover Image",
+                    "accept": "image/*",
+                    "required": "true"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "66520aca",
+        "type": "room",
+        "label": "Post To Server",
+        "x": 200,
         "y": 400,
         "payload": {
           "Enter": [],
@@ -313,28 +435,10 @@
         "things": []
       },
       {
-        "id": "f7934e86",
+        "id": "7ec283b9",
         "type": "room",
-        "label": "Summary/Preview",
-        "x": 0,
-        "y": 400,
-        "payload": {
-          "Enter": [],
-          "Exit": [],
-          "Back": [],
-          "Reset": [],
-          "Unload": []
-        },
-        "routes": [],
-        "template": null,
-        "meta": {},
-        "things": []
-      },
-      {
-        "id": "f17823b9",
-        "type": "room",
-        "label": "Summary/Preview",
-        "x": 0,
+        "label": "Video To Text",
+        "x": -200,
         "y": 200,
         "payload": {
           "Enter": [],
@@ -349,13 +453,46 @@
         "things": []
       },
       {
-        "id": "66520aca",
+        "id": "15b49c3e",
         "type": "room",
-        "label": "Post To Server",
-        "x": 240,
+        "label": "Preview",
+        "x": 0,
         "y": 400,
         "payload": {
-          "Enter": [],
+          "Enter": [
+            {
+              "action": "display.value",
+              "params": {
+                "selector": "",
+                "key": "title"
+              }
+            },
+            {
+              "action": "display.value",
+              "params": {
+                "key": "poem"
+              }
+            },
+            {
+              "action": "display.value",
+              "params": {
+                "key": "audio"
+              }
+            },
+            {
+              "action": "display.value",
+              "params": {
+                "key": "cover"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true
+              }
+            }
+          ],
           "Exit": [],
           "Back": [],
           "Reset": [],
@@ -439,51 +576,37 @@
         "condition": ""
       },
       {
-        "id": "a0e37b4f",
-        "fromId": "fdb191dc",
-        "toId": "edd912c3",
-        "label": "",
-        "condition": ""
-      },
-      {
-        "id": "b28ea112",
+        "id": "a7c1455e",
         "fromId": "3f99bc7f",
-        "toId": "f17823b9",
+        "toId": "7ec283b9",
         "label": "",
         "condition": ""
       },
       {
-        "id": "d2da0b9e",
+        "id": "e7339059",
+        "fromId": "7ec283b9",
+        "toId": "15b49c3e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "3c9ed5c2",
+        "fromId": "15b49c3e",
+        "toId": "66520aca",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "c6dacec9",
+        "fromId": "fdb191dc",
+        "toId": "ee8ff735",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "b8c2eb79",
         "fromId": "ee8ff735",
-        "toId": "f7934e86",
-        "label": "",
-        "condition": ""
-      },
-      {
-        "id": "1e1f35f4",
-        "fromId": "edd912c3",
-        "toId": "14e49304",
-        "label": "",
-        "condition": ""
-      },
-      {
-        "id": "aa88f0fc",
-        "fromId": "f17823b9",
-        "toId": "66520aca",
-        "label": "",
-        "condition": ""
-      },
-      {
-        "id": "4f83ab95",
-        "fromId": "f7934e86",
-        "toId": "66520aca",
-        "label": "",
-        "condition": ""
-      },
-      {
-        "id": "56b58a6d",
-        "fromId": "14e49304",
-        "toId": "66520aca",
+        "toId": "15b49c3e",
         "label": "",
         "condition": ""
       }
@@ -494,5 +617,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-02T02:10:44.875Z"
+  "modified": "2026-04-02T23:56:47.963Z"
 }

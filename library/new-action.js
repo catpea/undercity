@@ -4,6 +4,7 @@
  *
  * Usage:
  *   node library/new-action.js --category <id> --name <camelCaseName>
+ *   node library/new-action.js --category <id> --regen   (regenerate index without adding a new action)
  *
  * What it does:
  *   1. Creates library/<category>/<name>/action.json   (IDE metadata stub)
@@ -14,22 +15,39 @@
  *   6. Regenerates library/index.js                    (top-level entry point)
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, copyFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const ROOT = dirname(fileURLToPath(import.meta.url));
+const ROOT       = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT  = join(ROOT, '..');
+const ICONS_SRC  = join(REPO_ROOT, '.temp', 'bootstrap-icons');
+const ICONS_DEST = join(REPO_ROOT, 'public', 'icons');
+const HAS_ICONS  = existsSync(ICONS_SRC);
+
+if (!HAS_ICONS) {
+  console.warn('');
+  console.warn('  WARNING: Bootstrap Icons not found.');
+  console.warn('  Icons referenced in action.json will not be copied to public/icons/.');
+  console.warn('');
+  console.warn('  To fix, clone bootstrap-icons into .temp/:');
+  console.warn('    git clone https://github.com/twbs/icons .temp/bootstrap-icons');
+  console.warn('');
+}
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 
-const args = process.argv.slice(2);
-const get  = flag => { const i = args.indexOf(flag); return i !== -1 ? args[i + 1] : null; };
+const args  = process.argv.slice(2);
+const get   = flag => { const i = args.indexOf(flag); return i !== -1 ? args[i + 1] : null; };
+const has   = flag => args.includes(flag);
 
 const category = get('--category');
 const name     = get('--name');
+const regenOnly = has('--regen');
 
-if (!category || !name) {
+if (!category || (!name && !regenOnly)) {
   console.error('Usage: node library/new-action.js --category <id> --name <camelCaseName>');
+  console.error('       node library/new-action.js --category <id> --regen');
   process.exit(1);
 }
 
@@ -37,21 +55,55 @@ if (!/^[a-z][a-z0-9]*$/.test(category)) {
   console.error(`Error: category must be lowercase letters/digits, got "${category}"`);
   process.exit(1);
 }
-if (!/^[a-z][a-zA-Z0-9]*$/.test(name)) {
+if (!regenOnly && !/^[a-z][a-zA-Z0-9]*$/.test(name)) {
   console.error(`Error: name must be camelCase, got "${name}"`);
   process.exit(1);
 }
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-const categoryDir = join(ROOT, category);
-const actionDir   = join(categoryDir, name);
-const actionJson  = join(actionDir, 'action.json');
-const libraryJs   = join(actionDir, 'library.js');
+const categoryDir  = join(ROOT, category);
+const actionDir    = name ? join(categoryDir, name) : null;
+const actionJson   = actionDir ? join(actionDir, 'action.json') : null;
+const libraryJs    = actionDir ? join(actionDir, 'library.js')  : null;
+const componentTag = name ? `af-${toKebab(name)}` : null;
+const componentJs  = actionDir ? join(actionDir, `${componentTag}.js`) : null;
 const categoryJson = join(categoryDir, 'category.json');
 const categoryIdx  = join(categoryDir, 'index.js');
 const indexJson    = join(ROOT, 'index.json');
 const indexJs      = join(ROOT, 'index.js');
+
+// ── --regen mode: just regenerate indices ────────────────────────────────────
+
+if (regenOnly) {
+  if (!existsSync(categoryDir)) {
+    console.error(`Error: category directory not found: ${categoryDir}`);
+    process.exit(1);
+  }
+  // Copy icons for every action in this category
+  readdirSync(categoryDir, { withFileTypes: true })
+    .filter(d => d.isDirectory() && existsSync(join(categoryDir, d.name, 'action.json')))
+    .forEach(d => {
+      const meta = JSON.parse(readFileSync(join(categoryDir, d.name, 'action.json'), 'utf8'));
+      copyIcon(meta.icon);
+    });
+  if (existsSync(categoryJson)) {
+    const catMeta = JSON.parse(readFileSync(categoryJson, 'utf8'));
+    copyIcon(catMeta.icon);
+  }
+  regenerateCategoryIndex(categoryDir, category, categoryIdx);
+  const idxRaw  = existsSync(indexJson) ? readFileSync(indexJson, 'utf8').trim() : '';
+  const idxData = idxRaw ? JSON.parse(idxRaw) : { categories: [] };
+  if (!idxData.categories.includes(category)) {
+    idxData.categories.push(category);
+    idxData.categories.sort();
+    writeFileSync(indexJson, JSON.stringify(idxData, null, 2) + '\n');
+  }
+  regenerateIndexJs(idxData.categories, indexJs);
+  console.log(`✓ Regenerated  ${relative(categoryIdx)}`);
+  console.log(`✓ Regenerated  ${relative(indexJs)}`);
+  process.exit(0);
+}
 
 // ── Guard: don't overwrite existing action ────────────────────────────────────
 
@@ -77,15 +129,16 @@ const actionMeta = {
 };
 writeFileSync(actionJson, JSON.stringify(actionMeta, null, 2) + '\n');
 
-// ── 3. library.js stub ────────────────────────────────────────────────────────
+// ── 3. Copy icon SVG to public/icons/ ────────────────────────────────────────
 
-const isInput   = category === 'input';
-const TAG       = `uc-${category}-${toKebab(name)}`;
+copyIcon(actionMeta.icon);
 
-const libraryStub = isInput ? inputStub(TAG, name) : plainStub(name);
-writeFileSync(libraryJs, libraryStub);
+// ── 4. library.js stub + af-*.js web component stub ──────────────────────────
 
-// ── 4. category.json (create only if missing) ─────────────────────────────────
+writeFileSync(libraryJs, libraryStub(componentTag, name));
+writeFileSync(componentJs, componentStub(componentTag, name));
+
+// ── 5. category.json (create only if missing) ─────────────────────────────────
 
 if (!existsSync(categoryJson)) {
   const catMeta = {
@@ -98,11 +151,11 @@ if (!existsSync(categoryJson)) {
   writeFileSync(categoryJson, JSON.stringify(catMeta, null, 2) + '\n');
 }
 
-// ── 5. Regenerate category index.js ──────────────────────────────────────────
+// ── 6. Regenerate category index.js ──────────────────────────────────────────
 
 regenerateCategoryIndex(categoryDir, category, categoryIdx);
 
-// ── 6. Update index.json ──────────────────────────────────────────────────────
+// ── 7. Update index.json ──────────────────────────────────────────────────────
 
 const indexRaw  = existsSync(indexJson) ? readFileSync(indexJson, 'utf8').trim() : '';
 const indexData = indexRaw ? JSON.parse(indexRaw) : { categories: [] };
@@ -113,7 +166,7 @@ if (!indexData.categories.includes(category)) {
 }
 writeFileSync(indexJson, JSON.stringify(indexData, null, 2) + '\n');
 
-// ── 7. Regenerate top-level index.js ─────────────────────────────────────────
+// ── 8. Regenerate top-level index.js ─────────────────────────────────────────
 
 regenerateIndexJs(indexData.categories, indexJs);
 
@@ -122,6 +175,7 @@ regenerateIndexJs(indexData.categories, indexJs);
 console.log(`
 ✓ Created  ${relative(actionJson)}
 ✓ Created  ${relative(libraryJs)}
+✓ Created  ${relative(componentJs)}
 ✓ Updated  ${relative(categoryIdx)}
 ✓ Updated  ${relative(indexJson)}
 ✓ Updated  ${relative(indexJs)}
@@ -131,12 +185,30 @@ Next steps:
      • Set "label", "desc", "icon", "color"
      • Define "params" array
 
-  2. Edit ${relative(libraryJs)}
-     • Implement the run() function
-     ${isInput ? `• The Web Component stub (TAG="${TAG}") is ready — fill in connectedCallback` : ''}
+  2. Edit ${relative(componentJs)}
+     • Implement the web component (tag: <${componentTag}>)
+     • Add observed attributes, template, connectedCallback
+
+  3. Edit ${relative(libraryJs)}
+     • The run() stub already imports and creates <${componentTag}>
+     • Attach params as attributes before emitting 'render'
 `);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function copyIcon(iconName) {
+  if (!iconName || !HAS_ICONS) return;
+  const src  = join(ICONS_SRC,  `${iconName}.svg`);
+  const dest = join(ICONS_DEST, `${iconName}.svg`);
+  if (!existsSync(src)) {
+    console.warn(`  Warning: icon "${iconName}" not found in .temp/bootstrap-icons/`);
+    return;
+  }
+  if (existsSync(dest)) return; // already present, don't overwrite
+  mkdirSync(ICONS_DEST, { recursive: true });
+  copyFileSync(src, dest);
+  console.log(`✓ Copied   public/icons/${iconName}.svg`);
+}
 
 function regenerateCategoryIndex(catDir, catId, outPath) {
   // Collect all action subdirectories that have an action.json
@@ -209,53 +281,20 @@ ${uses}
   writeFileSync(outPath, src);
 }
 
-function inputStub(tag, actionName) {
+function libraryStub(tag, actionName) {
   return `// library/${category}/${actionName}/library.js
-import { Emitter, on } from 'framework';
-import { Scope }       from 'scope';
-
-const TAG = '${tag}';
-
-if (!customElements.get(TAG)) {
-  customElements.define(TAG, class extends HTMLElement {
-    #scope = new Scope();
-
-    connectedCallback() {
-      const { params, ctx } = this;
-
-      // TODO: build DOM
-      // const label = document.createElement('label');
-      // label.textContent = params.label ?? '';
-      // const input = document.createElement('input');
-      // input.type = 'text';
-      // input.name = params.key;
-      // this.append(label, input);
-
-      // TODO: Push — Inventory → DOM
-      // this.#scope.add(
-      //   ctx.inventory.subscribe(inv => {
-      //     const v = String(inv[params.key] ?? '');
-      //     if (input.value !== v) input.value = v;
-      //   })
-      // );
-
-      // TODO: Push — DOM → Inventory
-      // this.#scope.add(
-      //   on(input, 'input', () => {
-      //     ctx.inventory.value = { ...ctx.inventory.value, [params.key]: input.value };
-      //   })
-      // );
-    }
-
-    disconnectedCallback() {
-      this.#scope.dispose();
-    }
-  });
-}
+//
+// IDE-side action runner. Creates <${tag}> and emits it for Savant to render.
+import { Emitter } from 'framework';
+import './${tag}.js';
 
 export function run(params, ctx) {
   const emitter = new Emitter();
-  const el      = Object.assign(document.createElement(TAG), { params, ctx });
+
+  const el = document.createElement('${tag}');
+  // TODO: map params to element attributes
+  // if (params.key) el.setAttribute('key', params.key);
+
   emitter.emit('render', el);
   emitter.emit('done');
   return emitter;
@@ -263,22 +302,67 @@ export function run(params, ctx) {
 `;
 }
 
-function plainStub(actionName) {
-  return `// library/${category}/${actionName}/library.js
-import { Emitter } from 'framework';
+function componentStub(tag, actionName) {
+  const className = tag
+    .split('-')
+    .filter(Boolean)
+    .map(w => w[0].toUpperCase() + w.slice(1))
+    .join('');
 
-export function run(params, ctx) {
-  const emitter = new Emitter();
+  return `// library/${category}/${actionName}/${tag}.js
+//
+// <${tag}> — TODO: describe this component.
+//
+// Observed attributes:
+//   TODO: list attributes here
+//
+// Uses globalThis.Inventory for reactive data — works in both the IDE preview
+// and generated pages.
 
-  try {
-    // TODO: implement action
-    emitter.emit('done');
-  } catch (err) {
-    emitter.emit('error', err);
+const template = document.createElement('template');
+template.innerHTML = \`
+  <style>
+    :host { display: block; }
+    /* TODO: add component styles */
+  </style>
+  <!-- TODO: add component HTML -->
+  <slot></slot>
+\`;
+
+class ${className} extends HTMLElement {
+  static observedAttributes = [/* 'key', 'label', ... */];
+
+  #sub = null;
+
+  constructor() {
+    super();
+    const root = this.attachShadow({ mode: 'open' });
+    root.appendChild(template.content.cloneNode(true));
   }
 
-  return emitter;
+  connectedCallback() {
+    this.#syncView();
+    // TODO: subscribe to globalThis.Inventory if needed
+    // this.#sub = globalThis.Inventory?.subscribe('key', v => { ... });
+  }
+
+  disconnectedCallback() {
+    this.#sub?.dispose();
+    this.#sub = null;
+  }
+
+  attributeChangedCallback(attr, prev, next) {
+    if (prev === next) return;
+    this.#syncView();
+  }
+
+  #syncView() {
+    // TODO: update DOM from attributes
+  }
 }
+
+customElements.define('${tag}', ${className});
+export { ${className} };
 `;
 }
 

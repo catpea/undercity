@@ -1,18 +1,30 @@
 // ── Things ────────────────────────────────────────────────────────────────────
-// Registry of Things inhabiting the current room.
-// Things are instantiated by the page script from node.things[] definitions.
-// Each registered Thing also becomes a named namespace: things.get('auth').login(...)
-import { Inventory } from './inventory.js';
-import { Actions }   from './actions.js';
-import { Bus }       from './bus.js';
+// Things are objects that inhabit rooms — the MUD/MOO equivalent of objects
+// in a location. Each Thing has a name, an internal UUID, and responds to
+// room events via its own .on() method with target-matching baked in.
+//
+// Generated page usage:
+//   const Form1 = new FormThing("Form1", "dd006f52");
+//   Form1.on("Take", async ({ event, data, room }) => { ... });
+//
+// matchTarget is imported here so Thing.on() can apply it without the
+// generated page needing to spell out the guard manually.
+import { Inventory }        from './inventory.js';
+import { Actions }          from './actions.js';
+import { Bus }              from './bus.js';
+import { matchTarget, Room } from './room.js';
 import { registerNamespace } from './registry.js';
 
+// ── Things registry ───────────────────────────────────────────────────────────
 export const Things = (() => {
   const _reg = new Map();
   return {
-    register(id, obj) {
-      _reg.set(id, obj);
-      registerNamespace(id, obj);
+    /** Called automatically by the Thing constructor — not needed in page scripts. */
+    _register(thing) {
+      _reg.set(thing.id, thing);
+      // Register under both UUID and human name for runPayload namespace lookup
+      registerNamespace(thing.id, thing);
+      if (thing.name !== thing.id) registerNamespace(thing.name, thing);
     },
     get(id)  { return _reg.get(id); },
     all()    { return [..._reg.values()]; },
@@ -21,40 +33,65 @@ export const Things = (() => {
   };
 })();
 
-// ── Built-in Thing classes ─────────────────────────────────────────────────────
+// ── Thing base class ──────────────────────────────────────────────────────────
+// All built-in Thing types extend this. Handles registration and the .on()
+// DSL so subclasses only need to define their domain behaviour.
+class Thing {
+  /**
+   * @param {string} name  Human-readable name — used for event targeting ("Form1", "Auth").
+   * @param {string} [id]  Internal UUID — defaults to name when omitted.
+   */
+  constructor(name, id = name) {
+    this.name = name;
+    this.id   = id;
+    Things._register(this);
+  }
 
-/** FormThing — a form container. Its 'take' event workflow runs when an Emit Event targets it.
- *  Input and Display actions placed in the Take event render only on demand. */
-class FormThing {
-  constructor(id, config) {
-    this.id     = id;
-    this.config = config ?? {};
-    this.name   = this.config.name ?? id;
+  /**
+   * Listen for a room event, automatically applying target-matching so only
+   * events directed at this Thing (or broadcast with '*') will fire the handler.
+   *
+   * DSL:
+   *   Form1.on("Take", async ({ event, data, room }) => { ... });
+   *
+   * @param {string}   eventName
+   * @param {Function} handler   async ({ event, data, room }) => void
+   * @returns {{ dispose() }}  cleanup handle
+   */
+  on(eventName, handler) {
+    return Room.on(eventName, (payload) => {
+      if (!matchTarget(payload.target, this)) return;
+      handler(payload);
+    });
   }
 }
 
-/** WorkflowThing — a scriptable service. All behaviour is defined in event workflows.
- *  The class itself is a thin wrapper; the real logic lives in the event payload arrays. */
-class WorkflowThing {
-  constructor(id, config) {
-    this.id     = id;
-    this.config = config ?? {};
-    this.name   = this.config.name ?? id;
+// ── Built-in Thing classes ────────────────────────────────────────────────────
+
+/** FormThing — a form container. Wire Input/Display actions to the Take event;
+ *  they render only when an Emit Event is directed at this form. */
+export class FormThing extends Thing {
+  constructor(name, id = name) {
+    super(name, id);
+  }
+}
+
+/** WorkflowThing — a scriptable service. All behaviour lives in event payloads. */
+export class WorkflowThing extends Thing {
+  constructor(name, id = name) {
+    super(name, id);
   }
 }
 
 /** PersonaLiveThing — an AI persona that inhabits the room.
- *  Hears "message" room events and replies via any OpenAI-compatible endpoint.
- *  Works with localhost:8191 (no external server needed). */
-class PersonaLiveThing {
-  constructor(id, config) {
-    this.id          = id;
-    this.config      = config ?? {};
-    this.name        = this.config.name        ?? 'Persona';
-    this.personality = this.config.personality ?? '';
-    this.endpoint    = this.config.endpoint    ?? 'http://localhost:8191/v1/chat/completions';
-    this.model       = this.config.model       ?? 'local';
-    this.replyInto   = this.config.replyInto   ?? (id + '_reply');
+ *  Hears "message" events and replies via any OpenAI-compatible endpoint. */
+export class PersonaLiveThing extends Thing {
+  constructor(name, id = name, config = {}) {
+    super(name, id);
+    this.personality = config.personality ?? '';
+    this.endpoint    = config.endpoint    ?? 'http://localhost:8191/v1/chat/completions';
+    this.model       = config.model       ?? 'local';
+    this.replyInto   = config.replyInto   ?? (id + '_reply');
     this._history    = [];
   }
 
@@ -89,12 +126,11 @@ class PersonaLiveThing {
 }
 
 /** AuthServerThing — wraps a real auth API. */
-class AuthServerThing {
-  constructor(id, config) {
-    this.id        = id;
-    this.config    = config ?? {};
-    this.apiUrl    = this.config.apiUrl    ?? '';
-    this.tokenInto = this.config.tokenInto ?? 'authToken';
+export class AuthServerThing extends Thing {
+  constructor(name, id = name, config = {}) {
+    super(name, id);
+    this.apiUrl    = config.apiUrl    ?? '';
+    this.tokenInto = config.tokenInto ?? 'authToken';
   }
 
   async login(email, password) {
@@ -128,16 +164,15 @@ class AuthServerThing {
 }
 
 /** TestAuthServerThing — simulates auth for development. No server needed. */
-class TestAuthServerThing {
-  constructor(id, config) {
-    this.id            = id;
-    this.config        = config ?? {};
-    this.tokenInto     = this.config.tokenInto     ?? 'authToken';
-    this.alwaysSucceed = this.config.alwaysSucceed !== false;
+export class TestAuthServerThing extends Thing {
+  constructor(name, id = name, config = {}) {
+    super(name, id);
+    this.tokenInto     = config.tokenInto     ?? 'authToken';
+    this.alwaysSucceed = config.alwaysSucceed !== false;
   }
 
   async login(email, password) {
-    await new Promise(r => setTimeout(r, 300)); // simulate latency
+    await new Promise(r => setTimeout(r, 300));
     if (this.alwaysSucceed || (email && password)) {
       const token = 'test-token-' + btoa(email).slice(0, 8);
       Inventory.set(this.tokenInto, token);
@@ -155,20 +190,4 @@ class TestAuthServerThing {
     const token = Inventory.get(this.tokenInto);
     return !!(token && this.alwaysSucceed);
   }
-}
-
-// ── Thing registry (maps type name → class) ────────────────────────────────────
-const _THING_REGISTRY = {
-  FormThing,
-  WorkflowThing,
-  PersonaLiveThing,
-  AuthServerThing,
-  TestAuthServerThing,
-};
-
-/** Factory: instantiate a Thing by type name. */
-export function createThing(type, id, config) {
-  const Cls = _THING_REGISTRY[type];
-  if (!Cls) { console.warn('[Things] Unknown type:', type); return null; }
-  return new Cls(id, config ?? {});
 }

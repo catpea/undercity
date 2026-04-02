@@ -22,7 +22,6 @@ import { Scope } from '/src/lib/scope.js';
 import { SavantChat } from '/src/ide/savant-chat.js';
 
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-import { renderAfIcon } from '/src/lib/icons.js';
 
 /** Copy MCP JSON commands to clipboard and show a transient toast. */
 function _copyMcpJson(cmds) {
@@ -610,7 +609,7 @@ export class Savant extends Emitter {
     aiSection.className = 'cat-ai-section';
     aiSection.innerHTML = `
       <textarea class="cat-ai-input" rows="2" placeholder="Describe a new action… e.g. 'Video upload with thumbnail frame selector'"></textarea>
-      <button class="cat-ai-btn">${renderAfIcon('magic')}<span>Generate Action</span></button>
+      <button class="cat-ai-btn"><af-icon name="magic"></af-icon><span>Generate Action</span></button>
     `;
     this.#catPane.appendChild(aiSection);
 
@@ -623,7 +622,7 @@ export class Savant extends Emitter {
     const item = document.createElement('div');
     item.className = 'cat-item';
     item.dataset.cat = catId;
-    item.innerHTML = `${renderAfIcon(icon, { class: 'cat-icon' })}<span>${label}</span>`;
+    item.innerHTML = `<af-icon name="${icon}" class="cat-icon"></af-icon><span>${label}</span>`;
     item.addEventListener('click', () => this.#selectCategory(catId));
     return item;
   }
@@ -825,7 +824,7 @@ export class Savant extends Emitter {
           <span class="step-action-name step-unloaded-name">Action not loaded</span>
           <code class="step-unloaded-id">${escH(step.action)}</code>
           <div class="step-controls">
-            <button class="step-btn del" title="Delete">${renderAfIcon('x-lg')}</button>
+            <button class="step-btn del" title="Delete"><af-icon name="x-lg"></af-icon></button>
           </div>
         </div>`;
       const dragHandle = card.querySelector('.step-drag-handle');
@@ -872,7 +871,7 @@ export class Savant extends Emitter {
       <div class="step-controls">
         <button class="step-btn" title="Move up">↑</button>
         <button class="step-btn" title="Move down">↓</button>
-        <button class="step-btn del" title="Delete">${renderAfIcon('x-lg')}</button>
+        <button class="step-btn del" title="Delete"><af-icon name="x-lg"></af-icon></button>
       </div>`;
 
     const paramsDiv = document.createElement('div');
@@ -992,7 +991,7 @@ export class Savant extends Emitter {
     if (codeParams.length > 0) {
       const note = document.createElement('div');
       note.className = 'step-basic-code-note';
-      note.innerHTML = `${renderAfIcon('gear')} <span>${codeParams.map(p => p.label).join(', ')} — switch to <strong>Configure</strong> to edit</span>`;
+      note.innerHTML = `<af-icon name="gear"></af-icon> <span>${codeParams.map(p => p.label).join(', ')} — switch to <strong>Configure</strong> to edit</span>`;
       container.appendChild(note);
     }
   }
@@ -1237,7 +1236,7 @@ export class Savant extends Emitter {
         <select class="route-target">
           <option value="">— target room —</option>
         </select>
-        <button class="route-del" title="Delete route">${renderAfIcon('x-lg')}</button>
+        <button class="route-del" title="Delete route"><af-icon name="x-lg"></af-icon></button>
       </div>`;
 
     const visualDiv  = row.querySelector('.route-visual');
@@ -1323,7 +1322,7 @@ export class Savant extends Emitter {
     if (!prompt) return;
 
     this.#aiBtn.disabled = true;
-    this.#aiBtn.innerHTML = `${renderAfIcon('arrow-repeat')}<span>Generating…</span>`;
+    this.#aiBtn.innerHTML = `<af-icon name="arrow-repeat"></af-icon><span>Generating…</span>`;
 
     try {
       const result = await API.generateAction(prompt);
@@ -1345,7 +1344,7 @@ export class Savant extends Emitter {
       this.emit('toast', { msg: `AI error: ${err.message}`, type: 'error' });
     } finally {
       this.#aiBtn.disabled = false;
-      this.#aiBtn.innerHTML = `${renderAfIcon('magic')}<span>Generate Action</span>`;
+      this.#aiBtn.innerHTML = `<af-icon name="magic"></af-icon><span>Generate Action</span>`;
     }
   }
 
