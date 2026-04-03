@@ -1,5 +1,9 @@
 # Undercity — AGENTS.md
 
+**Read [`STYLEGUIDE.md`](./STYLEGUIDE.md) before writing any code.**
+It covers Web Component conventions, push architecture, all reactive primitives,
+Scope trees, and state machines with full examples. Violations will be rejected.
+
 ---
 
 ## ⛔ LOW QUALITY WORK IS NOT PERMITTED

@@ -17,11 +17,15 @@
  * marked with a ✦ badge so the user knows it is AI-generated.
  */
 
-import { Signal, Emitter } from '/src/lib/signal.js';
-import { Scope } from '/src/lib/scope.js';
+import { Signal, Emitter } from 'framework';
+import { Scope } from 'scope';
 import { SavantChat } from '/src/ide/savant-chat.js';
-
-function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+import { THING_LIBRARY, getThingEvents } from '/src/ide/thing-library.js';
+import { API } from '/src/ide/project-api.js';
+import {
+  WORKFLOW_STEP_CARD_TAG,
+  WORKFLOW_STEP_DRAG_MIME,
+} from '/src/ide/workflow-step-card.js';
 
 function isStepDisabled(step) {
   return step?.disabled === true;
@@ -42,12 +46,32 @@ function _copyMcpJson(cmds) {
     if (win) { win.document.write(`<pre style="font:13px monospace;padding:16px">${json.replace(/</g,'&lt;')}</pre>`); }
   });
 }
-import { THING_LIBRARY, getThingEvents } from '/src/ide/thing-library.js';
-import { API } from '/src/ide/project-api.js';
 
 // ── Action Library (populated exclusively via registerCategory) ───────────────
 // No static import from action-library.js. All categories arrive via App.use().
 const ACTION_LIBRARY = {};
+const STEP_UI_ID = Symbol('workflowStepUiId');
+
+function createStepUiId() {
+  return globalThis.crypto?.randomUUID?.()
+    ?? `step-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function textDragData(dataTransfer) {
+  return dataTransfer?.getData('text/plain') ?? '';
+}
+
+function actionIdFromTransfer(dataTransfer) {
+  const raw = textDragData(dataTransfer);
+  return raw.startsWith('action:') ? raw.slice(7) : '';
+}
+
+function stepIdFromTransfer(dataTransfer) {
+  const explicit = dataTransfer?.getData(WORKFLOW_STEP_DRAG_MIME) ?? '';
+  if (explicit) return explicit;
+  const raw = textDragData(dataTransfer);
+  return raw.startsWith('step:') ? raw.slice(5) : '';
+}
 
 function findAction(actionId) {
   for (const cat of Object.values(ACTION_LIBRARY)) {
@@ -68,10 +92,7 @@ export class Savant extends Emitter {
   #customActions = {};  // id → def (AI-generated or project-level)
   #chat       = null;
   _projectId  = '';
-  // Step UI mode stored in memory, never persisted to project.json
-  // Key format: "${nodeId}:${event}:${stepIndex}"
-  #stepModes      = new Map();
-  #collapsedSteps = new Set();
+  #stepCards = new Map();
 
   // DOM refs
   #catPane; #actPane; #actList; #actPreview; #wfPane; #wfTitle; #wfSteps;
@@ -136,6 +157,7 @@ export class Savant extends Emitter {
 
   // ── Public API ─────────────────────────────────────────────────────────────
   setNode(node) {
+    this.#resetStepCards();
     this.#nodeScope.dispose();
     this.#thingCtx = null;
     this.#thingNameSig = null;
@@ -171,6 +193,7 @@ export class Savant extends Emitter {
    * parentNode = the GraphNode that owns this thing
    */
   setThing(thingDef, parentNode) {
+    this.#resetStepCards();
     this.#thingCtx = { thingDef, parentNode };
     this.#thingNameSig = new Signal(
       thingDef.config?.name || THING_LIBRARY[thingDef.type]?.label || thingDef.type
@@ -726,15 +749,136 @@ export class Savant extends Emitter {
   #getSteps() {
     if (!this.#node) return [];
     const p = this.#node.payload.peek();
-    return p[this.#event] ?? [];
+    const steps = p[this.#event] ?? [];
+    steps.forEach(step => this.#ensureStepUiId(step));
+    return steps;
+  }
+
+  #ensureStepUiId(step) {
+    if (!step || typeof step !== 'object') return '';
+    if (!step[STEP_UI_ID]) step[STEP_UI_ID] = createStepUiId();
+    return step[STEP_UI_ID];
+  }
+
+  #resetStepCards() {
+    for (const card of this.#stepCards.values()) card.remove();
+    this.#stepCards.clear();
+  }
+
+  #pruneStepCards() {
+    if (!this.#node) {
+      this.#resetStepCards();
+      return;
+    }
+
+    const liveIds = new Set();
+    const payload = this.#node.payload?.peek() ?? {};
+    for (const value of Object.values(payload)) {
+      if (!Array.isArray(value)) continue;
+      for (const step of value) liveIds.add(this.#ensureStepUiId(step));
+    }
+
+    for (const [stepId, card] of this.#stepCards) {
+      if (liveIds.has(stepId)) continue;
+      card.remove();
+      this.#stepCards.delete(stepId);
+    }
+  }
+
+  #findCurrentStep(stepId) {
+    const steps = this.#getSteps();
+    const index = steps.findIndex(step => this.#ensureStepUiId(step) === stepId);
+    if (index < 0) return null;
+    return { index, step: steps[index], steps };
+  }
+
+  #moveStepToInsertIndex(stepId, insertIndex) {
+    if (!this.#node) return;
+
+    const current = this.#findCurrentStep(stepId);
+    if (!current) return;
+
+    const boundedInsertIndex = Math.max(0, Math.min(insertIndex, current.steps.length));
+    let targetIndex = boundedInsertIndex;
+    if (targetIndex > current.index) targetIndex -= 1;
+    targetIndex = Math.max(0, Math.min(targetIndex, current.steps.length - 1));
+
+    if (targetIndex === current.index) return;
+    this.#node.moveStep(this.#event, current.index, targetIndex);
+  }
+
+  #moveStepRelative(stepId, targetStepId, placement) {
+    if (stepId === targetStepId) return;
+    const target = this.#findCurrentStep(targetStepId);
+    if (!target) return;
+    const insertIndex = placement === 'after' ? target.index + 1 : target.index;
+    this.#moveStepToInsertIndex(stepId, insertIndex);
+  }
+
+  #createStepBody(step, index, def, mode) {
+    const body = document.createElement('div');
+    body.className = 'step-params open';
+    this.#renderStepParamsInMode(body, step, index, def, mode);
+    return body;
+  }
+
+  #bindStepCard(card) {
+    card.addEventListener('workflow-step-modechange', () => {
+      this.#renderWorkflow();
+    });
+
+    card.addEventListener('workflow-step-toggle-disabled', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current) return;
+      this.#toggleStepDisabled(current.index, current.step);
+    });
+
+    card.addEventListener('workflow-step-delete', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current) return;
+      this.#node.removeStep(this.#event, current.index);
+    });
+
+    card.addEventListener('workflow-step-move-up', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current || current.index === 0) return;
+      this.#node.moveStep(this.#event, current.index, current.index - 1);
+    });
+
+    card.addEventListener('workflow-step-move-down', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current || current.index >= current.steps.length - 1) return;
+      this.#node.moveStep(this.#event, current.index, current.index + 1);
+    });
+
+    card.addEventListener('workflow-step-reorder', (event) => {
+      const { stepId, targetStepId, placement } = event.detail;
+      this.#moveStepRelative(stepId, targetStepId, placement);
+    });
+  }
+
+  #getOrCreateStepCard(step) {
+    const stepId = this.#ensureStepUiId(step);
+    let card = this.#stepCards.get(stepId);
+    if (card) return card;
+
+    card = document.createElement(WORKFLOW_STEP_CARD_TAG);
+    card.setAttribute('step-id', stepId);
+    card.seedUiState({ mode: step._uiMode ?? 'basic', collapsed: false });
+    this.#bindStepCard(card);
+    this.#stepCards.set(stepId, card);
+    return card;
   }
 
   #renderWorkflow() {
     this.#updateEventTabsUI();
-    this.#wfSteps.innerHTML = '';
+    this.#pruneStepCards();
 
     if (!this.#node) {
-      this.#wfSteps.innerHTML = `<div class="wf-empty">Select a room or diamond<br>on the map to edit its flow.</div>`;
+      const empty = document.createElement('div');
+      empty.className = 'wf-empty';
+      empty.innerHTML = 'Select a room or diamond<br>on the map to edit its flow.';
+      this.#wfSteps.replaceChildren(empty);
       return;
     }
 
@@ -750,16 +894,17 @@ export class Savant extends Emitter {
       empty.className = 'wf-empty wf-drop-target';
       empty.textContent = 'No steps yet. Drag an action here or click to add.';
       this.#setupDropZone(empty, 0);
-      this.#wfSteps.appendChild(empty);
+      this.#wfSteps.replaceChildren(empty);
       return;
     }
 
-    // Render steps with drop zones between each one
-    this.#wfSteps.appendChild(this.#makeDropZone(0));
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(this.#makeDropZone(0));
     steps.forEach((step, i) => {
-      this.#wfSteps.appendChild(this.#makeStepCard(step, i));
-      this.#wfSteps.appendChild(this.#makeDropZone(i + 1));
+      fragment.appendChild(this.#makeStepCard(step, i, steps.length));
+      fragment.appendChild(this.#makeDropZone(i + 1));
     });
+    this.#wfSteps.replaceChildren(fragment);
   }
 
   #makeDropZone(insertIndex) {
@@ -771,20 +916,28 @@ export class Savant extends Emitter {
 
   #setupDropZone(el, insertIndex) {
     el.addEventListener('dragover', e => {
-      const data = e.dataTransfer.types.includes('text/plain');
-      if (data) { e.preventDefault(); el.classList.add('drag-over'); }
+      const hasPlainText = e.dataTransfer?.types.includes('text/plain');
+      const hasStepDrag = e.dataTransfer?.types.includes(WORKFLOW_STEP_DRAG_MIME);
+      if (hasPlainText || hasStepDrag) {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      }
     });
     el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
     el.addEventListener('drop', e => {
       e.preventDefault();
       el.classList.remove('drag-over');
-      const raw = e.dataTransfer.getData('text/plain');
-      if (raw.startsWith('action:')) {
-        const actionId = raw.slice(7);
+      const stepId = stepIdFromTransfer(e.dataTransfer);
+      if (stepId) {
+        this.#moveStepToInsertIndex(stepId, insertIndex);
+        return;
+      }
+
+      const actionId = actionIdFromTransfer(e.dataTransfer);
+      if (actionId) {
         const def = this.#findActionDef(actionId);
         if (def) this.#addStepAt(actionId, def, insertIndex);
       }
-      // step reorder drops are handled by the step card itself
     });
   }
 
@@ -795,25 +948,6 @@ export class Savant extends Emitter {
     return this.#customActions[actionId] ?? null;
   }
 
-  // ── Step card ──────────────────────────────────────────────────────────────
-  // Each step card has three display modes (toggled via the pill switcher):
-  //   Basic       — plain-language form, no code fields, friendly labels
-  //   Configure   — all params with explicit type-matched inputs (default)
-  //   JSON        — raw JSON editor for power users
-
-  #stepModeKey(index) { return `${this.#node?.id}:${this.#event}:${index}`; }
-
-  #getStepMode(step, index) {
-    // Prefer memory map; fall back to any legacy _uiMode saved in step data
-    return this.#stepModes.get(this.#stepModeKey(index)) ?? step._uiMode ?? 'basic';
-  }
-
-  #setStepMode(index, mode) {
-    this.#stepModes.set(this.#stepModeKey(index), mode);
-    // Re-render the workflow to reflect the new mode (no project.json mutation)
-    this.#renderWorkflow();
-  }
-
   #toggleStepDisabled(index, step) {
     if (!this.#node) return;
     this.#node.updateStep(this.#event, index, {
@@ -822,136 +956,19 @@ export class Savant extends Emitter {
     });
   }
 
-  #makeStepCard(step, index) {
-    const def    = findAction(step.action) ?? this.#customActions[step.action] ?? null;
-    const isDisabled = isStepDisabled(step);
+  #makeStepCard(step, index, totalSteps) {
+    const card = this.#getOrCreateStepCard(step);
+    const def = findAction(step.action) ?? this.#customActions[step.action] ?? null;
 
-    // Unregistered action — render a degraded "not loaded" card
-    if (!def) {
-      const card = document.createElement('div');
-      card.className = `step-card step-card-unloaded${isDisabled ? ' step-card-disabled' : ''}`;
-      card.innerHTML = `
-        <div class="step-header">
-          <span class="step-drag-handle" draggable="true" title="Drag to reorder">⠿</span>
-          <span class="step-number">${index + 1}</span>
-          <span class="step-action-name step-unloaded-name">Action not loaded</span>
-          <code class="step-unloaded-id">${escH(step.action)}</code>
-          ${isDisabled ? '<span class="step-disabled-badge" title="Disabled actions stay in the editor but are omitted from generated code.">Disabled</span>' : ''}
-          <div class="step-controls">
-            <button class="step-btn step-btn-toggle${isDisabled ? ' is-disabled' : ''}" title="${isDisabled ? 'Enable in generated code' : 'Disable in generated code'}" aria-pressed="${isDisabled ? 'true' : 'false'}"><af-icon name="${isDisabled ? 'eye-slash' : 'eye'}"></af-icon></button>
-            <button class="step-btn step-btn-del del" title="Delete"><af-icon name="x-lg"></af-icon></button>
-          </div>
-        </div>`;
-      const dragHandle = card.querySelector('.step-drag-handle');
-      dragHandle.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', String(index));
-        e.dataTransfer.effectAllowed = 'move';
-        card.style.opacity = '0.4';
-      });
-      dragHandle.addEventListener('dragend', () => { card.style.opacity = ''; });
-      card.addEventListener('dragover',  e => { e.preventDefault(); card.style.outline = '1px solid var(--accent)'; });
-      card.addEventListener('dragleave', () => { card.style.outline = ''; });
-      card.addEventListener('drop', e => {
-        e.preventDefault(); card.style.outline = '';
-        const raw = e.dataTransfer.getData('text/plain');
-        if (raw.startsWith('action:')) return;
-        const fromIdx = parseInt(raw);
-        if (!isNaN(fromIdx) && fromIdx !== index) this.#node.moveStep(this.#event, fromIdx, index);
-      });
-      card.querySelector('.step-btn-toggle').addEventListener('click', () => {
-        this.#toggleStepDisabled(index, step);
-      });
-      card.querySelector('.step-btn-del').addEventListener('click', () => {
-        this.#node.removeStep(this.#event, index);
-      });
-      return card;
-    }
-
-    const card   = document.createElement('div');
-    const isCollapsed = this.#collapsedSteps.has(this.#stepModeKey(index));
-    card.className = `step-card${isCollapsed ? ' collapsed' : ''}${isDisabled ? ' step-card-disabled' : ''}`;
-
-    const mode = this.#getStepMode(step, index);
-
-    const header = document.createElement('div');
-    header.className = 'step-header';
-    header.innerHTML = `
-      <span class="step-drag-handle" draggable="true" title="Drag to reorder">⠿</span>
-      <span class="step-number">${index + 1}</span>
-      <span class="step-action-name">${def.label ?? step.action}</span>
-      ${isDisabled ? '<span class="step-disabled-badge" title="Disabled actions stay in the editor but are omitted from generated code.">Disabled</span>' : ''}
-      <button class="step-collapse-btn" title="${isCollapsed ? 'Expand' : 'Collapse'}">${isCollapsed ? '▸' : '▾'}</button>
-      <div class="step-mode-pills">
-        <button class="step-mode-pill${mode === 'basic'     ? ' active' : ''}" data-mode="basic"     title="Simple view">Basic</button>
-        <button class="step-mode-pill${mode === 'configure' ? ' active' : ''}" data-mode="configure" title="All parameters">Configure</button>
-        <button class="step-mode-pill${mode === 'json'      ? ' active' : ''}" data-mode="json"      title="Raw JSON">JSON</button>
-      </div>
-      <div class="step-controls">
-        <button class="step-btn step-btn-toggle${isDisabled ? ' is-disabled' : ''}" title="${isDisabled ? 'Enable in generated code' : 'Disable in generated code'}" aria-pressed="${isDisabled ? 'true' : 'false'}"><af-icon name="${isDisabled ? 'eye-slash' : 'eye'}"></af-icon></button>
-        <button class="step-btn step-btn-up" title="Move up">↑</button>
-        <button class="step-btn step-btn-down" title="Move down">↓</button>
-        <button class="step-btn step-btn-del del" title="Delete"><af-icon name="x-lg"></af-icon></button>
-      </div>`;
-
-    const paramsDiv = document.createElement('div');
-    paramsDiv.className = 'step-params open';
-    paramsDiv.style.display = isCollapsed ? 'none' : '';
-
-    this.#renderStepParamsInMode(paramsDiv, step, index, def, mode);
-
-    card.appendChild(header);
-    card.appendChild(paramsDiv);
-
-    // Collapse button
-    const collapseBtn = header.querySelector('.step-collapse-btn');
-    collapseBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const key = this.#stepModeKey(index);
-      if (this.#collapsedSteps.has(key)) this.#collapsedSteps.delete(key);
-      else this.#collapsedSteps.add(key);
-      this.#renderWorkflow();
-    });
-
-    // Mode pill switching
-    header.querySelectorAll('.step-mode-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const newMode = pill.dataset.mode;
-        this.#setStepMode(index, newMode);
-      });
-    });
-
-    // Button handlers
-    const toggleBtn = header.querySelector('.step-btn-toggle');
-    const upBtn = header.querySelector('.step-btn-up');
-    const downBtn = header.querySelector('.step-btn-down');
-    const delBtn = header.querySelector('.step-btn-del');
-    toggleBtn.addEventListener('click', () => { this.#toggleStepDisabled(index, step); });
-    delBtn.addEventListener('click', () => { this.#node.removeStep(this.#event, index); });
-    upBtn.addEventListener('click',  () => { if (index > 0) this.#node.moveStep(this.#event, index, index - 1); });
-    downBtn.addEventListener('click',() => {
-      const steps = this.#getSteps();
-      if (index < steps.length - 1) this.#node.moveStep(this.#event, index, index + 1);
-    });
-
-    // Drag-to-reorder — only the handle initiates drag so inputs stay interactive
-    const dragHandle = header.querySelector('.step-drag-handle');
-    dragHandle.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', String(index));
-      e.dataTransfer.effectAllowed = 'move';
-      card.style.opacity = '0.4';
-    });
-    dragHandle.addEventListener('dragend', () => { card.style.opacity = ''; });
-    card.addEventListener('dragover',  e => { e.preventDefault(); card.style.outline = '1px solid var(--accent)'; });
-    card.addEventListener('dragleave', () => { card.style.outline = ''; });
-    card.addEventListener('drop', e => {
-      e.preventDefault(); card.style.outline = '';
-      const raw = e.dataTransfer.getData('text/plain');
-      if (raw.startsWith('action:')) return; // handled by drop zones
-      const fromIdx = parseInt(raw);
-      if (!isNaN(fromIdx) && fromIdx !== index) this.#node.moveStep(this.#event, fromIdx, index);
-    });
-
+    card.setAttribute('step-id', this.#ensureStepUiId(step));
+    card.setAttribute('step-number', String(index + 1));
+    card.setAttribute('action-label', def?.label ?? 'Action not loaded');
+    card.setAttribute('action-id', step.action ?? '');
+    card.toggleAttribute('disabled', isStepDisabled(step));
+    card.toggleAttribute('unloaded', !def);
+    card.toggleAttribute('can-move-up', index > 0);
+    card.toggleAttribute('can-move-down', index < totalSteps - 1);
+    card.setBody(def ? this.#createStepBody(step, index, def, card.mode) : null);
     return card;
   }
 
@@ -992,10 +1009,6 @@ export class Savant extends Emitter {
       const lbl   = document.createElement('label');
       lbl.className = 'param-label';
       lbl.textContent = p.label;
-
-      const hint = document.createElement('span');
-      hint.className = 'param-hint';
-      hint.textContent = p.placeholder ?? '';
 
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
       input.addEventListener('change', () => {
@@ -1157,12 +1170,14 @@ export class Savant extends Emitter {
     for (const p of (def.params ?? [])) {
       params[p.name] = p.default ?? '';
     }
-    this.#node.addStep(this.#event, { action: actionId, params });
+    const step = { action: actionId, params };
+    this.#ensureStepUiId(step);
+    this.#node.addStep(this.#event, step);
     // Expand the last card after render
     requestAnimationFrame(() => {
-      const cards = this.#wfSteps.querySelectorAll('.step-card');
+      const cards = this.#wfSteps.querySelectorAll(WORKFLOW_STEP_CARD_TAG);
       const last = cards[cards.length - 1];
-      last?.querySelector('.step-params')?.classList.add('open');
+      last?.expand?.();
       last?.scrollIntoView({ behavior: 'smooth' });
     });
   }
@@ -1173,7 +1188,9 @@ export class Savant extends Emitter {
     for (const p of (def.params ?? [])) {
       params[p.name] = p.default ?? '';
     }
-    this.#node.insertStep(this.#event, insertIndex, { action: actionId, params });
+    const step = { action: actionId, params };
+    this.#ensureStepUiId(step);
+    this.#node.insertStep(this.#event, insertIndex, step);
   }
 
   // ── Diamond routes editor ─────────────────────────────────────────────────

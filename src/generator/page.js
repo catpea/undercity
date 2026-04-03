@@ -17,7 +17,7 @@
  *   </body>
  */
 
-import { BUILT_IN_TEMPLATES, defaultPageHTML, errorHTML, escHtml } from './templates.js';
+import { BUILT_IN_TEMPLATES, defaultPageHTML, escHtml } from './templates.js';
 
 function filterGeneratedSteps(steps = []) {
   return (steps ?? [])

@@ -7,20 +7,11 @@
       {
         "id": "dcb5c8c7",
         "type": "room",
-        "label": "Room",
-        "x": -600,
-        "y": 400,
+        "label": "Lobby",
+        "x": -640,
+        "y": 360,
         "payload": {
           "Enter": [
-            {
-              "action": "input.image",
-              "params": {
-                "key": "profilePhoto",
-                "label": "Profile Photo",
-                "accept": "image/*",
-                "required": true
-              }
-            },
             {
               "action": "room.showNav",
               "params": {
@@ -28,6 +19,15 @@
                 "full": true,
                 "outline": true,
                 "group": true
+              }
+            },
+            {
+              "action": "input.image",
+              "params": {
+                "key": "profilePhoto",
+                "label": "Profile Photo",
+                "accept": "image/*",
+                "required": true
               }
             }
           ],
@@ -47,13 +47,30 @@
       {
         "id": "e9bb5ba2",
         "type": "room",
-        "label": "Room",
+        "label": "Check Out",
         "x": -400,
-        "y": 400,
+        "y": 360,
         "payload": {
           "Enter": [
             {
+              "action": "input.image",
+              "params": {
+                "key": "aaa",
+                "label": "aaaa",
+                "accept": "image/*",
+                "required": false,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
               "action": "debug.inventoryDump",
+              "params": {}
+            },
+            {
+              "action": "display.divider",
               "params": {}
             },
             {
@@ -94,5 +111,5 @@
   },
   "customActions": {},
   "created": "2026-04-03T20:54:30.100Z",
-  "modified": "2026-04-03T21:15:14.844Z"
+  "modified": "2026-04-03T23:32:27.615Z"
 }

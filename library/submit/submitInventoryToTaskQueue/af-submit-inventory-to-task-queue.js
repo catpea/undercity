@@ -312,9 +312,12 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
   }
 
   #filteredSnapshot() {
-    const inv    = globalThis.Inventory;
-    const data   = inv?.snapshot?.() ?? inv?.data ?? {};
-    const omit   = this.#omitSet();
+    // Inventory.get() with no argument returns a shallow copy of all stored keys.
+    // DO NOT use snapshot(), .data, or dump() — they do not exist or lose live
+    // Blob/File references (dump() round-trips through JSON).
+    // See: src/generator/runtime/inventory.js → get(key)
+    const data = globalThis.Inventory?.get() ?? {};
+    const omit = this.#omitSet();
     const result = {};
     for (const [k, v] of Object.entries(data)) {
       if (!omit.has(k)) result[k] = v;
@@ -672,34 +675,55 @@ function _fmtBytes(bytes) {
 
 function _renderPreviewInto(val, container) {
   if (!val || typeof val !== 'object' || !val.url) return;
+
+  // Blob URLs (blob:http://…) are bound to the browsing context that created
+  // them. They become inaccessible after page navigation, cross-origin load,
+  // or when served from sessionStorage in a different document. Always attach
+  // an onerror handler so the preview degrades gracefully instead of throwing
+  // a SecurityError.
   const mime = String(val.type ?? '');
+
   if (mime.startsWith('image/')) {
     const img = document.createElement('img');
-    img.src = val.url;
-    img.alt = val.name ?? '';
+    img.alt     = val.name ?? '';
+    img.onerror = () => { img.replaceWith(_unavailableNote(val.name ?? 'image')); };
+    img.src     = val.url;   // assign src AFTER onerror so the handler is in place
     container.appendChild(img);
     return;
   }
+
   if (mime.startsWith('audio/')) {
     const audio = document.createElement('audio');
-    audio.src      = val.url;
     audio.controls = true;
+    audio.onerror  = () => { audio.replaceWith(_unavailableNote(val.name ?? 'audio')); };
+    audio.src      = val.url;
     container.appendChild(audio);
     return;
   }
+
   if (mime.startsWith('video/')) {
     const video = document.createElement('video');
-    video.src      = val.url;
     video.controls = true;
+    video.onerror  = () => { video.replaceWith(_unavailableNote(val.name ?? 'video')); };
+    video.src      = val.url;
     container.appendChild(video);
     return;
   }
+
   const a = document.createElement('a');
   a.href        = val.url;
   a.download    = val.name ?? '';
   a.textContent = val.name ?? 'download';
   a.style.fontSize = '0.8rem';
   container.appendChild(a);
+}
+
+/** Small italic note shown when a media URL is inaccessible. */
+function _unavailableNote(label) {
+  const span = document.createElement('span');
+  span.style.cssText = 'font-style:italic;color:var(--sol-base01,#586e75);font-size:0.75rem;';
+  span.textContent   = `[${label} — url unavailable]`;
+  return span;
 }
 
 // ── Registration ──────────────────────────────────────────────────────────────

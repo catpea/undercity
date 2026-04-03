@@ -1,6 +1,9 @@
 # library/ — Action Library Specification
 
-**Agents: read this entire file before touching anything in `library/`.**
+**Agents: read [`../STYLEGUIDE.md`](../STYLEGUIDE.md) first, then this entire
+file, before touching anything in `library/`.**
+The style guide covers Web Components, push architecture, and all reactive
+primitives. This file covers the action library structure and contract.
 
 This is the authoritative specification for Undercity's action library.
 `./library/` replaces `./actions/`. Do not modify `./actions/`.
