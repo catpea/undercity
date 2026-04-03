@@ -17,6 +17,10 @@ export function run(params, ctx) {
   if (params.spellcheck === false || params.spellcheck === 'false') {
     el.setAttribute('spellcheck', 'false');
   }
+  if (params.helpText)        el.setAttribute('help',             params.helpText);
+  if (params.size)            el.setAttribute('size',             params.size);
+  if (params.validFeedback)   el.setAttribute('valid-feedback',   params.validFeedback);
+  if (params.invalidFeedback) el.setAttribute('invalid-feedback', params.invalidFeedback);
 
   emitter.emit('render', el);
   emitter.emit('done');

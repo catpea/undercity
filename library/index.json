@@ -3,6 +3,7 @@
     "debug",
     "display",
     "input",
-    "room"
+    "room",
+    "submit"
   ]
 }

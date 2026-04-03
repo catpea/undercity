@@ -9,6 +9,10 @@
     { "name": "key",      "label": "Inventory key",  "type": "text",    "placeholder": "profilePhoto" },
     { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Profile Photo" },
     { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "image/*", "default": "image/*" },
-    { "name": "required", "label": "Required",       "type": "boolean", "default": false }
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what image belongs here.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose an image.", "default": "" }
   ]
 }

@@ -8,6 +8,10 @@
   "params": [
     { "name": "key",      "label": "Inventory key", "type": "text",    "placeholder": "agreedToTerms" },
     { "name": "label",    "label": "Label",         "type": "text",    "placeholder": "I agree to the Terms of Service" },
-    { "name": "required", "label": "Required",      "type": "boolean", "default": false }
+    { "name": "required", "label": "Required",      "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what checking this means.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please check this box to continue.", "default": "" }
   ]
 }

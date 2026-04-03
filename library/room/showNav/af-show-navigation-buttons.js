@@ -131,8 +131,46 @@ class AfShowNavigationButtons extends HTMLElement {
     btn.type      = 'button';
     btn.className = classes.filter(Boolean).join(' ');
     btn.textContent = entry.label;
-    btn.addEventListener('click', () => entry.call());
+    btn.addEventListener('click', async () => {
+      if (!this.#validatePage()) return;
+      btn.disabled = true;
+      try {
+        await entry.call();
+      } finally {
+        btn.disabled = false;
+      }
+    });
     return btn;
+  }
+
+  #validatePage() {
+    document.getElementById('pw-form')?.classList.add('was-validated');
+
+    const fields = [...document.querySelectorAll('[data-af-validatable]')];
+    if (!fields.length) return true;
+
+    const validFields = [];
+    const invalidFields = [];
+
+    for (const field of fields) {
+      if (typeof field.checkValidity === 'function' && !field.checkValidity()) invalidFields.push(field);
+      else                                                                    validFields.push(field);
+    }
+
+    for (const field of validFields) {
+      if (typeof field.reportValidity === 'function') field.reportValidity();
+    }
+
+    for (const field of invalidFields.slice(1)) {
+      if (typeof field.reportValidity === 'function') field.reportValidity();
+    }
+
+    if (invalidFields[0] && typeof invalidFields[0].reportValidity === 'function') {
+      invalidFields[0].reportValidity();
+      return false;
+    }
+
+    return true;
   }
 }
 

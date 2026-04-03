@@ -10,6 +10,10 @@
     { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Upload Document" },
     { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "*/*", "default": "*/*" },
     { "name": "multiple", "label": "Allow multiple", "type": "boolean", "default": false },
-    { "name": "required", "label": "Required",       "type": "boolean", "default": false }
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what files belong here.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose a file.", "default": "" }
   ]
 }

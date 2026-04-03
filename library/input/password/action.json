@@ -10,6 +10,10 @@
     { "name": "label",         "label": "Label",               "type": "text",    "placeholder": "Password" },
     { "name": "placeholder",   "label": "Placeholder",         "type": "text",    "placeholder": "Enter password" },
     { "name": "required",      "label": "Required",            "type": "boolean", "default": true },
-    { "name": "strengthMeter", "label": "Show strength meter", "type": "boolean", "default": false }
+    { "name": "strengthMeter", "label": "Show strength meter", "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what belongs in this field.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please provide a valid password.", "default": "" }
   ]
 }

@@ -1,0 +1,98 @@
+{
+  "id": "test-apr3",
+  "name": "Test Apr3",
+  "description": "",
+  "graph": {
+    "nodes": [
+      {
+        "id": "dcb5c8c7",
+        "type": "room",
+        "label": "Room",
+        "x": -600,
+        "y": 400,
+        "payload": {
+          "Enter": [
+            {
+              "action": "input.image",
+              "params": {
+                "key": "profilePhoto",
+                "label": "Profile Photo",
+                "accept": "image/*",
+                "required": true
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "outline": true,
+                "group": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": true,
+          "appName": "Apr3"
+        },
+        "things": []
+      },
+      {
+        "id": "e9bb5ba2",
+        "type": "room",
+        "label": "Room",
+        "x": -400,
+        "y": 400,
+        "payload": {
+          "Enter": [
+            {
+              "action": "debug.inventoryDump",
+              "params": {}
+            },
+            {
+              "action": "submit.submitInventoryToTaskQueue",
+              "params": {
+                "url": "http://localhost:4000",
+                "jobType": "test1",
+                "omit": "",
+                "preview": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {
+          "isEntry": false
+        },
+        "things": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "8d9e7045",
+        "fromId": "dcb5c8c7",
+        "toId": "e9bb5ba2",
+        "label": "",
+        "condition": ""
+      }
+    ]
+  },
+  "inventory": {
+    "schema": {}
+  },
+  "customActions": {},
+  "created": "2026-04-03T20:54:30.100Z",
+  "modified": "2026-04-03T21:15:14.844Z"
+}

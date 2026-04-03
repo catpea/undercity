@@ -14,6 +14,7 @@ import { Things }    from './things.js';
 import { Input }     from './input.js';
 import { User }      from './user.js';
 import { Debug }     from './debug.js';
+import { Submit }    from './submit.js';
 import { _NS, registerNamespace } from './registry.js';
 
 // ── Populate namespace map ─────────────────────────────────────────────────────
@@ -45,6 +46,8 @@ Object.assign(_NS, {
   Input, input: Input,
   // Debug — developer tools (inventory dump, diagnostics)
   Debug, debug: Debug,
+  // Submit — send Inventory to external services (task queue, APIs)
+  Submit, submit: Submit,
   // "http" maps to Actions (which contains .get, .post, .fetch)
   http: Actions,
 });

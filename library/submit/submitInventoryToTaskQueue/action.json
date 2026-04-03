@@ -1,0 +1,14 @@
+{
+  "id":      "submit.submitInventoryToTaskQueue",
+  "icon":    "send-check",
+  "color":   "var(--sol-green)",
+  "label":   "Submit Inventory To Task Queue",
+  "desc":    "Send the current Inventory to a running task-queue server. Features health monitoring, duplicate-job guarding, checksum verification, progress tracking with a live progress bar, and a live log viewer.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "url",     "label": "Server URL", "type": "text",    "placeholder": "http://localhost:4000", "default": "http://localhost:4000" },
+    { "name": "jobType", "label": "Job Type",   "type": "text",    "placeholder": "video-encode" },
+    { "name": "omit",    "label": "Omit Keys",  "type": "text",    "placeholder": "sensitiveKey, tempKey" },
+    { "name": "preview", "label": "Preview",    "type": "boolean", "default": true }
+  ]
+}

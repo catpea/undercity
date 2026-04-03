@@ -8,6 +8,10 @@
   "params": [
     { "name": "key",     "label": "Inventory key", "type": "text", "placeholder": "brandColor" },
     { "name": "label",   "label": "Label",         "type": "text", "placeholder": "Brand Color" },
-    { "name": "default", "label": "Default color", "type": "text", "placeholder": "#268bd2", "default": "#268bd2" }
+    { "name": "default", "label": "Default color", "type": "text", "placeholder": "#268bd2", "default": "#268bd2" },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what belongs in this field.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose a valid color.", "default": "" }
   ]
 }

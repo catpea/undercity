@@ -45,6 +45,24 @@ export const Actions = {
   validate(sel = 'form') {
     const form = document.querySelector(sel);
     if (!form) return true;
+    form.classList.add('was-validated');
+
+    const customFields = [...form.querySelectorAll('[data-af-validatable]')];
+    if (customFields.length) {
+      const validFields = [];
+      const invalidFields = [];
+
+      for (const field of customFields) {
+        if (typeof field.checkValidity === 'function' && !field.checkValidity()) invalidFields.push(field);
+        else                                                                    validFields.push(field);
+      }
+
+      validFields.forEach((field) => field.reportValidity?.());
+      invalidFields.slice(1).forEach((field) => field.reportValidity?.());
+      invalidFields[0]?.reportValidity?.();
+      return invalidFields.length === 0;
+    }
+
     let valid = true;
     form.querySelectorAll('[required],[minlength],[maxlength],[pattern],[min],[max]').forEach(el => {
       if (!el.checkValidity()) {

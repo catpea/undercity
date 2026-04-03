@@ -9,6 +9,10 @@
     { "name": "key",         "label": "Inventory key", "type": "text",    "placeholder": "email" },
     { "name": "label",       "label": "Label",         "type": "text",    "placeholder": "Email Address" },
     { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "you@example.com" },
-    { "name": "required",    "label": "Required",      "type": "boolean", "default": true }
+    { "name": "required",    "label": "Required",      "type": "boolean", "default": true },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what belongs in this field.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please provide a valid email address.", "default": "" }
   ]
 }

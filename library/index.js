@@ -3,6 +3,7 @@ import { roomCategory } from './room/index.js';
 import { debugCategory } from './debug/index.js';
 import { displayCategory } from './display/index.js';
 import { inputCategory } from './input/index.js';
+import { submitCategory } from './submit/index.js';
 
 export default {
   name: 'undercity/library',
@@ -11,5 +12,6 @@ export default {
     app.use(debugCategory);
     app.use(displayCategory);
     app.use(inputCategory);
+    app.use(submitCategory);
   },
 };

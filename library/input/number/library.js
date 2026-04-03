@@ -12,6 +12,10 @@ export function run(params, ctx) {
   if (params.max  != null) el.setAttribute('max',  params.max);
   if (params.step != null) el.setAttribute('step', params.step);
   if (params.required)    el.setAttribute('required',    '');
+  if (params.helpText)        el.setAttribute('help',             params.helpText);
+  if (params.size)            el.setAttribute('size',             params.size);
+  if (params.validFeedback)   el.setAttribute('valid-feedback',   params.validFeedback);
+  if (params.invalidFeedback) el.setAttribute('invalid-feedback', params.invalidFeedback);
   emitter.emit('render', el);
   emitter.emit('done');
   return emitter;

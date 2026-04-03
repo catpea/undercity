@@ -3,7 +3,7 @@
   "icon":    "signpost-split",
   "color":   "var(--sol-orange)",
   "label":   "Show Navigation Buttons",
-  "desc":    "Render Bootstrap 5.3 navigation buttons for every room exit. Supports all color variants, sizes, outline style, and button-group mode.",
+  "desc":    "Render Bootstrap 5.3 navigation buttons for every room exit. Clicking a button validates the current room inputs before navigation and shows Bootstrap-style valid/invalid feedback.",
   "version": "1.0.0",
   "params": [
     { "name": "variant", "label": "Color variant", "type": "select",  "options": ["primary","secondary","success","danger","warning","info","light","dark","link"], "default": "primary" },

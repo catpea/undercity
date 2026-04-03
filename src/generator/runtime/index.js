@@ -17,6 +17,7 @@ export { Media }                    from './media.js';
 export { matchTarget, Room }        from './room.js';
 export { Things, FormThing, WorkflowThing, PersonaLiveThing, AuthServerThing, TestAuthServerThing } from './things.js';
 export { Input }                    from './input.js';
+export { Submit }                               from './submit.js';
 export { registerNamespace, route, runPayload } from './runner.js';
 
 // Load plugin extensions (generated per project — may be empty)

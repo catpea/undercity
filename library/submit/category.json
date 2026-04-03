@@ -1,0 +1,7 @@
+{
+  "id":          "submit",
+  "name":        "Submit",
+  "icon":        "send-check",
+  "color":       "var(--sol-green)",
+  "description": "Submit inventory data to external services such as the task-queue server."
+}

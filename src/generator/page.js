@@ -60,7 +60,7 @@ function pageShell({ proj, node, headExtra = '', bodyContent, scriptContent }) {
   <link rel="stylesheet" href="lib/bootstrap.min.css">
   <link rel="stylesheet" href="css/flow.css">
   <script type="importmap">
-  {"imports":{"framework":"./js/signal.js","scope":"./js/scope.js"}}
+  {"imports":{"framework":"./js/signal.js","form-field":"./js/form-field.js","scope":"./js/scope.js"}}
   </script>
   <script type="module" src="js/af-icons.js"></script>
   <script type="module" src="js/components.js"></script>

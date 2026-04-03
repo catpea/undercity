@@ -11,6 +11,10 @@
     { "name": "min",       "label": "Minimum",            "type": "number",  "default": 0 },
     { "name": "max",       "label": "Maximum",            "type": "number",  "default": 100 },
     { "name": "step",      "label": "Step",               "type": "number",  "default": 1 },
-    { "name": "showValue", "label": "Show current value", "type": "boolean", "default": true }
+    { "name": "showValue", "label": "Show current value", "type": "boolean", "default": true },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain how to use this range.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose a valid value.", "default": "" }
   ]
 }

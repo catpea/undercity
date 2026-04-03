@@ -10,6 +10,10 @@
     { "name": "label",       "label": "Label",           "type": "text",    "placeholder": "Phone Number" },
     { "name": "placeholder", "label": "Placeholder",     "type": "text",    "placeholder": "+1 (555) 000-0000" },
     { "name": "pattern",     "label": "Pattern (regex)", "type": "text",    "placeholder": "", "default": "" },
-    { "name": "required",    "label": "Required",        "type": "boolean", "default": false }
+    { "name": "required",    "label": "Required",        "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what belongs in this field.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please provide a valid phone number.", "default": "" }
   ]
 }

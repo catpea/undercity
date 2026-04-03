@@ -11,6 +11,10 @@
     { "name": "placeholder", "label": "Placeholder",   "type": "text",    "placeholder": "Write here…" },
     { "name": "rows",        "label": "Rows",          "type": "number",  "default": 4 },
     { "name": "required",    "label": "Required",      "type": "boolean", "default": false },
-    { "name": "spellcheck",  "label": "Spell check",   "type": "boolean", "default": true }
+    { "name": "spellcheck",  "label": "Spell check",   "type": "boolean", "default": true },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Explain what belongs in this field.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please provide a valid value.", "default": "" }
   ]
 }

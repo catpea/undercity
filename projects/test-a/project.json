@@ -24,7 +24,7 @@
               "action": "room.showNav",
               "params": {
                 "variant": "outline-info",
-                "full": "false"
+                "full": true
               }
             }
           ],
@@ -54,8 +54,8 @@
                   "action": "input.text",
                   "params": {
                     "key": "title",
-                    "label": "Title",
-                    "placeholder": "",
+                    "label": "Poem Title",
+                    "placeholder": "Moby-Dick; or, The Whale",
                     "required": "true",
                     "autocomplete": "",
                     "spellcheck": "true"
@@ -118,7 +118,7 @@
         "id": "3f99bc7f",
         "type": "room",
         "label": "Select Thumbnail Frame",
-        "x": -440,
+        "x": -400,
         "y": 200,
         "payload": {
           "Enter": [],
@@ -295,6 +295,15 @@
                   }
                 },
                 {
+                  "action": "submit.submitInventoryToTaskQueue",
+                  "params": {
+                    "url": "http://localhost:4000",
+                    "jobType": "",
+                    "omit": "",
+                    "preview": true
+                  }
+                },
+                {
                   "action": "debug.inventoryDump",
                   "params": {}
                 }
@@ -419,11 +428,21 @@
       {
         "id": "66520aca",
         "type": "room",
-        "label": "Post To Server",
+        "label": "Submit To Task Server",
         "x": 200,
         "y": 400,
         "payload": {
-          "Enter": [],
+          "Enter": [
+            {
+              "action": "submit.submitInventoryToTaskQueue",
+              "params": {
+                "url": "http://localhost:4000",
+                "jobType": "",
+                "omit": "",
+                "preview": true
+              }
+            }
+          ],
           "Exit": [],
           "Back": [],
           "Reset": [],
@@ -617,5 +636,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-03T01:14:30.301Z"
+  "modified": "2026-04-03T20:52:25.147Z"
 }

@@ -98,8 +98,9 @@ export async function generateProject(proj, outDir, reg = defaultRegistry) {
 
   await copyFile(join(ROOT, 'src', 'ide', 'af-icons.js'), join(outDir, 'js', 'af-icons.js'));
   await copyFile(join(ROOT, 'src', 'lib', 'signal.js'),  join(outDir, 'js', 'signal.js'));
+  await copyFile(join(ROOT, 'src', 'lib', 'form-field.js'), join(outDir, 'js', 'form-field.js'));
   await copyFile(join(ROOT, 'src', 'lib', 'scope.js'),   join(outDir, 'js', 'scope.js'));
-  files.push('js/af-icons.js', 'js/signal.js', 'js/scope.js');
+  files.push('js/af-icons.js', 'js/signal.js', 'js/form-field.js', 'js/scope.js');
 
   // Web components — collect all af-*.js from library/*/*/
   // Copy each to js/components/ and generate a barrel js/components.js
