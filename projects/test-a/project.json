@@ -13,18 +13,18 @@
         "payload": {
           "Enter": [
             {
-              "action": "room.showNav",
-              "params": {
-                "variant": "primary",
-                "full": true
-              }
-            },
-            {
               "action": "room.emit",
               "params": {
                 "event": "Take",
                 "at": "Form*",
                 "data": "{}"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "outline-info",
+                "full": "false"
               }
             }
           ],
@@ -617,5 +617,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-02T23:56:47.963Z"
+  "modified": "2026-04-03T01:14:30.301Z"
 }

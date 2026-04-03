@@ -34,6 +34,15 @@ import { CommandPalette }  from '/src/ide/command-line/index.js';
 import { ALL_COMMANDS }    from '/src/ide/command-line/commands.js';
 import { CommandHistory }  from '/src/ide/history.js';
 
+function withDisabledStepFlag(cmd, step) {
+  if (step?.disabled === true) cmd.disabled = true;
+  return cmd;
+}
+
+function stepDisabledLabel(step) {
+  return step?.disabled === true ? ' *(disabled in generated code)*' : '';
+}
+
 // ── App class ─────────────────────────────────────────────────────────────────
 
 class App extends Emitter {
@@ -384,7 +393,7 @@ class App extends Emitter {
         if (!Array.isArray(steps)) continue;
         for (const step of steps) {
           if (!step?.action) continue;
-          const cmd = { cmd: 'addAction', node: nodeLabel, event, action: step.action };
+          const cmd = withDisabledStepFlag({ cmd: 'addAction', node: nodeLabel, event, action: step.action }, step);
           if (step.params && Object.keys(step.params).length > 0) cmd.params = step.params;
           cmds.push(cmd);
         }
@@ -453,7 +462,7 @@ class App extends Emitter {
             const paramStr = step.params && Object.keys(step.params).length > 0
               ? ' — params: ' + Object.entries(step.params).map(([k, v]) => `\`${k}=${JSON.stringify(v)}\``).join(', ')
               : '';
-            lines.push(`    - \`${step.action}\`${paramStr}`);
+            lines.push(`    - \`${step.action}\`${paramStr}${stepDisabledLabel(step)}`);
           }
         }
       }
@@ -473,7 +482,7 @@ class App extends Emitter {
               const ps = step.params && Object.keys(step.params).length > 0
                 ? ' — ' + Object.entries(step.params).map(([k, v]) => `\`${k}=${JSON.stringify(v)}\``).join(', ')
                 : '';
-              lines.push(`      - \`${step.action}\`${ps}`);
+              lines.push(`      - \`${step.action}\`${ps}${stepDisabledLabel(step)}`);
             }
           }
         }
@@ -517,7 +526,7 @@ class App extends Emitter {
         if (!Array.isArray(steps)) continue;
         for (const step of steps) {
           if (!step?.action) continue;
-          const cmd = { cmd: 'addAction', node: nodeLabel, event, action: step.action };
+          const cmd = withDisabledStepFlag({ cmd: 'addAction', node: nodeLabel, event, action: step.action }, step);
           if (step.params && Object.keys(step.params).length > 0) cmd.params = step.params;
           cmds.push(cmd);
         }
@@ -1498,7 +1507,7 @@ class App extends Emitter {
             if (!node) throw new Error(`addAction: node "${cmd.node}" not found`);
             if (!cmd.action) continue;
             const event = cmd.event ?? 'Enter';
-            node.addStep(event, { action: cmd.action, params: cmd.params ?? {} });
+            node.addStep(event, { action: cmd.action, params: cmd.params ?? {}, ...(cmd.disabled === true ? { disabled: true } : {}) });
           } else if (cmd.cmd === 'addStep') {
             const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
             if (!node) throw new Error(`addStep: node "${cmd.node}" not found`);

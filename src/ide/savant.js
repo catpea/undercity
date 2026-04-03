@@ -23,6 +23,10 @@ import { SavantChat } from '/src/ide/savant-chat.js';
 
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function isStepDisabled(step) {
+  return step?.disabled === true;
+}
+
 /** Copy MCP JSON commands to clipboard and show a transient toast. */
 function _copyMcpJson(cmds) {
   const json = JSON.stringify(cmds, null, 2);
@@ -810,21 +814,32 @@ export class Savant extends Emitter {
     this.#renderWorkflow();
   }
 
+  #toggleStepDisabled(index, step) {
+    if (!this.#node) return;
+    this.#node.updateStep(this.#event, index, {
+      ...step,
+      disabled: isStepDisabled(step) ? undefined : true,
+    });
+  }
+
   #makeStepCard(step, index) {
     const def    = findAction(step.action) ?? this.#customActions[step.action] ?? null;
+    const isDisabled = isStepDisabled(step);
 
     // Unregistered action — render a degraded "not loaded" card
     if (!def) {
       const card = document.createElement('div');
-      card.className = 'step-card step-card-unloaded';
+      card.className = `step-card step-card-unloaded${isDisabled ? ' step-card-disabled' : ''}`;
       card.innerHTML = `
         <div class="step-header">
           <span class="step-drag-handle" draggable="true" title="Drag to reorder">⠿</span>
           <span class="step-number">${index + 1}</span>
           <span class="step-action-name step-unloaded-name">Action not loaded</span>
           <code class="step-unloaded-id">${escH(step.action)}</code>
+          ${isDisabled ? '<span class="step-disabled-badge" title="Disabled actions stay in the editor but are omitted from generated code.">Disabled</span>' : ''}
           <div class="step-controls">
-            <button class="step-btn del" title="Delete"><af-icon name="x-lg"></af-icon></button>
+            <button class="step-btn step-btn-toggle${isDisabled ? ' is-disabled' : ''}" title="${isDisabled ? 'Enable in generated code' : 'Disable in generated code'}" aria-pressed="${isDisabled ? 'true' : 'false'}"><af-icon name="${isDisabled ? 'eye-slash' : 'eye'}"></af-icon></button>
+            <button class="step-btn step-btn-del del" title="Delete"><af-icon name="x-lg"></af-icon></button>
           </div>
         </div>`;
       const dragHandle = card.querySelector('.step-drag-handle');
@@ -843,16 +858,18 @@ export class Savant extends Emitter {
         const fromIdx = parseInt(raw);
         if (!isNaN(fromIdx) && fromIdx !== index) this.#node.moveStep(this.#event, fromIdx, index);
       });
-      card.querySelector('.step-btn.del').addEventListener('click', () => {
+      card.querySelector('.step-btn-toggle').addEventListener('click', () => {
+        this.#toggleStepDisabled(index, step);
+      });
+      card.querySelector('.step-btn-del').addEventListener('click', () => {
         this.#node.removeStep(this.#event, index);
       });
       return card;
     }
 
-    const params = def.params ?? [];
     const card   = document.createElement('div');
     const isCollapsed = this.#collapsedSteps.has(this.#stepModeKey(index));
-    card.className = 'step-card' + (isCollapsed ? ' collapsed' : '');
+    card.className = `step-card${isCollapsed ? ' collapsed' : ''}${isDisabled ? ' step-card-disabled' : ''}`;
 
     const mode = this.#getStepMode(step, index);
 
@@ -862,6 +879,7 @@ export class Savant extends Emitter {
       <span class="step-drag-handle" draggable="true" title="Drag to reorder">⠿</span>
       <span class="step-number">${index + 1}</span>
       <span class="step-action-name">${def.label ?? step.action}</span>
+      ${isDisabled ? '<span class="step-disabled-badge" title="Disabled actions stay in the editor but are omitted from generated code.">Disabled</span>' : ''}
       <button class="step-collapse-btn" title="${isCollapsed ? 'Expand' : 'Collapse'}">${isCollapsed ? '▸' : '▾'}</button>
       <div class="step-mode-pills">
         <button class="step-mode-pill${mode === 'basic'     ? ' active' : ''}" data-mode="basic"     title="Simple view">Basic</button>
@@ -869,9 +887,10 @@ export class Savant extends Emitter {
         <button class="step-mode-pill${mode === 'json'      ? ' active' : ''}" data-mode="json"      title="Raw JSON">JSON</button>
       </div>
       <div class="step-controls">
-        <button class="step-btn" title="Move up">↑</button>
-        <button class="step-btn" title="Move down">↓</button>
-        <button class="step-btn del" title="Delete"><af-icon name="x-lg"></af-icon></button>
+        <button class="step-btn step-btn-toggle${isDisabled ? ' is-disabled' : ''}" title="${isDisabled ? 'Enable in generated code' : 'Disable in generated code'}" aria-pressed="${isDisabled ? 'true' : 'false'}"><af-icon name="${isDisabled ? 'eye-slash' : 'eye'}"></af-icon></button>
+        <button class="step-btn step-btn-up" title="Move up">↑</button>
+        <button class="step-btn step-btn-down" title="Move down">↓</button>
+        <button class="step-btn step-btn-del del" title="Delete"><af-icon name="x-lg"></af-icon></button>
       </div>`;
 
     const paramsDiv = document.createElement('div');
@@ -903,7 +922,11 @@ export class Savant extends Emitter {
     });
 
     // Button handlers
-    const [upBtn, downBtn, delBtn] = header.querySelectorAll('.step-btn');
+    const toggleBtn = header.querySelector('.step-btn-toggle');
+    const upBtn = header.querySelector('.step-btn-up');
+    const downBtn = header.querySelector('.step-btn-down');
+    const delBtn = header.querySelector('.step-btn-del');
+    toggleBtn.addEventListener('click', () => { this.#toggleStepDisabled(index, step); });
     delBtn.addEventListener('click', () => { this.#node.removeStep(this.#event, index); });
     upBtn.addEventListener('click',  () => { if (index > 0) this.#node.moveStep(this.#event, index, index - 1); });
     downBtn.addEventListener('click',() => {
@@ -976,7 +999,7 @@ export class Savant extends Emitter {
 
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
       input.addEventListener('change', () => {
-        const storedVal = input.value;
+        const storedVal = input.type === 'checkbox' ? input.checked : input.value;
         this.#node.updateStep(this.#event, index, {
           params: { ...(step.params ?? {}), [p.name]: storedVal }
         });
@@ -1015,7 +1038,7 @@ export class Savant extends Emitter {
       lbl.innerHTML = `${p.label}${p.type === 'code' ? ' <span class="param-code-badge">JS</span>' : ''}`;
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
       input.addEventListener('change', () => {
-        const storedVal = input.value;
+        const storedVal = input.type === 'checkbox' ? input.checked : input.value;
         this.#node.updateStep(this.#event, index, {
           params: { ...(step.params ?? {}), [p.name]: storedVal }
         });
@@ -1073,15 +1096,12 @@ export class Savant extends Emitter {
     }
 
     if (paramDef.type === 'boolean') {
-      const sel = document.createElement('select');
-      sel.className = 'param-input';
-      for (const opt of ['true','false']) {
-        const o = document.createElement('option');
-        o.value = opt; o.textContent = opt;
-        if (String(value) === opt) o.selected = true;
-        sel.appendChild(o);
-      }
-      return sel;
+      const cb = document.createElement('input');
+      cb.type      = 'checkbox';
+      cb.className = 'param-switch';
+      cb.setAttribute('role', 'switch');
+      cb.checked   = value === true || value === 'true';
+      return cb;
     }
 
     if (paramDef.type === 'textarea') {

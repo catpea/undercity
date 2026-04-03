@@ -3,10 +3,13 @@
   "icon":    "signpost-split",
   "color":   "var(--sol-orange)",
   "label":   "Show Navigation Buttons",
-  "desc":    "Render Bootstrap navigation buttons for every room connected from this one.",
+  "desc":    "Render Bootstrap 5.3 navigation buttons for every room exit. Supports all color variants, sizes, outline style, and button-group mode.",
   "version": "1.0.0",
   "params": [
-    { "name": "variant", "label": "Button style", "type": "select",  "options": ["primary","outline-info","secondary","outline-secondary","success","outline-primary"], "default": "primary" },
-    { "name": "full",    "label": "Full width",   "type": "boolean", "default": true }
+    { "name": "variant", "label": "Color variant", "type": "select",  "options": ["primary","secondary","success","danger","warning","info","light","dark","link"], "default": "primary" },
+    { "name": "full",    "label": "Full width",    "type": "boolean", "default": true  },
+    { "name": "size",    "label": "Size",          "type": "select",  "options": ["","sm","lg"], "default": "" },
+    { "name": "outline", "label": "Outline style", "type": "boolean", "default": false },
+    { "name": "group",   "label": "Button group",  "type": "boolean", "default": false }
   ]
 }

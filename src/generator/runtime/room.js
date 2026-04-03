@@ -35,18 +35,6 @@ export function matchTarget(pattern, ...candidates) {
   });
 }
 
-// ── Internal helpers ──────────────────────────────────────────────────────────
-
-/** Create a Bootstrap nav button that invokes an exit entry's call(). */
-function _makeExitButton(entry, className) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = className;
-  btn.textContent = entry.label;
-  btn.addEventListener('click', () => entry.call());
-  return btn;
-}
-
 // ── Room ──────────────────────────────────────────────────────────────────────
 export const Room = {
   /**
@@ -100,37 +88,43 @@ export const Room = {
   },
 
   /**
-   * Render Bootstrap navigation buttons for every exit in this room.
+   * Render Bootstrap 5.3 navigation buttons for every exit in this room.
    * Reads window._PW_NAV populated by Room.exits().
    *
-   * Injects into #pw-nav-list (navbar) when present;
-   * falls back to a card appended below the page content.
+   * Creates an <af-show-navigation-buttons> component inside a card so the
+   * generated page source is readable and the component is self-documenting.
    *
-   * @param {string}  variant  Bootstrap colour variant (default 'primary')
-   * @param {boolean} full     Full-width buttons in the fallback card (default true)
+   * @param {string}  variant  Bootstrap color variant (default 'primary')
+   * @param {boolean} full     Full-width buttons (default true)
+   * @param {string}  size     'sm' | 'lg' | '' default size (default '')
+   * @param {boolean} outline  Use outline variant (default false)
+   * @param {boolean} group    Wrap in .btn-group (default false)
    */
-  showNav(variant = 'primary', full = true) {
+  showNav(variant = 'primary', full = true, size = '', outline = false, group = false) {
     const nav = window._PW_NAV ?? [];
     if (!nav.length) return;
 
-    // Always render in the content area — navigation is part of the form flow,
-    // not a chrome-level concern. Nav buttons sit below the room's content cards.
     const root = _pwContainer();
     let card   = root.querySelector('#pw-nav-card');
     if (!card) {
       card = document.createElement('div');
-      card.id = 'pw-nav-card';
+      card.id        = 'pw-nav-card';
       card.className = 'card mt-3';
       const body = document.createElement('div');
-      body.className = 'card-body d-flex flex-column gap-2';
+      body.className = 'card-body';
       card.appendChild(body);
       root.appendChild(card);
     }
-    const body     = card.querySelector('.card-body') ?? card;
+
+    const body = card.querySelector('.card-body') ?? card;
     body.innerHTML = '';
-    const btnClass = `btn btn-${variant} fw-semibold${full ? ' w-100' : ''}`;
-    for (const entry of nav) {
-      body.appendChild(_makeExitButton(entry, btnClass));
-    }
+
+    const el = document.createElement('af-show-navigation-buttons');
+    el.setAttribute('variant', variant || 'primary');
+    if (size)    el.setAttribute('size',    size);
+    if (outline) el.setAttribute('outline', '');
+    if (full)    el.setAttribute('full',    '');
+    if (group)   el.setAttribute('group',   '');
+    body.appendChild(el);
   },
 };

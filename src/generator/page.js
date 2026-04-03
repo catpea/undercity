@@ -19,6 +19,35 @@
 
 import { BUILT_IN_TEMPLATES, defaultPageHTML, errorHTML, escHtml } from './templates.js';
 
+function filterGeneratedSteps(steps = []) {
+  return (steps ?? [])
+    .filter(step => step?.action && step.disabled !== true)
+    .map(({ disabled, ...step }) => step);
+}
+
+function filterGeneratedPayload(payload = {}) {
+  const out = {};
+  for (const [key, steps] of Object.entries(payload ?? {})) {
+    out[key] = Array.isArray(steps) ? filterGeneratedSteps(steps) : steps;
+  }
+  return out;
+}
+
+function filterGeneratedThings(things = []) {
+  return (things ?? []).map(thing => ({
+    ...thing,
+    events: filterGeneratedPayload(thing.events ?? {}),
+  }));
+}
+
+function filterGeneratedNode(node) {
+  return {
+    ...node,
+    payload: filterGeneratedPayload(node.payload ?? {}),
+    things: filterGeneratedThings(node.things ?? []),
+  };
+}
+
 // ── Shared page shell ─────────────────────────────────────────────────────────
 
 function pageShell({ proj, node, headExtra = '', bodyContent, scriptContent }) {
@@ -80,15 +109,16 @@ ${scriptContent}
  * Build a complete HTML page for a room (non-diamond) node.
  */
 export function buildNodePage(proj, node, nodes, edges, registry) {
-  if (node.type === 'diamond') return buildDiamondPage(proj, node, nodes, edges);
+  const generatedNode = filterGeneratedNode(node);
+  if (generatedNode.type === 'diamond') return buildDiamondPage(proj, generatedNode, nodes, edges);
 
-  const outEdges   = edges.filter(e => e.fromId === node.id);
-  const onEnter    = node.payload?.Enter ?? [];
-  const onExit     = node.payload?.Exit  ?? [];
-  const isEntry    = node.meta?.isEntry    ?? false;
-  const isTerminal = node.type === 'terminal';
+  const outEdges   = edges.filter(e => e.fromId === generatedNode.id);
+  const onEnter    = generatedNode.payload?.Enter ?? [];
+  const onExit     = generatedNode.payload?.Exit  ?? [];
+  const isEntry    = generatedNode.meta?.isEntry    ?? false;
+  const isTerminal = generatedNode.type === 'terminal';
 
-  const content = buildPageContent(proj, node, outEdges, nodes, registry);
+  const content = buildPageContent(proj, generatedNode, outEdges, nodes, registry);
 
   // Build nav entries for window._PW_NAV (used by room.showNav)
   const navEntries = outEdges.map(e => {
@@ -124,9 +154,9 @@ export function buildNodePage(proj, node, nodes, edges, registry) {
     <small class="text-muted">Powered by <span class="text-info">Undercity</span></small>
   </footer>`;
 
-  const scriptContent = buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, navEntries);
+  const scriptContent = buildPageScript(generatedNode, outEdges, onEnter, onExit, isEntry, isTerminal, navEntries);
 
-  return pageShell({ proj, node, bodyContent, scriptContent });
+  return pageShell({ proj, node: generatedNode, bodyContent, scriptContent });
 }
 
 // ── Diamond page ──────────────────────────────────────────────────────────────
@@ -170,8 +200,9 @@ function buildDiamondPage(proj, node, nodes, edges) {
     }, TIMEOUT_MS);
 
     try {
-      // Run the diamond's Enter payload (typically an API call), then route
+${onEnter.length ? `      // Run the diamond's Enter payload (typically an API call), then route
       await runPayload(${JSON.stringify(onEnter, null, 4)});
+` : ''}      // Route after the Enter payload settles
       if (!timedOut) {
         clearTimeout(timer);
         route(${JSON.stringify(routes, null, 4)});
@@ -214,7 +245,7 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
 
   // Room-event listeners defined directly on the node (non-lifecycle payload keys)
   const roomListeners = Object.entries(node.payload ?? {})
-    .filter(([key]) => !_LIFECYCLE_KEYS.has(key))
+    .filter(([key, steps]) => !_LIFECYCLE_KEYS.has(key) && Array.isArray(steps) && steps.length > 0)
     .map(([key, steps]) =>
       `    Room.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
       await runPayload(${JSON.stringify(steps, null, 6)});
@@ -250,7 +281,7 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
 
       // Event listeners — target guard is baked into thing.on(), no manual matchTarget
       const evEntries = Object.entries(t.events ?? {})
-        .filter(([key]) => !_LIFECYCLE_KEYS.has(key))
+        .filter(([key, steps]) => !_LIFECYCLE_KEYS.has(key) && Array.isArray(steps) && steps.length > 0)
         .map(([key, steps]) =>
           `    ${varName}.on(${JSON.stringify(key)}, async ({ event, data, room }) => {
       await runPayload(${JSON.stringify(steps, null, 6)});
@@ -306,7 +337,8 @@ function buildPageScript(node, outEdges, onEnter, onExit, isEntry, isTerminal, n
     ${importLine}
 
 ${!isTerminal && exitsCode ? `${exitsCode}\n` : ''}${thingsBlock ? `\n${thingsBlock}\n` : ''}${roomListeners ? `\n    // Room event listeners\n${roomListeners}\n` : ''}${thingOnEnterCode ? `\n    // Thing Enter payloads\n${thingOnEnterCode}\n` : ''}
-    // Enter
+${onEnter.length ? `    // Enter
     await runPayload(${JSON.stringify(onEnter, null, 4)});
+` : ''}
   </script>`;
 }
