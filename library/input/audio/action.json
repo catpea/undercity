@@ -1,0 +1,18 @@
+{
+  "id":      "input.audio",
+  "icon":    "music-note-beamed",
+  "color":   "var(--sol-cyan)",
+  "label":   "Ask For Audio",
+  "desc":    "Render an audio file picker with an inline player and duration/size stats so the user can preview their choice. Audio metadata (name, size, type, url, duration) is stored in inventory.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key",  "type": "text",    "placeholder": "audioTrack" },
+    { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Audio Track" },
+    { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "audio/*", "default": "audio/*" },
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Describe what audio belongs here.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Sounds good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose an audio file.", "default": "" }
+  ]
+}

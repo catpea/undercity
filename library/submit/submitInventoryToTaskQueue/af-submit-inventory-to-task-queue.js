@@ -371,8 +371,35 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     tdPrev.className = 'col-prev';
     _renderPreviewInto(val, tdPrev);
 
+    // If this entry has a cache URL, confirm size against the server async.
+    this.#enrichStatFromCache(tdStat, val);
+
     tr.append(tdKey, tdType, tdStat, tdPrev);
     return tr;
+  }
+
+  // Fires a HEAD request to the inventory-cache server for any entry whose URL
+  // already points there (i.e. the background upload in Inventory completed).
+  // On success, rewrites the stat cell with the server-confirmed size + a ✓.
+  #enrichStatFromCache(tdStat, val) {
+    if (typeof val?.url !== 'string') return;
+    if (!val.url.startsWith('http://localhost:5000/v1/')) return;
+
+    const mime = String(val.type ?? '');
+    fetch(val.url, { method: 'HEAD', signal: AbortSignal.timeout(2000) })
+      .then(res => {
+        if (!res.ok) return;
+        const len = Number(res.headers.get('Content-Length') ?? 0);
+        if (!len) return;
+        const sizeStr = _fmtBytes(len);
+        const dur  = val.duration != null ? ` ${_fmtDuration(val.duration)}` : '';
+        const dims = (val.width && val.height) ? ` ${val.width}×${val.height}` : '';
+        if      (mime.startsWith('image/')) tdStat.textContent = `${sizeStr}${dims} ✓`;
+        else if (mime.startsWith('audio/')) tdStat.textContent = `${sizeStr}${dur} ✓`;
+        else if (mime.startsWith('video/')) tdStat.textContent = `${sizeStr}${dur}${dims} ✓`;
+        else                                tdStat.textContent = `${sizeStr} ✓`;
+      })
+      .catch(() => { /* cache unavailable — leave stat as-is */ });
   }
 
   // ── Health polling ──────────────────────────────────────────────────────────
@@ -642,14 +669,23 @@ function _inferType(val) {
 function _humanStat(val) {
   if (val === null || val === undefined) return '—';
   if (typeof val === 'object' && !Array.isArray(val)) {
-    const mime = String(val.type ?? '');
-    const size = val.fileSize ?? (typeof val.url === 'string' ? Math.round(val.url.length * 0.75) : 0);
-    const sizeStr = _fmtBytes(size);
+    const mime    = String(val.type ?? '');
+    // val.size is the actual byte count set by input components; never use URL length.
+    const size    = val.size ?? val.fileSize ?? 0;
+    const sizeStr = size ? _fmtBytes(size) : '?';
     if (mime.startsWith('image/')) {
       const dims = (val.width && val.height) ? ` ${val.width}×${val.height}` : '';
       return `${sizeStr}${dims}`;
     }
-    if (mime.startsWith('audio/') || mime.startsWith('video/')) return sizeStr;
+    if (mime.startsWith('audio/')) {
+      const dur = val.duration != null ? ` ${_fmtDuration(val.duration)}` : '';
+      return `${sizeStr}${dur}`;
+    }
+    if (mime.startsWith('video/')) {
+      const dur  = val.duration != null ? ` ${_fmtDuration(val.duration)}` : '';
+      const dims = (val.width && val.height) ? ` ${val.width}×${val.height}` : '';
+      return `${sizeStr}${dur}${dims}`;
+    }
     if (size) return sizeStr;
     return '—';
   }
@@ -664,6 +700,13 @@ function _humanStat(val) {
   if (typeof val === 'boolean') return String(val);
   if (Array.isArray(val)) return `${val.length} items`;
   return '—';
+}
+
+function _fmtDuration(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return '?:??';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function _fmtBytes(bytes) {

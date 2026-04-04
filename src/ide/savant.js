@@ -22,10 +22,7 @@ import { Scope } from 'scope';
 import { SavantChat } from '/src/ide/savant-chat.js';
 import { THING_LIBRARY, getThingEvents } from '/src/ide/thing-library.js';
 import { API } from '/src/ide/project-api.js';
-import {
-  WORKFLOW_STEP_CARD_TAG,
-  WORKFLOW_STEP_DRAG_MIME,
-} from '/src/ide/workflow-step-card.js';
+import { WORKFLOW_STEPS_TAG } from '/src/ide/workflow-steps.js';
 
 function isStepDisabled(step) {
   return step?.disabled === true;
@@ -57,22 +54,6 @@ function createStepUiId() {
     ?? `step-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function textDragData(dataTransfer) {
-  return dataTransfer?.getData('text/plain') ?? '';
-}
-
-function actionIdFromTransfer(dataTransfer) {
-  const raw = textDragData(dataTransfer);
-  return raw.startsWith('action:') ? raw.slice(7) : '';
-}
-
-function stepIdFromTransfer(dataTransfer) {
-  const explicit = dataTransfer?.getData(WORKFLOW_STEP_DRAG_MIME) ?? '';
-  if (explicit) return explicit;
-  const raw = textDragData(dataTransfer);
-  return raw.startsWith('step:') ? raw.slice(5) : '';
-}
-
 function findAction(actionId) {
   for (const cat of Object.values(ACTION_LIBRARY)) {
     if (cat.actions?.[actionId]) return cat.actions[actionId];
@@ -92,7 +73,9 @@ export class Savant extends Emitter {
   #customActions = {};  // id → def (AI-generated or project-level)
   #chat       = null;
   _projectId  = '';
-  #stepCards = new Map();
+  #workflowStepsEl;
+  #workflowMessageEl;
+  #workflowRoutesEl;
 
   // DOM refs
   #catPane; #actPane; #actList; #actPreview; #wfPane; #wfTitle; #wfSteps;
@@ -113,6 +96,22 @@ export class Savant extends Emitter {
     this.#eventTabs  = containerEl.querySelector('#event-tabs');
     this.#breadcrumb = containerEl.querySelector('#savant-breadcrumb');
     this.#customActions = customActions;
+    this.#workflowStepsEl = document.createElement(WORKFLOW_STEPS_TAG);
+    this.#workflowStepsEl.hidden = true;
+    this.#workflowStepsEl.renderBody = (item, card) => {
+      return this.#createStepBody(item.stepId, item.step, item.def, card.mode);
+    };
+    this.#workflowMessageEl = document.createElement('div');
+    this.#workflowMessageEl.className = 'wf-empty';
+    this.#workflowMessageEl.hidden = true;
+    this.#workflowRoutesEl = document.createElement('div');
+    this.#workflowRoutesEl.hidden = true;
+    this.#wfSteps.replaceChildren(
+      this.#workflowMessageEl,
+      this.#workflowStepsEl,
+      this.#workflowRoutesEl,
+    );
+    this.#bindWorkflowEvents();
 
     // Wire workflow help toggle
     const wfHelpBtn = document.getElementById('wf-help-btn');
@@ -155,9 +154,48 @@ export class Savant extends Emitter {
     }
   }
 
+  #bindWorkflowEvents() {
+    this.#workflowStepsEl.addEventListener('workflow-step-toggle-disabled', (event) => {
+      this.#toggleStepDisabled(event.detail.stepId);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-step-delete', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current) return;
+      this.#node.removeStep(this.#event, current.index);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-step-move-up', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current || current.index === 0) return;
+      this.#node.moveStep(this.#event, current.index, current.index - 1);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-step-move-down', (event) => {
+      const current = this.#findCurrentStep(event.detail.stepId);
+      if (!current || current.index >= current.steps.length - 1) return;
+      this.#node.moveStep(this.#event, current.index, current.index + 1);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-step-reorder', (event) => {
+      const { stepId, targetStepId, placement } = event.detail;
+      this.#moveStepRelative(stepId, targetStepId, placement);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-insert-step', (event) => {
+      const { stepId, insertIndex } = event.detail;
+      this.#moveStepToInsertIndex(stepId, insertIndex);
+    });
+
+    this.#workflowStepsEl.addEventListener('workflow-insert-action', (event) => {
+      const { actionId, insertIndex } = event.detail;
+      const def = this.#findActionDef(actionId);
+      if (def) this.#addStepAt(actionId, def, insertIndex);
+    });
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
   setNode(node) {
-    this.#resetStepCards();
     this.#nodeScope.dispose();
     this.#thingCtx = null;
     this.#thingNameSig = null;
@@ -193,7 +231,6 @@ export class Savant extends Emitter {
    * parentNode = the GraphNode that owns this thing
    */
   setThing(thingDef, parentNode) {
-    this.#resetStepCards();
     this.#thingCtx = { thingDef, parentNode };
     this.#thingNameSig = new Signal(
       thingDef.config?.name || THING_LIBRARY[thingDef.type]?.label || thingDef.type
@@ -760,31 +797,6 @@ export class Savant extends Emitter {
     return step[STEP_UI_ID];
   }
 
-  #resetStepCards() {
-    for (const card of this.#stepCards.values()) card.remove();
-    this.#stepCards.clear();
-  }
-
-  #pruneStepCards() {
-    if (!this.#node) {
-      this.#resetStepCards();
-      return;
-    }
-
-    const liveIds = new Set();
-    const payload = this.#node.payload?.peek() ?? {};
-    for (const value of Object.values(payload)) {
-      if (!Array.isArray(value)) continue;
-      for (const step of value) liveIds.add(this.#ensureStepUiId(step));
-    }
-
-    for (const [stepId, card] of this.#stepCards) {
-      if (liveIds.has(stepId)) continue;
-      card.remove();
-      this.#stepCards.delete(stepId);
-    }
-  }
-
   #findCurrentStep(stepId) {
     const steps = this.#getSteps();
     const index = steps.findIndex(step => this.#ensureStepUiId(step) === stepId);
@@ -815,70 +827,63 @@ export class Savant extends Emitter {
     this.#moveStepToInsertIndex(stepId, insertIndex);
   }
 
-  #createStepBody(step, index, def, mode) {
+  #createStepBody(stepId, step, def, mode) {
     const body = document.createElement('div');
     body.className = 'step-params open';
-    this.#renderStepParamsInMode(body, step, index, def, mode);
+    this.#renderStepParamsInMode(body, stepId, step, def, mode);
     return body;
   }
 
-  #bindStepCard(card) {
-    card.addEventListener('workflow-step-modechange', () => {
-      this.#renderWorkflow();
-    });
-
-    card.addEventListener('workflow-step-toggle-disabled', (event) => {
-      const current = this.#findCurrentStep(event.detail.stepId);
-      if (!current) return;
-      this.#toggleStepDisabled(current.index, current.step);
-    });
-
-    card.addEventListener('workflow-step-delete', (event) => {
-      const current = this.#findCurrentStep(event.detail.stepId);
-      if (!current) return;
-      this.#node.removeStep(this.#event, current.index);
-    });
-
-    card.addEventListener('workflow-step-move-up', (event) => {
-      const current = this.#findCurrentStep(event.detail.stepId);
-      if (!current || current.index === 0) return;
-      this.#node.moveStep(this.#event, current.index, current.index - 1);
-    });
-
-    card.addEventListener('workflow-step-move-down', (event) => {
-      const current = this.#findCurrentStep(event.detail.stepId);
-      if (!current || current.index >= current.steps.length - 1) return;
-      this.#node.moveStep(this.#event, current.index, current.index + 1);
-    });
-
-    card.addEventListener('workflow-step-reorder', (event) => {
-      const { stepId, targetStepId, placement } = event.detail;
-      this.#moveStepRelative(stepId, targetStepId, placement);
+  #describeWorkflowSteps(steps) {
+    const totalSteps = steps.length;
+    return steps.map((step, index) => {
+      const stepId = this.#ensureStepUiId(step);
+      const def = findAction(step.action) ?? this.#customActions[step.action] ?? null;
+      return {
+        stepId,
+        step,
+        def,
+        index,
+        totalSteps,
+        disabled: isStepDisabled(step),
+        unloaded: !def,
+      };
     });
   }
 
-  #getOrCreateStepCard(step) {
-    const stepId = this.#ensureStepUiId(step);
-    let card = this.#stepCards.get(stepId);
-    if (card) return card;
+  #collectLiveStepIds() {
+    if (!this.#node) return [];
+    const payload = this.#node.payload?.peek() ?? {};
+    const liveIds = [];
+    for (const value of Object.values(payload)) {
+      if (!Array.isArray(value)) continue;
+      for (const step of value) liveIds.push(this.#ensureStepUiId(step));
+    }
+    return liveIds;
+  }
 
-    card = document.createElement(WORKFLOW_STEP_CARD_TAG);
-    card.setAttribute('step-id', stepId);
-    card.seedUiState({ mode: step._uiMode ?? 'basic', collapsed: false });
-    this.#bindStepCard(card);
-    this.#stepCards.set(stepId, card);
-    return card;
+  #showWorkflowMessage(html) {
+    this.#workflowRoutesEl.hidden = true;
+    this.#workflowStepsEl.hidden = true;
+    this.#workflowMessageEl.hidden = false;
+    this.#workflowMessageEl.innerHTML = html;
+  }
+
+  #showWorkflowSteps(steps) {
+    this.#workflowMessageEl.hidden = true;
+    this.#workflowRoutesEl.hidden = true;
+    this.#workflowStepsEl.hidden = false;
+    this.#workflowStepsEl.liveStepIds = this.#collectLiveStepIds();
+    this.#workflowStepsEl.items = this.#describeWorkflowSteps(steps);
   }
 
   #renderWorkflow() {
     this.#updateEventTabsUI();
-    this.#pruneStepCards();
 
     if (!this.#node) {
-      const empty = document.createElement('div');
-      empty.className = 'wf-empty';
-      empty.innerHTML = 'Select a room or diamond<br>on the map to edit its flow.';
-      this.#wfSteps.replaceChildren(empty);
+      this.#workflowStepsEl.liveStepIds = [];
+      this.#workflowStepsEl.items = [];
+      this.#showWorkflowMessage('Select a room or diamond<br>on the map to edit its flow.');
       return;
     }
 
@@ -888,57 +893,7 @@ export class Savant extends Emitter {
       return;
     }
 
-    const steps = this.#getSteps();
-    if (steps.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'wf-empty wf-drop-target';
-      empty.textContent = 'No steps yet. Drag an action here or click to add.';
-      this.#setupDropZone(empty, 0);
-      this.#wfSteps.replaceChildren(empty);
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(this.#makeDropZone(0));
-    steps.forEach((step, i) => {
-      fragment.appendChild(this.#makeStepCard(step, i, steps.length));
-      fragment.appendChild(this.#makeDropZone(i + 1));
-    });
-    this.#wfSteps.replaceChildren(fragment);
-  }
-
-  #makeDropZone(insertIndex) {
-    const dz = document.createElement('div');
-    dz.className = 'wf-drop-zone';
-    this.#setupDropZone(dz, insertIndex);
-    return dz;
-  }
-
-  #setupDropZone(el, insertIndex) {
-    el.addEventListener('dragover', e => {
-      const hasPlainText = e.dataTransfer?.types.includes('text/plain');
-      const hasStepDrag = e.dataTransfer?.types.includes(WORKFLOW_STEP_DRAG_MIME);
-      if (hasPlainText || hasStepDrag) {
-        e.preventDefault();
-        el.classList.add('drag-over');
-      }
-    });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      el.classList.remove('drag-over');
-      const stepId = stepIdFromTransfer(e.dataTransfer);
-      if (stepId) {
-        this.#moveStepToInsertIndex(stepId, insertIndex);
-        return;
-      }
-
-      const actionId = actionIdFromTransfer(e.dataTransfer);
-      if (actionId) {
-        const def = this.#findActionDef(actionId);
-        if (def) this.#addStepAt(actionId, def, insertIndex);
-      }
-    });
+    this.#showWorkflowSteps(this.#getSteps());
   }
 
   #findActionDef(actionId) {
@@ -948,43 +903,29 @@ export class Savant extends Emitter {
     return this.#customActions[actionId] ?? null;
   }
 
-  #toggleStepDisabled(index, step) {
+  #toggleStepDisabled(stepId) {
     if (!this.#node) return;
-    this.#node.updateStep(this.#event, index, {
-      ...step,
-      disabled: isStepDisabled(step) ? undefined : true,
+    const current = this.#findCurrentStep(stepId);
+    if (!current) return;
+    this.#node.updateStep(this.#event, current.index, {
+      ...current.step,
+      disabled: isStepDisabled(current.step) ? undefined : true,
     });
   }
 
-  #makeStepCard(step, index, totalSteps) {
-    const card = this.#getOrCreateStepCard(step);
-    const def = findAction(step.action) ?? this.#customActions[step.action] ?? null;
-
-    card.setAttribute('step-id', this.#ensureStepUiId(step));
-    card.setAttribute('step-number', String(index + 1));
-    card.setAttribute('action-label', def?.label ?? 'Action not loaded');
-    card.setAttribute('action-id', step.action ?? '');
-    card.toggleAttribute('disabled', isStepDisabled(step));
-    card.toggleAttribute('unloaded', !def);
-    card.toggleAttribute('can-move-up', index > 0);
-    card.toggleAttribute('can-move-down', index < totalSteps - 1);
-    card.setBody(def ? this.#createStepBody(step, index, def, card.mode) : null);
-    return card;
-  }
-
-  #renderStepParamsInMode(container, step, index, def, mode) {
+  #renderStepParamsInMode(container, stepId, step, def, mode) {
     container.innerHTML = '';
     if (mode === 'json') {
-      this.#renderJsonMode(container, step, index);
+      this.#renderJsonMode(container, stepId, step);
     } else if (mode === 'basic') {
-      this.#renderBasicMode(container, step, index, def);
+      this.#renderBasicMode(container, stepId, step, def);
     } else {
-      this.#renderConfigureMode(container, step, index, def);
+      this.#renderConfigureMode(container, stepId, step, def);
     }
   }
 
   // ── Basic mode — friendly, no code fields ──────────────────────────────────
-  #renderBasicMode(container, step, index, def) {
+  #renderBasicMode(container, stepId, step, def) {
     const params = (def.params ?? []).filter(p => p.type !== 'code' && p.type !== 'textarea');
 
     if (params.length === 0 && def.desc) {
@@ -1013,8 +954,10 @@ export class Savant extends Emitter {
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
       input.addEventListener('change', () => {
         const storedVal = input.type === 'checkbox' ? input.checked : input.value;
-        this.#node.updateStep(this.#event, index, {
-          params: { ...(step.params ?? {}), [p.name]: storedVal }
+        const current = this.#findCurrentStep(stepId);
+        if (!current) return;
+        this.#node.updateStep(this.#event, current.index, {
+          params: { ...(current.step.params ?? {}), [p.name]: storedVal },
         });
       });
       row.appendChild(lbl);
@@ -1033,7 +976,7 @@ export class Savant extends Emitter {
   }
 
   // ── Configure mode — all params ────────────────────────────────────────────
-  #renderConfigureMode(container, step, index, def) {
+  #renderConfigureMode(container, stepId, step, def) {
     const params = def.params ?? [];
     if (params.length === 0) {
       const note = document.createElement('div');
@@ -1052,8 +995,10 @@ export class Savant extends Emitter {
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
       input.addEventListener('change', () => {
         const storedVal = input.type === 'checkbox' ? input.checked : input.value;
-        this.#node.updateStep(this.#event, index, {
-          params: { ...(step.params ?? {}), [p.name]: storedVal }
+        const current = this.#findCurrentStep(stepId);
+        if (!current) return;
+        this.#node.updateStep(this.#event, current.index, {
+          params: { ...(current.step.params ?? {}), [p.name]: storedVal },
         });
       });
       row.appendChild(lbl);
@@ -1063,7 +1008,7 @@ export class Savant extends Emitter {
   }
 
   // ── JSON mode — raw step object editor ─────────────────────────────────────
-  #renderJsonMode(container, step, index) {
+  #renderJsonMode(container, stepId, step) {
     const { _uiMode, ...cleanStep } = step;
     const ta = document.createElement('textarea');
     ta.className = 'param-input step-json-editor';
@@ -1082,7 +1027,9 @@ export class Savant extends Emitter {
         parseErr = false;
         errDiv.style.display = 'none';
         ta.style.borderColor = '';
-        this.#node.updateStep(this.#event, index, parsed);
+        const current = this.#findCurrentStep(stepId);
+        if (!current) return;
+        this.#node.updateStep(this.#event, current.index, parsed);
       } catch (e) {
         parseErr = true;
         errDiv.textContent = e.message;
@@ -1171,14 +1118,10 @@ export class Savant extends Emitter {
       params[p.name] = p.default ?? '';
     }
     const step = { action: actionId, params };
-    this.#ensureStepUiId(step);
+    const stepId = this.#ensureStepUiId(step);
     this.#node.addStep(this.#event, step);
-    // Expand the last card after render
     requestAnimationFrame(() => {
-      const cards = this.#wfSteps.querySelectorAll(WORKFLOW_STEP_CARD_TAG);
-      const last = cards[cards.length - 1];
-      last?.expand?.();
-      last?.scrollIntoView({ behavior: 'smooth' });
+      this.#workflowStepsEl.expandStep(stepId);
     });
   }
 
@@ -1195,16 +1138,19 @@ export class Savant extends Emitter {
 
   // ── Diamond routes editor ─────────────────────────────────────────────────
   #renderRoutesEditor() {
-    this.#wfSteps.innerHTML = '';
+    this.#workflowMessageEl.hidden = true;
+    this.#workflowStepsEl.hidden = true;
+    this.#workflowRoutesEl.hidden = false;
+    this.#workflowRoutesEl.innerHTML = '';
 
     const header = document.createElement('div');
     header.style.cssText = 'font-size:11px;color:var(--text-muted);margin-bottom:8px';
     header.textContent = 'Routes are evaluated top-to-bottom. First match wins. Use inventory.key syntax.';
-    this.#wfSteps.appendChild(header);
+    this.#workflowRoutesEl.appendChild(header);
 
     const routes = this.#node.routes.peek() ?? [];
     routes.forEach((route, i) => {
-      this.#wfSteps.appendChild(this.#makeRouteRow(route, i));
+      this.#workflowRoutesEl.appendChild(this.#makeRouteRow(route, i));
     });
 
     const addBtn = document.createElement('button');
@@ -1216,7 +1162,7 @@ export class Savant extends Emitter {
       this.#node.routes.value = rs;
       this.#renderWorkflow();
     });
-    this.#wfSteps.appendChild(addBtn);
+    this.#workflowRoutesEl.appendChild(addBtn);
   }
 
   /** Parse a condition like `inventory.get('key') === 'val'` or `inventory.key === 'val'` into {key, op, value} */

@@ -638,6 +638,23 @@ undercity-map {
   padding: 8px;
 }
 
+uc-workflow-steps {
+  display: block;
+}
+
+wf-repeater {
+  display: contents;
+}
+
+.workflow-step-row {
+  display: block;
+}
+
+.workflow-step-row > uc-workflow-step-card {
+  display: block;
+  margin-bottom: 4px;
+}
+
 .wf-empty {
   color: var(--text-muted);
   font-size: 11px;

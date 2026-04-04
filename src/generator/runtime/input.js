@@ -174,4 +174,24 @@ export const Input = {
     return _append(el);
   },
 
+  // ── Ask For Audio ──────────────────────────────────────────────────────────
+  audio(key, label = '', accept = 'audio/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+    const el = _decorate(_el('af-ask-for-audio'), helpText, size, validFeedback, invalidFeedback);
+    _set(el, 'key', key);
+    if (label)  _set(el, 'label', label);
+    if (accept) _set(el, 'accept', accept);
+    _flag(el, 'required', Boolean(required) || required === 'true');
+    return _append(el);
+  },
+
+  // ── Ask For Video ──────────────────────────────────────────────────────────
+  video(key, label = '', accept = 'video/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+    const el = _decorate(_el('af-ask-for-video'), helpText, size, validFeedback, invalidFeedback);
+    _set(el, 'key', key);
+    if (label)  _set(el, 'label', label);
+    if (accept) _set(el, 'accept', accept);
+    _flag(el, 'required', Boolean(required) || required === 'true');
+    return _append(el);
+  },
+
 };

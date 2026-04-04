@@ -115,16 +115,20 @@ export class CompositeDisposable {
 
 /**
  * Keyed list renderer — reconciles add/remove/reorder without clearing the container.
+ * Optional update/remove hooks let callers mutate existing nodes instead of
+ * recreating them on every signal change.
  * Implements dispose() so it can be passed directly to a Scope:
  *   scope.add(new Repeater(container, signal, render))
  */
 export class Repeater {
-  #container; #render; #key; #nodes = new Map();
+  #container; #render; #updateNode; #remove; #key; #nodes = new Map(); #items = new Map();
   #sub;
 
-  constructor(container, signal, render, { key = 'id' } = {}) {
+  constructor(container, signal, render, { key = 'id', update = null, remove = null } = {}) {
     this.#container = container;
     this.#render    = render;
+    this.#updateNode = typeof update === 'function' ? update : null;
+    this.#remove    = typeof remove === 'function' ? remove : null;
     this.#key       = typeof key === 'function' ? key : item => item[key];
     this.#sub       = signal.subscribe(items => this.#update(items));
   }
@@ -132,17 +136,29 @@ export class Repeater {
   dispose() {
     this.#sub.dispose();
     this.#nodes.clear();
+    this.#items.clear();
   }
 
   #update(items) {
     const incoming = new Map(items.map(item => [this.#key(item), item]));
     for (const [k, node] of this.#nodes) {
-      if (!incoming.has(k)) { node.remove(); this.#nodes.delete(k); }
+      if (incoming.has(k)) continue;
+      const prevItem = this.#items.get(k);
+      this.#remove?.(node, prevItem);
+      node.remove();
+      this.#nodes.delete(k);
+      this.#items.delete(k);
     }
     for (const item of items) {
       const k = this.#key(item);
       let node = this.#nodes.get(k);
-      if (!node) { node = this.#render(item); this.#nodes.set(k, node); }
+      const prevItem = this.#items.get(k);
+      if (!node) {
+        node = this.#render(item);
+        this.#nodes.set(k, node);
+      }
+      this.#updateNode?.(node, item, prevItem);
+      this.#items.set(k, item);
       this.#container.appendChild(node);
     }
   }

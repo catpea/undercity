@@ -526,9 +526,10 @@ class WorkflowStepCard extends HTMLElement {
     }));
 
     this.#scope.add(on(this, 'dragover', (event) => {
-      const hasStepDrag = event.dataTransfer?.types.includes(WORKFLOW_STEP_DRAG_MIME);
-      const hasTextDrag = event.dataTransfer?.types.includes('text/plain');
-      if (!hasStepDrag && !hasTextDrag) return;
+      const hasStepMime = event.dataTransfer?.types.includes(WORKFLOW_STEP_DRAG_MIME);
+      const hasFallbackStep = event.dataTransfer?.types.includes('text/plain')
+        && Boolean(stepIdFromTransfer(event.dataTransfer));
+      if (!hasStepMime && !hasFallbackStep) return;
       event.preventDefault();
       this.#dropPosition.value = this.#dropPositionForPointer(event.clientY);
     }));
@@ -538,13 +539,13 @@ class WorkflowStepCard extends HTMLElement {
     }));
 
     this.#scope.add(on(this, 'drop', (event) => {
-      event.preventDefault();
       const stepId = stepIdFromTransfer(event.dataTransfer);
       if (!stepId || stepId === this.#stepId.peek()) {
         this.#dropPosition.value = '';
         return;
       }
 
+      event.preventDefault();
       const placement = this.#dropPositionForPointer(event.clientY);
       this.#dropPosition.value = '';
       this.dispatchEvent(createEvent('workflow-step-reorder', {

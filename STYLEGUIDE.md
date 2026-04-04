@@ -476,6 +476,55 @@ items.value = [
 
 `Repeater` implements `.dispose()` so it can be passed directly to `scope.add()`.
 
+#### Reconciling Repeater
+
+`Repeater` is the project's **reconciling repeater** primitive. It is the
+correct tool for keyed lists whose child nodes have local UI state.
+
+- It preserves existing DOM nodes across add/remove/reorder.
+- It accepts optional `update(node, item, prevItem)` and
+  `remove(node, prevItem)` hooks so callers can mutate or clean up existing
+  nodes instead of recreating them.
+- Use it when a row contains inputs, collapse state, drag state, focus, or
+  any other UI state that should stay with the node.
+- Do **not** clear a list with `innerHTML = ''` or `replaceChildren(...)` on
+  every state change when keyed reconciliation is possible.
+
+```js
+const items = new Signal([
+  { id: 'a', label: 'Alpha' },
+  { id: 'b', label: 'Beta' },
+]);
+
+function renderItem(item) {
+  const li = document.createElement('li');
+  li.textContent = item.label;
+  return li;
+}
+
+function updateItem(node, item) {
+  node.textContent = item.label;
+}
+
+const repeater = new Repeater(listEl, items, renderItem, {
+  key: item => item.id,
+  update: updateItem,
+});
+
+scope.add(repeater);
+```
+
+#### `<wf-repeater>`
+
+For Web Component code that wants a DOM-native wrapper, use the reusable
+`<wf-repeater>` element from `src/ide/wf-repeater.js`.
+
+- It wraps `Repeater`.
+- It accepts an item `Signal`, `renderItem`, `updateItem`, and `removeItem`.
+- It is appropriate when the list itself is a custom element and you want the
+  reconciliation boundary to live inside that element rather than in an
+  external controller.
+
 ---
 
 ### DisposableEventBinder

@@ -5,6 +5,16 @@ coverage/
 test/tmp/
 tmp
 generated
+example/task-queue/data/active
+example/task-queue/data/incoming
+example/task-queue/data/jobs
+example/task-queue/data/output
+example/task-queue/data/tmp
+example/task-queue/data/
+
+
+
+
 
 # Logs
 logs

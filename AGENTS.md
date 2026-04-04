@@ -37,6 +37,15 @@ use Signal, combineLatest, Scope, Events, Disposable, CompositeDisposable, Repea
 
 See src/lib/signal.js src/lib/scope.js
 
+### Reconciling Repeater
+
+Undercity has a **reconciling Repeater** now.
+
+- Use `Repeater` from `src/lib/signal.js` when rendering keyed lists that must preserve DOM nodes across add/remove/reorder.
+- `Repeater` supports **keyed reconciliation plus optional update/remove hooks**. That means callers can mutate existing nodes in place instead of rebuilding whole lists.
+- For DOM-first list components, use the reusable `<wf-repeater>` wrapper in [`src/ide/wf-repeater.js`](./src/ide/wf-repeater.js).
+- If a list item's local UI state matters, **do not** clear the parent with `innerHTML = ''` or `replaceChildren(...)` on every update. Reconcile keyed children in place.
+
 ## USE WEB COMPONENTS
 
 Use web-components/custom-elements to create reusable and portable code

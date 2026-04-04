@@ -1,0 +1,18 @@
+{
+  "id":      "input.video",
+  "icon":    "camera-video",
+  "color":   "var(--sol-violet)",
+  "label":   "Ask For Video",
+  "desc":    "Render a video file picker with an inline player and duration/resolution/size stats so the user can preview their choice. Video metadata (name, size, type, url, duration, width, height) is stored in inventory.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "key",      "label": "Inventory key",  "type": "text",    "placeholder": "videoClip" },
+    { "name": "label",    "label": "Label",          "type": "text",    "placeholder": "Video Clip" },
+    { "name": "accept",   "label": "Accepted types", "type": "text",    "placeholder": "video/*", "default": "video/*" },
+    { "name": "required", "label": "Required",       "type": "boolean", "default": false },
+    { "name": "helpText",        "label": "Help text",        "type": "textarea", "placeholder": "Describe what video belongs here.", "default": "" },
+    { "name": "size",            "label": "Size",             "type": "select",   "options": ["","sm","lg"], "default": "" },
+    { "name": "validFeedback",   "label": "Valid feedback",   "type": "text",     "placeholder": "Looks good!", "default": "" },
+    { "name": "invalidFeedback", "label": "Invalid feedback", "type": "text",     "placeholder": "Please choose a video file.", "default": "" }
+  ]
+}
