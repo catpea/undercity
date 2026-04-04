@@ -8,9 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
+    "start": "node packages/process-manager/pm.js start network-services/ecosystem.json",
+    "dev":   "NODE_ENV=development node packages/process-manager/pm.js start network-services/ecosystem.json",
+    "logs":  "node packages/process-manager/pm.js logs",
+    "save":  "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
   },
   "author": "catpea (https://github.com/catpea)",
   "license": "MIT",

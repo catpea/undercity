@@ -7,31 +7,19 @@
       {
         "id": "dcb5c8c7",
         "type": "room",
-        "label": "Lobby",
-        "x": -680,
+        "label": "Quick Poem",
+        "x": -520,
         "y": 360,
         "payload": {
           "Enter": [
             {
-              "action": "input.image",
-              "params": {
-                "key": "sss",
-                "label": "",
-                "accept": "image/*",
-                "required": false,
-                "helpText": "",
-                "size": "",
-                "validFeedback": "",
-                "invalidFeedback": ""
-              }
-            },
-            {
               "action": "room.showNav",
               "params": {
                 "variant": "primary",
-                "full": true,
-                "outline": true,
-                "group": true
+                "full": false,
+                "outline": false,
+                "group": false,
+                "size": "lg"
               }
             }
           ],
@@ -51,20 +39,37 @@
       {
         "id": "e9bb5ba2",
         "type": "room",
-        "label": "Check Out",
-        "x": -440,
-        "y": 360,
+        "label": "Basic Poem",
+        "x": -400,
+        "y": 320,
         "payload": {
           "Enter": [
             {
-              "action": "input.image",
+              "action": "input.text",
               "params": {
-                "key": "image",
-                "label": "Cover Image",
-                "accept": "image/*",
-                "required": true,
-                "helpText": "A nice square 1:1 ration 1024x1024 is the best cover image.",
-                "size": "lg",
+                "key": "title",
+                "label": "",
+                "placeholder": "",
+                "required": false,
+                "autocomplete": "",
+                "spellcheck": false,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
+              "action": "input.longText",
+              "params": {
+                "key": "poem",
+                "label": "Poem Text",
+                "placeholder": "",
+                "rows": 4,
+                "required": false,
+                "spellcheck": true,
+                "helpText": "",
+                "size": "",
                 "validFeedback": "",
                 "invalidFeedback": ""
               }
@@ -84,8 +89,17 @@
               }
             },
             {
-              "action": "debug.inventoryDump",
-              "params": {}
+              "action": "input.image",
+              "params": {
+                "key": "image",
+                "label": "Cover Image",
+                "accept": "image/*",
+                "required": false,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
             },
             {
               "action": "display.divider",
@@ -112,6 +126,95 @@
           "isEntry": false
         },
         "things": []
+      },
+      {
+        "id": "c8329426",
+        "type": "room",
+        "label": "Looped Video",
+        "x": -400,
+        "y": 400,
+        "payload": {
+          "Enter": [
+            {
+              "action": "input.text",
+              "params": {
+                "key": "title",
+                "label": "",
+                "placeholder": "",
+                "required": false,
+                "autocomplete": "",
+                "spellcheck": false,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
+              "action": "input.longText",
+              "params": {
+                "key": "poem",
+                "label": "Poem Text",
+                "placeholder": "",
+                "rows": 4,
+                "required": false,
+                "spellcheck": true,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
+              "action": "input.file",
+              "params": {
+                "key": "audio",
+                "label": "Audio Narration",
+                "accept": "*/*",
+                "multiple": false,
+                "required": true,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
+              "action": "input.video",
+              "params": {
+                "key": "clip",
+                "label": "Loop Clip",
+                "accept": "video/*",
+                "required": false,
+                "helpText": "",
+                "size": "",
+                "validFeedback": "",
+                "invalidFeedback": ""
+              }
+            },
+            {
+              "action": "display.divider",
+              "params": {}
+            },
+            {
+              "action": "submit.submitInventoryToTaskQueue",
+              "params": {
+                "url": "http://localhost:4000",
+                "jobType": "video-from-looping-clip-over-mp3",
+                "omit": "",
+                "preview": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
       }
     ],
     "edges": [
@@ -119,6 +222,13 @@
         "id": "8d9e7045",
         "fromId": "dcb5c8c7",
         "toId": "e9bb5ba2",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "3224f382",
+        "fromId": "dcb5c8c7",
+        "toId": "c8329426",
         "label": "",
         "condition": ""
       }
@@ -129,5 +239,5 @@
   },
   "customActions": {},
   "created": "2026-04-03T20:54:30.100Z",
-  "modified": "2026-04-04T03:17:59.979Z"
+  "modified": "2026-04-04T23:39:18.016Z"
 }

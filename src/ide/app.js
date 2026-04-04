@@ -364,6 +364,8 @@ class App extends Emitter {
         cmd:   'addNode',
         type:  n.type ?? 'room',
         label: n.label?.value ?? n.label ?? n.id,
+        x:     Math.round(n.x?.value ?? n.x ?? 0),
+        y:     Math.round(n.y?.value ?? n.y ?? 0),
       };
       if (n.meta?.isEntry) cmd.entry = true;
       if (n.template)      cmd.template = n.template;
@@ -400,6 +402,31 @@ class App extends Emitter {
       }
     }
 
+    // addThing / addThingAction commands — one addThing per Thing in every node,
+    // then one addThingAction per step in each Thing's events.
+    // NOTE: When adding new map features, remember to update both #exportMapMcp()
+    // and #applyMcpCommands() so MCP round-trips stay complete.
+    for (const n of nodes) {
+      const nodeLabel = n.label?.value ?? n.label ?? n.id;
+      const things    = n.things?.peek?.() ?? [];
+      for (const t of things) {
+        cmds.push({ cmd: 'addThing', node: nodeLabel, type: t.type, config: t.config ?? {} });
+        const events = t.events ?? {};
+        for (const [event, steps] of Object.entries(events)) {
+          if (!Array.isArray(steps)) continue;
+          for (const step of steps) {
+            if (!step?.action) continue;
+            const acmd = withDisabledStepFlag(
+              { cmd: 'addThingAction', node: nodeLabel, thing: t.config?.name ?? t.id, event, action: step.action },
+              step
+            );
+            if (step.params && Object.keys(step.params).length > 0) acmd.params = step.params;
+            cmds.push(acmd);
+          }
+        }
+      }
+    }
+
     const json = JSON.stringify(cmds, null, 2);
     navigator.clipboard.writeText(json).then(() => {
       this.toast(`Copied ${cmds.length} MCP commands to clipboard`, 'info');
@@ -407,6 +434,149 @@ class App extends Emitter {
       const win = window.open('', '_blank', 'width=700,height=520');
       if (win) { win.document.write(`<pre style="font:13px monospace;padding:16px">${json.replace(/</g,'&lt;')}</pre>`); }
     });
+  }
+
+  /**
+   * Execute an array of MCP commands ({cmd, ...}) against the current graph.
+   * Shared by the AI chat executor and the import button.
+   * Does NOT record history — callers are responsible for that.
+   */
+  #applyMcpCommands(commands) {
+    // Build a label→node lookup for nodes that already exist in the graph
+    const resolveNode = (ref) => {
+      if (!ref) return null;
+      const byId = this.#graph.nodes.get(ref);
+      if (byId) return byId;
+      const lower = String(ref).toLowerCase();
+      for (const n of this.#graph.nodes.values()) {
+        if (n.label.value.toLowerCase() === lower) return n;
+      }
+      return null;
+    };
+
+    // First pass: create all nodes so edges can reference them by label
+    const created = new Map(); // label (lowercase) → GraphNode
+    for (const cmd of commands) {
+      if (cmd.cmd !== 'addNode') continue;
+      const x    = cmd.x ?? (200 + Math.random() * 400);
+      const y    = cmd.y ?? (200 + Math.random() * 300);
+      const node = this.#graph.addNode({ type: cmd.type ?? 'room', label: cmd.label ?? 'Room', x, y });
+      if (cmd.entry) this.#graph.setEntry(node.id);
+      created.set((cmd.label ?? '').toLowerCase(), node);
+    }
+
+    // Second pass: edges, actions, and metadata
+    for (const cmd of commands) {
+      if (cmd.cmd === 'addNode') continue;
+
+      if (cmd.cmd === 'addEdge') {
+        const from = created.get((cmd.from ?? '').toLowerCase()) ?? resolveNode(cmd.from);
+        const to   = created.get((cmd.to   ?? '').toLowerCase()) ?? resolveNode(cmd.to);
+        if (!from || !to) continue;
+        const edge = this.#graph.addEdge(from.id, to.id);
+        if (cmd.label)     edge.label.value     = cmd.label;
+        if (cmd.condition) edge.condition.value = cmd.condition;
+
+      } else if (cmd.cmd === 'addAction') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (!node) throw new Error(`addAction: node "${cmd.node}" not found`);
+        if (!cmd.action) continue;
+        node.addStep(cmd.event ?? 'Enter', {
+          action: cmd.action,
+          params: cmd.params ?? {},
+          ...(cmd.disabled === true ? { disabled: true } : {}),
+        });
+
+      } else if (cmd.cmd === 'addStep') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (!node) throw new Error(`addStep: node "${cmd.node}" not found`);
+        if (!cmd.step) continue;
+        node.addStep(cmd.event ?? 'Enter', cmd.step);
+
+      } else if (cmd.cmd === 'setLabel') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (node && cmd.label) node.label.value = cmd.label;
+
+      } else if (cmd.cmd === 'setEntry') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (node) this.#graph.setEntry(node.id);
+
+      } else if (cmd.cmd === 'addThing') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (!node) throw new Error(`addThing: node "${cmd.node}" not found`);
+        if (!cmd.type) continue;
+        node.addThing({ type: cmd.type, config: cmd.config ?? {} });
+
+      } else if (cmd.cmd === 'addThingAction') {
+        const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
+        if (!node) throw new Error(`addThingAction: node "${cmd.node}" not found`);
+        if (!cmd.action) continue;
+        // Resolve the thing by config.name or id suffix match
+        const things = node.things?.peek?.() ?? [];
+        const thing  = things.find(t => (t.config?.name ?? t.id) === cmd.thing) ?? things[things.length - 1];
+        if (!thing) continue;
+        const event   = cmd.event ?? 'Enter';
+        const events  = { ...(thing.events ?? {}) };
+        const steps   = [...(events[event] ?? [])];
+        const newStep = { action: cmd.action, params: cmd.params ?? {} };
+        if (cmd.disabled === true) newStep.disabled = true;
+        steps.push(newStep);
+        events[event] = steps;
+        node.updateThing(thing.id, { events });
+      }
+    }
+
+    this.markDirty();
+    return { ok: true };
+  }
+
+  /**
+   * Import a map from a JSON file containing MCP commands (same format as
+   * btn-export-map). Clears the current graph and re-applies all commands,
+   * giving every action a clean re-run through the current runtime.
+   */
+  #importMapMcp() {
+    const input = document.createElement('input');
+    input.type   = 'file';
+    input.accept = '.json,application/json';
+
+    input.addEventListener('change', async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      let commands;
+      try {
+        const text = await file.text();
+        commands   = JSON.parse(text);
+      } catch {
+        this.toast('Import failed: file is not valid JSON', 'error');
+        return;
+      }
+
+      if (!Array.isArray(commands)) {
+        this.toast('Import failed: expected an array of MCP commands', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Import ${commands.length} MCP commands from "${file.name}"?\n\nThis will REPLACE the current map. Save first if you want to keep it.`
+      );
+      if (!confirmed) return;
+
+      this.#history.record(this.#graph.toJSON());
+      this.#graph.fromJSON({ nodes: [], edges: [] });
+
+      try {
+        this.#applyMcpCommands(commands);
+        this.fitView();
+        await this.saveProject();
+        this.toast(`Imported ${commands.length} commands from "${file.name}"`, 'info');
+      } catch (e) {
+        this.toast('Import error: ' + e.message, 'error');
+      }
+    });
+
+    input.click();
   }
 
   /** Export current map as Markdown instructions an AI can read and reproduce. */
@@ -1040,6 +1210,8 @@ class App extends Emitter {
 
     // Export map as MCP JSON (addNode + addEdge + addAction commands)
     $('btn-export-map')?.addEventListener('click', () => this.#exportMapMcp());
+    // Import map from MCP JSON file (replaces current map)
+    $('btn-import-map')?.addEventListener('click', () => this.#importMapMcp());
     // Export map as Markdown AI instructions
     $('btn-export-markdown')?.addEventListener('click', () => this.#exportMapMarkdown());
     $('btn-cmd')?.addEventListener('click', () => this.#palette?.open());
@@ -1467,63 +1639,7 @@ class App extends Emitter {
     this.#savant.setChatExecutor(commands => {
       try {
         this.#history.record(this.#graph.toJSON());
-        // Build a label→node map for resolution
-        const resolveNode = (ref) => {
-          if (!ref) return null;
-          // Try exact ID first
-          const byId = this.#graph.nodes.get(ref);
-          if (byId) return byId;
-          // Try case-insensitive label
-          const lower = String(ref).toLowerCase();
-          for (const n of this.#graph.nodes.values()) {
-            if (n.label.value.toLowerCase() === lower) return n;
-          }
-          return null;
-        };
-        // First pass: collect addNode temp-id map (labels assigned in this batch)
-        const created = new Map(); // label → GraphNode
-        for (const cmd of commands) {
-          if (cmd.cmd === 'addNode') {
-            const x = cmd.x ?? (200 + Math.random() * 400);
-            const y = cmd.y ?? (200 + Math.random() * 300);
-            const node = this.#graph.addNode({ type: cmd.type ?? 'room', label: cmd.label ?? 'Room', x, y });
-            if (cmd.entry) this.#graph.setEntry(node.id);
-            created.set((cmd.label ?? '').toLowerCase(), node);
-          }
-        }
-        // Second pass: edges and steps
-        for (const cmd of commands) {
-          if (cmd.cmd === 'addNode') continue; // already done
-          if (cmd.cmd === 'addEdge') {
-            const fromNode = created.get((cmd.from ?? '').toLowerCase()) ?? resolveNode(cmd.from);
-            const toNode   = created.get((cmd.to   ?? '').toLowerCase()) ?? resolveNode(cmd.to);
-            if (!fromNode || !toNode) continue;
-            const edge = this.#graph.addEdge(fromNode.id, toNode.id);
-            if (cmd.label) edge.label.value = cmd.label;
-            if (cmd.condition) edge.condition.value = cmd.condition;
-          } else if (cmd.cmd === 'addAction') {
-            // addAction is the export-side name; addStep is the original internal form
-            const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
-            if (!node) throw new Error(`addAction: node "${cmd.node}" not found`);
-            if (!cmd.action) continue;
-            const event = cmd.event ?? 'Enter';
-            node.addStep(event, { action: cmd.action, params: cmd.params ?? {}, ...(cmd.disabled === true ? { disabled: true } : {}) });
-          } else if (cmd.cmd === 'addStep') {
-            const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
-            if (!node) throw new Error(`addStep: node "${cmd.node}" not found`);
-            if (!cmd.step) continue;
-            const event = cmd.event ?? 'Enter';
-            node.addStep(event, cmd.step);
-          } else if (cmd.cmd === 'setLabel') {
-            const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
-            if (node && cmd.label) node.label.value = cmd.label;
-          } else if (cmd.cmd === 'setEntry') {
-            const node = created.get((cmd.node ?? '').toLowerCase()) ?? resolveNode(cmd.node);
-            if (node) this.#graph.setEntry(node.id);
-          }
-        }
-        this.markDirty();
-        return { ok: true };
+        return this.#applyMcpCommands(commands);
       } catch (e) {
         return { error: e.message };
       }

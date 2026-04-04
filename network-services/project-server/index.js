@@ -1,5 +1,5 @@
 /**
- * src/server/index.js — HTTP server setup.
+ * network-services/project-server/index.js — HTTP server setup.
  *
  * createServer(options?) builds the Express-compatible app.
  * listen(app, port?)   starts it and returns {server, port, url, close}.
@@ -13,8 +13,8 @@
  *   const { url, close } = await listen(app, 0);  // port 0 → OS picks one
  */
 
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath }          from 'url';
 
 import express from '../../packages/undercity-http-server/index.js';
 
@@ -93,4 +93,13 @@ export function listen(app, port) {
     });
     srv.on('error', reject);
   });
+}
+
+// ── Bootstrap when run directly ───────────────────────────────────────────────
+// When imported as a module (e.g. by tests or root server.js) nothing runs.
+// When executed directly (e.g. by the process manager via ecosystem.json) the
+// server starts itself.
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  listen(createServer());
 }

@@ -45,18 +45,29 @@
 // ── Run ───────────────────────────────────────────────────────────────────────
 //   node processor.js [server-url]   (default: http://localhost:4000)
 
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, rmSync, watch } from 'node:fs';
 import { readdir }                                       from 'node:fs/promises';
 import { join, resolve, extname }                        from 'node:path';
 import { spawn }                                         from 'node:child_process';
 
-const VERSION  = '1.0.0';
-const SERVER   = (process.argv[2] ?? process.env.QUEUE_URL ?? 'http://localhost:4000').replace(/\/$/, '');
-const PROC_DIR = resolve(import.meta.dirname, 'processor');
-const OUT_DIR  = resolve(import.meta.dirname, 'data', 'output');
-const TMP_DIR  = resolve(import.meta.dirname, 'data', 'tmp');
-const POLL_MS  = 2000;   // wait between polls when queue is empty
-const RETRY_MS = 8000;   // wait after a network error before retrying
+const VERSION        = '1.0.0';
+const SERVER         = (process.argv[2] ?? process.env.QUEUE_URL ?? 'http://localhost:4000').replace(/\/$/, '');
+const QUEUE_ROOT     = process.env.TASK_QUEUE_ROOT ?? '/tmp/undercity-task-queue';
+const PROC_DIR       = resolve(import.meta.dirname, 'processor');
+const OUT_DIR        = join(QUEUE_ROOT, 'output');
+const TMP_DIR        = join(QUEUE_ROOT, 'tmp');
+const INCOMING_DIR   = join(QUEUE_ROOT, 'incoming');
+const RETRY_MS       = 8000;   // wait after a network error before retrying
+
+// ── Idle strategy ─────────────────────────────────────────────────────────────
+// Default: fs.watch — the OS wakes workers the instant a job directory appears
+//          in data/incoming/. Zero activity while truly idle.
+//
+// Alternative: set QUEUE_LONG_POLL=<seconds> (e.g. QUEUE_LONG_POLL=25).
+//   Workers pass ?wait=N to /dequeue and the server holds the connection open,
+//   returning the moment a job is queued. No filesystem access needed — useful
+//   when workers and the queue server run on separate machines.
+const LONG_POLL_SECS = Number(process.env.QUEUE_LONG_POLL ?? 0);
 
 for (const dir of [OUT_DIR, TMP_DIR]) mkdirSync(dir, { recursive: true });
 
@@ -130,17 +141,25 @@ function mimeToExt(mimeType, originalName) {
 
 // ── Server API helpers ────────────────────────────────────────────────────────
 
-async function api(method, path, body) {
+async function api(method, path, body, timeoutMs = 10_000) {
   const res = await fetch(`${SERVER}${path}`, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body:    body ? JSON.stringify(body) : undefined,
-    signal:  AbortSignal.timeout(10_000),
+    signal:  AbortSignal.timeout(timeoutMs),
   });
   return res.json();
 }
 
-async function dequeue()                                  { return api('GET',  '/dequeue'); }
+async function dequeue() {
+  if (LONG_POLL_SECS > 0) {
+    // Ask the server to hold the connection until a job arrives or the wait
+    // period elapses. Add a generous margin to the fetch timeout so we never
+    // abort a valid long-poll response early.
+    return api('GET', `/dequeue?wait=${LONG_POLL_SECS}`, null, (LONG_POLL_SECS + 15) * 1000);
+  }
+  return api('GET', '/dequeue');
+}
 async function postProgress(jobId, percent, message, state) {
   return api('POST', `/job/${jobId}/progress`, { percent, message, state });
 }
@@ -199,9 +218,21 @@ async function decodeFields(rawFields, tmpDir) {
       continue;
     }
 
-    // HTTP/HTTPS URL — pass through without fetching
-    fields[key] = { key, name, type, size, path: null, url, isFile: true,
-      warning: 'Remote URL — not fetched automatically. Use the url property.' };
+    // HTTP/HTTPS URL — download to temp file
+    try {
+      const ext      = mimeToExt(type, name);
+      const tmpPath  = join(tmpDir, `${key}${ext}`);
+      const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+      if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      const buffer   = Buffer.from(await response.arrayBuffer());
+      writeFileSync(tmpPath, buffer);
+      const kb = (buffer.byteLength / 1024).toFixed(1);
+      fields[key] = { key, name, type, size, path: tmpPath, url, isFile: true,
+        downloadNote: `Downloaded ${kb} KB from ${url}` };
+    } catch (err) {
+      fields[key] = { key, name, type, size, path: null, url, isFile: true,
+        warning: `Failed to download (${url}): ${err.message}` };
+    }
   }
 
   return fields;
@@ -299,6 +330,7 @@ async function runJob(submission) {
   const label = `${C.cyan}${formId}${C.reset} ${C.dim}(${submissionId.slice(0, 8)}…)${C.reset}`;
 
   log('job', `Starting ${label}`);
+  await postLog(jobId, `Job started — formId: ${formId}  submissionId: ${submissionId}`).catch(() => {});
 
   // ── Find handler ──────────────────────────────────────────────────────────
   const handlerPath = join(PROC_DIR, formId, 'index.js');
@@ -325,12 +357,15 @@ async function runJob(submission) {
   for (const [key, f] of Object.entries(fields)) {
     if (f.warning) {
       log('warn', `  field ${C.yellow}${key}${C.reset}: ${f.warning}`);
-      await postLog(jobId, `[${key}] ${f.warning}`, 'warn').catch(() => {});
+      await postLog(jobId, `Field [${key}] warning: ${f.warning}`, 'warn').catch(() => {});
     } else if (f.isFile) {
+      const note = f.downloadNote ?? `path: ${f.path}`;
       log('info', `  field ${C.cyan}${key}${C.reset}: ${f.type}  ${C.dim}→ ${f.path}${C.reset}`);
+      await postLog(jobId, `Field [${key}] (${f.type}): ${note}`).catch(() => {});
     } else {
       const preview = String(f.value ?? '').slice(0, 60);
       log('info', `  field ${C.cyan}${key}${C.reset}: ${f.type}  "${preview}"`);
+      await postLog(jobId, `Field [${key}]: "${preview}"`).catch(() => {});
     }
   }
 
@@ -381,10 +416,15 @@ async function runJob(submission) {
   }
 
   try {
-    await handler.handle(fields, ctx);
+    const handlerResult = await handler.handle(fields, ctx);
     log('ok', `Finished ${label}  → ${C.dim}${outputDir}${C.reset}`);
-    await postProgress(jobId, 100, 'Done.', 'done').catch(() => {});
-    await postLog(jobId, `Job complete. Output: ${outputDir}`, 'info').catch(() => {});
+    // Post result alongside the done progress update so the client can read it
+    const doneBody = { percent: 100, message: 'Done.', state: 'done' };
+    if (handlerResult !== null && handlerResult !== undefined && typeof handlerResult === 'object') {
+      doneBody.result = handlerResult;
+    }
+    await api('POST', `/job/${jobId}/progress`, doneBody).catch(() => {});
+    await postLog(jobId, `Job complete. Output directory: ${outputDir}`, 'info').catch(() => {});
   } catch (err) {
     log('error', `Handler threw: ${err.message}`);
     await postProgress(jobId, 0, err.message, 'error').catch(() => {});
@@ -396,9 +436,38 @@ async function runJob(submission) {
   }
 }
 
+// ── Idle wait strategy ────────────────────────────────────────────────────────
+//
+// fs.watch mode (default):
+//   Open an OS directory watch on data/incoming/. The kernel wakes us the
+//   instant any entry is added or removed — zero CPU, zero network, zero log
+//   spam. On wakeup we call /dequeue; if another worker already claimed the job
+//   (the rename fired our watch too) we re-enter the watch silently.
+//
+// Long-poll mode (QUEUE_LONG_POLL=N):
+//   The /dequeue request itself blocks on the server for up to N seconds, so
+//   waitForWork() is a no-op — we just loop back and call dequeue() again.
+//   Useful when workers run on a separate machine with no shared filesystem.
+
+let _watcher = null;  // held so shutdown() can unblock a sleeping worker
+
+function waitForWork() {
+  if (LONG_POLL_SECS > 0) {
+    // Server-side wait already elapsed; loop immediately.
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    mkdirSync(INCOMING_DIR, { recursive: true });
+    const w = watch(INCOMING_DIR, () => { w.close(); _watcher = null; resolve(); });
+    w.on('error',   ()  => { w.close(); _watcher = null; resolve(); });
+    _watcher = w;
+  });
+}
+
 // ── Poll loop ─────────────────────────────────────────────────────────────────
 
 let running = true;
+let idle    = false;  // suppress repeated "queue empty" lines per worker
 
 async function pollLoop() {
   while (running) {
@@ -406,12 +475,18 @@ async function pollLoop() {
       const { submission } = await dequeue();
 
       if (submission) {
+        idle = false;
         await runJob(submission);
-        // No sleep after a job — check immediately for the next one
+        // No sleep after a job — check immediately for the next one.
       } else {
-        // Queue is empty — pause before checking again
-        log('wait', `Queue empty. Polling in ${POLL_MS / 1000}s…`);
-        await sleep(POLL_MS);
+        if (!idle) {
+          const modeLabel = LONG_POLL_SECS > 0
+            ? `long-polling (wait=${LONG_POLL_SECS}s)`
+            : `watching ${INCOMING_DIR}`;
+          log('wait', `Queue empty — ${modeLabel}`);
+          idle = true;
+        }
+        await waitForWork();
       }
     } catch (err) {
       log('error', `Poll error: ${err.message}`);
@@ -430,6 +505,8 @@ function sleep(ms) {
 function shutdown(signal) {
   log('info', `Received ${signal}. Finishing current job then exiting…`);
   running = false;
+  // Unblock any worker sitting in waitForWork() so the loop can exit cleanly.
+  if (_watcher) { _watcher.close(); _watcher = null; }
 }
 process.on('SIGINT',  () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));

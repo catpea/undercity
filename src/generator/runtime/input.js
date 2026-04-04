@@ -30,7 +30,7 @@ function _decorate(el, helpText = '', size = '', validFeedback = '', invalidFeed
 export const Input = {
 
   // ── Ask For Text ─────────────────────────────────────────────────────────
-  text(key, label = '', placeholder = '', required = false, autocomplete = '', spellcheck = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  text({ key, label = '', placeholder = '', required = false, autocomplete = '', spellcheck = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-text', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback);
     if (autocomplete) _set(el, 'autocomplete', autocomplete);
     if (spellcheck)   el.setAttribute('spellcheck', 'true');
@@ -38,7 +38,7 @@ export const Input = {
   },
 
   // ── Ask For Long Text ────────────────────────────────────────────────────
-  longText(key, label = '', placeholder = '', rows = 4, required = false, spellcheck = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  longText({ key, label = '', placeholder = '', rows = 4, required = false, spellcheck = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-long-text', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'rows', Number(rows) || 4);
     if (!(Boolean(spellcheck) || spellcheck === 'true')) el.setAttribute('spellcheck', 'false');
@@ -46,31 +46,31 @@ export const Input = {
   },
 
   // ── Ask For Email Address ────────────────────────────────────────────────
-  email(key, label = '', placeholder = '', required = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  email({ key, label = '', placeholder = '', required = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     return _append(_decorate(_input('af-ask-for-email', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback));
   },
 
   // ── Ask For Password ─────────────────────────────────────────────────────
-  password(key, label = '', placeholder = '', required = true, strengthMeter = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  password({ key, label = '', placeholder = '', required = true, strengthMeter = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-password', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback);
     _flag(el, 'strength-meter', Boolean(strengthMeter) || strengthMeter === 'true');
     return _append(el);
   },
 
   // ── Ask For Phone Number ─────────────────────────────────────────────────
-  tel(key, label = '', placeholder = '', pattern = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  tel({ key, label = '', placeholder = '', pattern = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-phone', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback);
     if (pattern) _set(el, 'pattern', pattern);
     return _append(el);
   },
 
   // ── Ask For Web Address ──────────────────────────────────────────────────
-  url(key, label = '', placeholder = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  url({ key, label = '', placeholder = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     return _append(_decorate(_input('af-ask-for-url', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback));
   },
 
   // ── Ask For Number ────────────────────────────────────────────────────────
-  number(key, label = '', placeholder = '', min = null, max = null, step = 1, required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  number({ key, label = '', placeholder = '', min = null, max = null, step = 1, required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-number', key, label, placeholder, required), helpText, size, validFeedback, invalidFeedback);
     if (min  != null) _set(el, 'min',  min);
     if (max  != null) _set(el, 'max',  max);
@@ -79,7 +79,7 @@ export const Input = {
   },
 
   // ── Ask For Numeric Range ─────────────────────────────────────────────────
-  range(key, label = '', min = 0, max = 100, step = 1, showValue = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  range({ key, label = '', min = 0, max = 100, step = 1, showValue = true, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-range'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key',  key);
     if (label) _set(el, 'label', label);
@@ -91,7 +91,7 @@ export const Input = {
   },
 
   // ── Ask For Date ─────────────────────────────────────────────────────────
-  date(key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  date({ key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-date', key, label, '', required), helpText, size, validFeedback, invalidFeedback);
     if (min) _set(el, 'min', min);
     if (max) _set(el, 'max', max);
@@ -99,7 +99,7 @@ export const Input = {
   },
 
   // ── Ask For Date & Time ───────────────────────────────────────────────────
-  datetimeLocal(key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  datetimeLocal({ key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-datetime', key, label, '', required), helpText, size, validFeedback, invalidFeedback);
     if (min) _set(el, 'min', min);
     if (max) _set(el, 'max', max);
@@ -107,7 +107,7 @@ export const Input = {
   },
 
   // ── Ask For Time ─────────────────────────────────────────────────────────
-  time(key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  time({ key, label = '', min = '', max = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_input('af-ask-for-time', key, label, '', required), helpText, size, validFeedback, invalidFeedback);
     if (min) _set(el, 'min', min);
     if (max) _set(el, 'max', max);
@@ -115,17 +115,17 @@ export const Input = {
   },
 
   // ── Ask For Month ─────────────────────────────────────────────────────────
-  month(key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  month({ key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     return _append(_decorate(_input('af-ask-for-month', key, label, '', required), helpText, size, validFeedback, invalidFeedback));
   },
 
   // ── Ask For Week ─────────────────────────────────────────────────────────
-  week(key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  week({ key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     return _append(_decorate(_input('af-ask-for-week', key, label, '', required), helpText, size, validFeedback, invalidFeedback));
   },
 
   // ── Ask For Color ─────────────────────────────────────────────────────────
-  color(key, label = '', defaultColor = '#268bd2', helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  color({ key, label = '', default: defaultColor = '#268bd2', helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-color'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key',   key);
     if (label) _set(el, 'label', label);
@@ -134,7 +134,7 @@ export const Input = {
   },
 
   // ── Ask With Checkbox ─────────────────────────────────────────────────────
-  checkbox(key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  checkbox({ key, label = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-with-checkbox'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label) _set(el, 'label', label);
@@ -143,7 +143,7 @@ export const Input = {
   },
 
   // ── Ask With Radio Buttons ────────────────────────────────────────────────
-  radio(key, label = '', options = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  radio({ key, label = '', options = '', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-with-radio'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label) _set(el, 'label', label);
@@ -154,7 +154,7 @@ export const Input = {
   },
 
   // ── Ask For File ──────────────────────────────────────────────────────────
-  file(key, label = '', accept = '*/*', multiple = false, required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  file({ key, label = '', accept = '*/*', multiple = false, required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-file'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label)  _set(el, 'label', label);
@@ -165,7 +165,7 @@ export const Input = {
   },
 
   // ── Ask For Image ──────────────────────────────────────────────────────────
-  image(key, label = '', accept = 'image/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  image({ key, label = '', accept = 'image/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-image'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label)  _set(el, 'label', label);
@@ -175,7 +175,7 @@ export const Input = {
   },
 
   // ── Ask For Audio ──────────────────────────────────────────────────────────
-  audio(key, label = '', accept = 'audio/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  audio({ key, label = '', accept = 'audio/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-audio'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label)  _set(el, 'label', label);
@@ -185,7 +185,7 @@ export const Input = {
   },
 
   // ── Ask For Video ──────────────────────────────────────────────────────────
-  video(key, label = '', accept = 'video/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '') {
+  video({ key, label = '', accept = 'video/*', required = false, helpText = '', size = '', validFeedback = '', invalidFeedback = '' } = {}) {
     const el = _decorate(_el('af-ask-for-video'), helpText, size, validFeedback, invalidFeedback);
     _set(el, 'key', key);
     if (label)  _set(el, 'label', label);

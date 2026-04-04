@@ -136,6 +136,44 @@ export class Savant extends Emitter {
       _copyMcpJson(cmds);
     });
 
+    // Wire workspace import button — imports addStep commands from a JSON file
+    document.getElementById('wf-import-btn')?.addEventListener('click', () => {
+      if (!this.#node) { return; }
+      const input  = document.createElement('input');
+      input.type   = 'file';
+      input.accept = '.json,application/json';
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        let cmds;
+        try {
+          cmds = JSON.parse(await file.text());
+        } catch {
+          alert('Import failed: file is not valid JSON');
+          return;
+        }
+        if (!Array.isArray(cmds)) {
+          alert('Import failed: expected an array of MCP commands');
+          return;
+        }
+        let count = 0;
+        for (const cmd of cmds) {
+          if (cmd.cmd !== 'addStep') continue;
+          if (!cmd.step) continue;
+          this.#node.addStep(cmd.event ?? 'Enter', cmd.step);
+          count++;
+        }
+        const t = document.createElement('div');
+        t.textContent = count
+          ? `Imported ${count} step${count !== 1 ? 's' : ''} from "${file.name}"`
+          : `No addStep commands found in "${file.name}"`;
+        t.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--sol-cyan,#2aa198);color:#002b36;padding:6px 16px;border-radius:6px;font-size:12px;z-index:9999;pointer-events:none';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+      });
+      input.click();
+    });
+
     // Wire preview "Add" button
     containerEl.querySelector('#act-preview-add')?.addEventListener('click', () => {
       if (this.#previewedAction) {

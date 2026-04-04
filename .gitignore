@@ -5,16 +5,13 @@ coverage/
 test/tmp/
 tmp
 generated
-example/task-queue/data/active
-example/task-queue/data/incoming
-example/task-queue/data/jobs
-example/task-queue/data/output
-example/task-queue/data/tmp
-example/task-queue/data/
-
-
-
-
+network-services/task-queue/data/active
+network-services/task-queue/data/incoming
+network-services/task-queue/data/jobs
+network-services/task-queue/data/output
+network-services/task-queue/data/tmp
+network-services/task-queue/data/
+network-services/logs
 
 # Logs
 logs

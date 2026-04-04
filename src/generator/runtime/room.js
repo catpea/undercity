@@ -39,13 +39,10 @@ export function matchTarget(pattern, ...candidates) {
 export const Room = {
   /**
    * Emit a named event to Things in this room.
-   * `target` is a glob pattern: '*' broadcasts to all Things (default),
+   * `at` is a glob pattern: '*' broadcasts to all Things (default),
    * 'Form1' targets exactly one, 'Form*' targets by name prefix.
-   *
-   * Argument order mirrors the IDE action params { event, at, data } so
-   * runPayload's Object.values() mapping is correct.
    */
-  emit(eventName, target = '*', data) {
+  emit({ event: eventName, at: target = '*', data } = {}) {
     const room = User.location;
     Bus.emit(`room:${room}:${eventName}`, { event: eventName, data, room, target });
   },
@@ -100,7 +97,7 @@ export const Room = {
    * @param {boolean} outline  Use outline variant (default false)
    * @param {boolean} group    Wrap in .btn-group (default false)
    */
-  showNav(variant = 'primary', full = true, size = '', outline = false, group = false) {
+  showNav({ variant = 'primary', full = true, size = '', outline = false, group = false } = {}) {
     const nav = window._PW_NAV ?? [];
     if (!nav.length) return;
 

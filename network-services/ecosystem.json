@@ -1,0 +1,51 @@
+{
+  "apps": [
+
+    {
+      "name":            "project-server",
+      "script":          "project-server/index.js",
+      "instances":       1,
+      "env": {
+        "PORT": "3000"
+      },
+      "env_development": {
+        "NODE_ENV": "development"
+      },
+      "max_restarts": 5
+    },
+
+    {
+      "name":            "inventory-cache",
+      "script":          "inventory-cache/server.js",
+      "instances":       1,
+      "env": {
+        "PORT": "5000"
+      },
+      "max_restarts": 10
+    },
+
+    {
+      "name":            "task-queue",
+      "script":          "task-queue/server.js",
+      "instances":       1,
+      "env": {
+        "PORT": "4000",
+        "TASK_QUEUE_ROOT": "/tmp/undercity-task-queue"
+      },
+      "max_restarts": 10
+    },
+
+    {
+      "name":            "task-worker",
+      "script":          "task-queue/processor.js",
+      "instances":       "max",
+      "env": {
+        "QUEUE_URL":       "http://localhost:4000",
+        "TASK_QUEUE_ROOT": "/tmp/undercity-task-queue"
+      },
+      "restart_delay":   2000,
+      "max_restarts":    20
+    }
+
+  ]
+}

@@ -6,9 +6,13 @@
   "desc":    "Send the current Inventory to a running task-queue server. Features health monitoring, duplicate-job guarding, checksum verification, progress tracking with a live progress bar, and a live log viewer.",
   "version": "1.0.0",
   "params": [
-    { "name": "url",     "label": "Server URL", "type": "text",    "placeholder": "http://localhost:4000", "default": "http://localhost:4000" },
-    { "name": "jobType", "label": "Job Type",   "type": "text",    "placeholder": "video-encode" },
-    { "name": "omit",    "label": "Omit Keys",  "type": "text",    "placeholder": "sensitiveKey, tempKey" },
-    { "name": "preview", "label": "Preview",    "type": "boolean", "default": true }
+    { "name": "key",           "label": "Inventory key", "type": "text",    "placeholder": "jobResult" },
+    { "name": "url",           "label": "Server URL",    "type": "text",    "placeholder": "http://localhost:4000", "default": "http://localhost:4000" },
+    { "name": "jobType",       "label": "Job Type",      "type": "text",    "placeholder": "video-encode" },
+    { "name": "keepJobUrl",    "label": "Keep job URL",  "type": "boolean", "default": false },
+    { "name": "omit",          "label": "Omit Keys",     "type": "text",    "placeholder": "sensitiveKey, tempKey" },
+    { "name": "manualRetry",   "label": "Retry Button",  "type": "boolean", "default": true },
+    { "name": "manualAbort",   "label": "Abort Button",  "type": "boolean", "default": true },
+    { "name": "preview",       "label": "Preview",       "type": "boolean", "default": true }
   ]
 }

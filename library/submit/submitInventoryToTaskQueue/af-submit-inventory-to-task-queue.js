@@ -23,153 +23,57 @@
 
 const template = document.createElement('template');
 template.innerHTML = `
+  <link rel="stylesheet" href="/lib/bootstrap/css/bootstrap.min.css">
   <style>
     :host {
       display: block;
       font-family: monospace;
       font-size: 0.85rem;
-      color: var(--sol-base0, #839496);
     }
-
-    /* ── layout ── */
-    .section { margin-bottom: 14px; }
     .section-title {
-      display: inline-block;
-      color: var(--sol-base1, #93a1a1);
       font-weight: bold;
-      margin-bottom: 6px;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       font-size: 0.75rem;
     }
-
-    /* ── badges ── */
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      letter-spacing: 0.02em;
-    }
-    .badge-unknown  { background: var(--sol-base02, #073642); color: var(--sol-base01, #586e75); }
-    .badge-checking { background: var(--sol-base02, #073642); color: var(--sol-yellow,  #b58900); }
-    .badge-online   { background: var(--sol-base02, #073642); color: var(--sol-green,   #859900); }
-    .badge-offline  { background: var(--sol-base02, #073642); color: var(--sol-red,     #dc322f); }
-    .badge-pending  { background: var(--sol-base02, #073642); color: var(--sol-cyan,    #2aa198); }
-    .badge-active   { background: var(--sol-base02, #073642); color: var(--sol-blue,    #268bd2); }
-    .badge-done     { background: var(--sol-base02, #073642); color: var(--sol-green,   #859900); }
-    .badge-error    { background: var(--sol-base02, #073642); color: var(--sol-red,     #dc322f); }
-    .badge-dupe     { background: var(--sol-base02, #073642); color: var(--sol-violet,  #6c71c4); }
-    .badge-verifying { background: var(--sol-base02, #073642); color: var(--sol-yellow, #b58900); }
-
-    /* ── table ── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th {
-      text-align: left;
-      padding: 4px 8px;
-      background: var(--sol-base02, #073642);
-      color: var(--sol-base1, #93a1a1);
-      border-bottom: 2px solid var(--sol-base01, #586e75);
-    }
-    td {
-      padding: 4px 8px;
-      border-bottom: 1px solid var(--sol-base02, #073642);
-      vertical-align: top;
-    }
-    tr:hover td { background: rgba(255,255,255,.03); }
+    /* preview table cell colours */
     .col-key  { color: var(--sol-cyan,    #2aa198); white-space: nowrap; }
     .col-type { color: var(--sol-base1,   #93a1a1); white-space: nowrap; }
     .col-stat { color: var(--sol-magenta, #d33682); white-space: nowrap; }
-    .col-prev { }
     .col-prev img,
     .col-prev video { max-height: 60px; max-width: 90px; border-radius: 3px; display: block; }
     .col-prev audio  { width: 140px; }
-
-    /* ── action bar ── */
-    .action-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    button {
-      font-family: monospace;
-      font-size: 0.85rem;
-      padding: 4px 14px;
-      border: 1px solid var(--sol-base01, #586e75);
-      background: var(--sol-base02, #073642);
-      color: var(--sol-base0, #839496);
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    button:hover:not(:disabled) {
-      background: var(--sol-base01, #586e75);
-      color: var(--sol-base3, #fdf6e3);
-    }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* ── progress bar ── */
-    .progress {
-      height: 8px;
-      background: var(--sol-base02, #073642);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 4px;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--sol-blue, #268bd2);
-      border-radius: 4px;
-      transition: width 0.3s ease;
-    }
-    .progress-bar.done { background: var(--sol-green, #859900); }
-    .progress-bar.error { background: var(--sol-red, #dc322f); }
-    .progress-msg { color: var(--sol-base1, #93a1a1); font-size: 0.8rem; }
-
-    /* ── log ── */
-    .log-header { display: flex; align-items: center; gap: 8px; }
-    .log-toggle {
-      font-size: 0.7rem;
-      padding: 1px 6px;
-      cursor: pointer;
-    }
+    /* log body */
     .log-body {
       background: var(--sol-base03, #002b36);
       border: 1px solid var(--sol-base02, #073642);
-      border-radius: 3px;
+      border-radius: 4px;
       padding: 6px 8px;
       max-height: 200px;
       overflow-y: auto;
       margin-top: 6px;
     }
-    .log-entry { margin: 0; line-height: 1.5; }
+    .log-entry { margin: 0; line-height: 1.5; font-size: 0.8rem; }
     .log-ts    { color: var(--sol-base01, #586e75); margin-right: 6px; }
-    .log-info  { color: var(--sol-base0, #839496); }
+    .log-info  { color: var(--sol-base0,  #839496); }
     .log-warn  { color: var(--sol-yellow, #b58900); }
-    .log-error { color: var(--sol-red, #dc322f); }
-
-    [hidden] { display: none !important; }
+    .log-error { color: var(--sol-red,    #dc322f); }
   </style>
 
   <!-- ── Health ───────────────────────────────────────────── -->
-  <div class="section">
-    <span class="section-title">Server</span>
-    &nbsp;
-    <span part="health-badge" class="badge badge-checking">checking…</span>
-    &nbsp;
-    <span part="server-url" style="color:var(--sol-base01,#586e75);font-size:0.75rem;"></span>
+  <div class="mb-3">
+    <span class="section-title text-secondary me-1">Server</span>
+    <span part="health-badge" class="badge bg-secondary">checking…</span>
+    <small part="server-url" class="text-muted ms-1"></small>
   </div>
 
   <!-- ── Preview ─────────────────────────────────────────── -->
-  <div part="preview-section" class="section" hidden>
-    <div class="section-title">Preview</div>
-    <table>
-      <thead>
+  <div part="preview-section" class="mb-3" hidden>
+    <div class="section-title text-secondary mb-1">Preview</div>
+    <table class="table table-sm table-borderless mb-0" style="font-size:0.8rem;">
+      <thead class="table-dark">
         <tr>
-          <th>Key</th>
-          <th>Type</th>
-          <th>Stats</th>
-          <th>Preview</th>
+          <th>Key</th><th>Type</th><th>Stats</th><th>Preview</th>
         </tr>
       </thead>
       <tbody part="preview-body"></tbody>
@@ -177,30 +81,44 @@ template.innerHTML = `
   </div>
 
   <!-- ── Action bar ──────────────────────────────────────── -->
-  <div class="section action-bar">
-    <button part="submit-btn" disabled>Submit</button>
-    <span part="job-status" class="badge badge-unknown" hidden></span>
-    <span part="job-id-display" style="color:var(--sol-base01,#586e75);font-size:0.75rem;" hidden></span>
+  <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+    <button part="submit-btn" class="btn btn-sm btn-outline-primary"    disabled>Submit</button>
+    <button part="retry-btn"  class="btn btn-sm btn-outline-secondary"  hidden>Retry</button>
+    <button part="abort-btn"  class="btn btn-sm btn-outline-danger"     hidden>Abort</button>
+    <span part="job-status"    class="badge"    hidden></span>
+    <small part="job-id-display" class="text-muted" hidden></small>
   </div>
 
   <!-- ── Progress ────────────────────────────────────────── -->
-  <div part="progress-section" class="section" hidden>
-    <div class="section-title">Progress</div>
-    <div class="progress">
-      <div part="progress-bar" class="progress-bar"></div>
+  <div part="progress-section" class="mb-3" hidden>
+    <div class="section-title text-secondary mb-1">Progress</div>
+    <div class="progress mb-1" style="height:8px;">
+      <div part="progress-bar" class="progress-bar" role="progressbar" style="width:0%;transition:width .3s ease;"></div>
     </div>
-    <span part="progress-msg" class="progress-msg"></span>
+    <small part="progress-msg" class="text-muted"></small>
   </div>
 
   <!-- ── Log ─────────────────────────────────────────────── -->
-  <div part="log-section" class="section" hidden>
-    <div class="log-header">
-      <span class="section-title">Log</span>
-      <button part="log-toggle" class="log-toggle">▼ show</button>
+  <div part="log-section" class="mb-3" hidden>
+    <div class="d-flex align-items-center gap-2">
+      <span class="section-title text-secondary">Log</span>
+      <button part="log-toggle" class="btn btn-sm btn-outline-secondary py-0" type="button"
+              aria-expanded="false">▼ show</button>
     </div>
-    <div part="log-body" class="log-body" hidden></div>
+    <div part="log-body" class="collapse log-body"></div>
   </div>
 `;
+
+// ── UUID helper ───────────────────────────────────────────────────────────────
+// crypto.randomUUID() is only available in secure contexts (HTTPS / localhost).
+// Fall back to a Math.random-based v4 UUID when unavailable (plain HTTP).
+function randomUUID() {
+  if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 
 // ── State machine values ──────────────────────────────────────────────────────
 
@@ -218,7 +136,7 @@ const S = Object.freeze({
 // ── Component ─────────────────────────────────────────────────────────────────
 
 class AfSubmitInventoryToTaskQueue extends HTMLElement {
-  static observedAttributes = ['url', 'job-type', 'omit', 'preview'];
+  static observedAttributes = ['url', 'job-type', 'omit', 'preview', 'key', 'manual-retry', 'manual-abort', 'keep-job-url'];
 
   // DOM refs
   #root = null;
@@ -227,6 +145,8 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
   #previewSection = null;
   #previewBody   = null;
   #submitBtn     = null;
+  #retryBtn      = null;
+  #abortBtn      = null;
   #jobStatus     = null;
   #jobIdDisplay  = null;
   #progressSection = null;
@@ -256,6 +176,8 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     this.#previewSection = this.#root.querySelector('[part="preview-section"]');
     this.#previewBody    = this.#root.querySelector('[part="preview-body"]');
     this.#submitBtn      = this.#root.querySelector('[part="submit-btn"]');
+    this.#retryBtn       = this.#root.querySelector('[part="retry-btn"]');
+    this.#abortBtn       = this.#root.querySelector('[part="abort-btn"]');
     this.#jobStatus      = this.#root.querySelector('[part="job-status"]');
     this.#jobIdDisplay   = this.#root.querySelector('[part="job-id-display"]');
     this.#progressSection = this.#root.querySelector('[part="progress-section"]');
@@ -266,9 +188,11 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     this.#logBody        = this.#root.querySelector('[part="log-body"]');
 
     // Stable jobId for this page-load instance
-    this.#jobId = crypto.randomUUID();
+    this.#jobId = randomUUID();
 
     this.#submitBtn.addEventListener('click', () => this.#handleSubmit());
+    this.#retryBtn.addEventListener('click',  () => this.#handleRetry());
+    this.#abortBtn.addEventListener('click',  () => this.#handleAbort());
     this.#logToggle.addEventListener('click', () => this.#toggleLog());
   }
 
@@ -479,6 +403,14 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
       this.#logSection.hidden = false;
       this.#appendLog('info', `Submitted as job ${this.#jobId}`);
       this.#appendLog('info', `Server submission ID: ${submissionId}`);
+
+      // Store job URL in Inventory if keepJobUrl is enabled
+      const key = this.#attr('key');
+      if (key && this.#attr('keep-job-url') !== null) {
+        const jobUrl = `${base}/job/${this.#jobId}`;
+        globalThis.Inventory?.set(`${key}Url`, jobUrl);
+      }
+
       this.#startJobPolling();
 
     } catch (err) {
@@ -537,11 +469,12 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
         if (prog.state === 'done') {
           this.#setState(S.DONE);
           clearInterval(this.#pollTimer);
-          this.#progressBar.classList.add('done');
+          this.#progressBar.classList.add('bg-success');
+          this.#storeResult(prog.result);
         } else if (prog.state === 'error') {
           this.#setState(S.ERROR);
           clearInterval(this.#pollTimer);
-          this.#progressBar.classList.add('error');
+          this.#progressBar.classList.add('bg-danger');
         } else if (prog.state === 'active') {
           this.#setState(S.ACTIVE);
         }
@@ -561,6 +494,62 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     } catch {
       // server may be processing — silently retry
     }
+  }
+
+  // ── Result / Retry / Abort ───────────────────────────────────────────────────
+
+  #storeResult(result) {
+    const key = this.#attr('key');
+    if (!key || result === null || result === undefined || typeof result !== 'object') return;
+    globalThis.Inventory?.set(key, result);
+  }
+
+  async #handleRetry() {
+    // Clean up the server-side submission before retrying
+    const base = this.#baseUrl();
+    if (this.#submissionId) {
+      try {
+        await fetch(`${base}/clear/${this.#submissionId}`, { method: 'DELETE' });
+      } catch { /* ignore */ }
+    }
+    this.#reset();
+  }
+
+  async #handleAbort() {
+    const base = this.#baseUrl();
+    if (this.#submissionId) {
+      try {
+        await fetch(`${base}/clear/${this.#submissionId}`, { method: 'DELETE' });
+      } catch { /* ignore */ }
+    }
+    this.#reset();
+  }
+
+  #reset() {
+    clearInterval(this.#pollTimer);
+    this.#pollTimer   = null;
+    this.#jobId       = crypto.randomUUID();
+    this.#submissionId = null;
+    this.#seenLogCount = 0;
+    this.#logBody.innerHTML = '';
+    this.#progressBar.style.width = '0%';
+    this.#progressBar.classList.remove('bg-success', 'bg-danger');
+    this.#progressMsg.textContent  = '';
+    this.#progressSection.hidden   = true;
+    this.#logSection.hidden        = true;
+    this.#logOpen                  = false;
+    this.#logToggle.textContent    = '▼ show';
+    this.#logToggle.setAttribute('aria-expanded', 'false');
+    // Collapse the log body via Bootstrap if available
+    const bsColl = window.bootstrap?.Collapse;
+    if (bsColl) {
+      bsColl.getOrCreateInstance(this.#logBody, { toggle: false }).hide();
+    } else {
+      this.#logBody.classList.remove('show');
+    }
+    this.#jobIdDisplay.hidden      = true;
+    this.#setState(S.IDLE);
+    this.#submitBtn.disabled = false;
   }
 
   #updateProgress({ percent = 0, message = '' } = {}) {
@@ -590,13 +579,19 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
 
   #toggleLog() {
     this.#logOpen = !this.#logOpen;
-    this.#logBody.hidden  = !this.#logOpen;
+    const bsColl = window.bootstrap?.Collapse;
+    if (bsColl) {
+      bsColl.getOrCreateInstance(this.#logBody, { toggle: false })[this.#logOpen ? 'show' : 'hide']();
+    } else {
+      this.#logBody.classList.toggle('show', this.#logOpen);
+    }
+    this.#logToggle.setAttribute('aria-expanded', String(this.#logOpen));
     this.#logToggle.textContent = this.#logOpen ? '▲ hide' : '▼ show';
   }
 
   #showLogHint() {
     if (this.#logToggle.textContent.includes('new')) return;
-    if (!this.#logOpen) this.#logToggle.textContent = '▼ show (new entries)';
+    if (!this.#logOpen) this.#logToggle.textContent = '▼ show (new)';
   }
 
   // ── State helpers ────────────────────────────────────────────────────────────
@@ -616,11 +611,27 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     const badge = this.#jobStatus;
     if (state === S.IDLE) {
       badge.hidden = true;
-      return;
+    } else {
+      const badgeClasses = {
+        [S.SUBMIT]:    'badge bg-info text-dark',
+        [S.VERIFY]:    'badge bg-warning text-dark',
+        [S.PENDING]:   'badge bg-info text-dark',
+        [S.ACTIVE]:    'badge bg-primary',
+        [S.DONE]:      'badge bg-success',
+        [S.DUPLICATE]: 'badge bg-secondary',
+        [S.ERROR]:     'badge bg-danger',
+      };
+      badge.hidden    = false;
+      badge.className = badgeClasses[state] ?? 'badge bg-secondary';
+      badge.textContent = labels[state] ?? state;
     }
-    badge.hidden = false;
-    badge.textContent = labels[state] ?? state;
-    badge.className   = `badge badge-${state === S.VERIFY ? 'verifying' : state}`;
+
+    // Retry button — show in terminal states when manualRetry is enabled
+    const terminalState = state === S.DONE || state === S.ERROR || state === S.DUPLICATE;
+    this.#retryBtn.hidden = !(this.#attr('manual-retry') !== null && terminalState);
+
+    // Abort button — show only on error when manualAbort is enabled
+    this.#abortBtn.hidden = !(this.#attr('manual-abort') !== null && state === S.ERROR);
   }
 
   #showJobId() {
@@ -630,7 +641,12 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
   }
 
   #setBadge(el, cls, label) {
-    el.className   = `badge badge-${cls}`;
+    const map = {
+      checking:  'badge bg-warning text-dark',
+      online:    'badge bg-success',
+      offline:   'badge bg-danger',
+    };
+    el.className   = map[cls] ?? 'badge bg-secondary';
     el.textContent = label;
   }
 }

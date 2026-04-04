@@ -9,7 +9,7 @@ export const Debug = {
   // Appends <af-inventory-dump> to the current card body.
   // The component self-subscribes via globalThis.Inventory.subscribeAll()
   // and renders a live reactive table of every key/value in Inventory.
-  inventoryDump() {
+  inventoryDump(_params) {
     const el = document.createElement('af-inventory-dump');
     _pwCardBody().appendChild(el);
   },

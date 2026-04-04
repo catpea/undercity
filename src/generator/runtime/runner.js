@@ -90,13 +90,13 @@ export async function runPayload(steps) {
 
       const target = _NS[ns];
 
-      // Extract "into" before building fn args (it's a meta-param, not passed to the fn)
+      // Extract "into" before passing params — it's a meta-param, not forwarded.
+      // Pass the whole remaining object so handlers read by name, not position.
       const { into, ...rest } = params;
-      const fnArgs = Object.values(rest);
 
       let result;
       if (target?.[fn]) {
-        result = await target[fn](...fnArgs);
+        result = await target[fn](rest);
       } else {
         console.warn('[runPayload] unknown action:', action, '— known namespaces:', Object.keys(_NS).filter(k => k[0] === k[0].toUpperCase()));
       }

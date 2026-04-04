@@ -9,7 +9,7 @@ import { mkdir } from 'fs/promises';
 import { join }  from 'path';
 
 import { readProject }     from './projects.js';
-import { generateProject } from '../../generator/index.js';
+import { generateProject } from '../../../src/generator/index.js';
 
 /**
  * @param {object} app     - Express-compatible app

@@ -3,15 +3,18 @@ import { run as emitRun } from './emit/library.js';
 import { run as showNavRun } from './showNav/library.js';
 import { run as takeRun } from './take/library.js';
 
-const categoryMeta = {"id":"room","name":"Room","icon":"broadcast","color":"var(--sol-orange)","description":"Core room behaviours: emit events, show nav, take a form."};
+const categoryMeta = await fetch(new URL('./category.json', import.meta.url)).then(r => r.json());
+const emitMeta = await fetch(new URL('./emit/action.json', import.meta.url)).then(r => r.json());
+const showNavMeta = await fetch(new URL('./showNav/action.json', import.meta.url)).then(r => r.json());
+const takeMeta = await fetch(new URL('./take/action.json', import.meta.url)).then(r => r.json());
 
 export const roomCategory = {
   name: `library/${categoryMeta.id}`,
   install(app) {
     app.registerCategory(categoryMeta, {
-      "room.emit": { ...{"id":"room.emit","icon":"broadcast","color":"var(--sol-orange)","label":"Emit Room Event","desc":"Broadcast a named event inside this room. All Things inhabiting the room hear it immediately and can react.","version":"1.0.0","params":[{"name":"event","label":"Event name","type":"text","placeholder":"message"},{"name":"data","label":"Data","type":"json","default":"{}"}]}, run: emitRun },
-      "room.showNav": { ...{"id":"room.showNav","icon":"signpost-split","color":"var(--sol-orange)","label":"Show Navigation Buttons","desc":"Render Bootstrap 5.3 navigation buttons for every room exit. Clicking a button validates the current room inputs before navigation and shows Bootstrap-style valid/invalid feedback.","version":"1.0.0","params":[{"name":"variant","label":"Color variant","type":"select","options":["primary","secondary","success","danger","warning","info","light","dark","link"],"default":"primary"},{"name":"full","label":"Full width","type":"boolean","default":true},{"name":"size","label":"Size","type":"select","options":["","sm","lg"],"default":""},{"name":"outline","label":"Outline style","type":"boolean","default":false},{"name":"group","label":"Button group","type":"boolean","default":false}]}, run: showNavRun },
-      "room.take": { ...{"id":"room.take","icon":"bag-plus","color":"var(--sol-orange)","label":"Take Form","desc":"Trigger a FormThing's Take event, causing its Input and Display actions to render on the page. The form's fields are live-bound to Inventory from that moment on.","version":"1.0.0","params":[{"name":"form","label":"Form","type":"text","placeholder":"Form1"}]}, run: takeRun },
+      [emitMeta.id]: { ...emitMeta, run: emitRun },
+      [showNavMeta.id]: { ...showNavMeta, run: showNavRun },
+      [takeMeta.id]: { ...takeMeta, run: takeRun },
     });
   },
 };

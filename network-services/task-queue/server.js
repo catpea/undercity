@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 // example/task-queue/task-queue.js
 //
 // Pure Node.js task queue server — no external dependencies.
@@ -52,8 +53,8 @@ import { join, resolve }                       from 'node:path';
 const VERSION = '2.0.0';
 
 // ── Storage roots ─────────────────────────────────────────────────────────────
-
-const ROOT     = resolve(import.meta.dirname, 'data');
+// Override with TASK_QUEUE_ROOT env var, e.g. TASK_QUEUE_ROOT=/data/task-queue
+const ROOT     = process.env.TASK_QUEUE_ROOT ?? '/tmp/undercity-task-queue';
 const INCOMING = join(ROOT, 'incoming');
 const ACTIVE   = join(ROOT, 'active');
 const JOBS     = join(ROOT, 'jobs');      // jobId → submissionId index
@@ -221,35 +222,62 @@ function handleQueue(_req, res) {
   send(res, 200, { pending: items.length, items });
 }
 
-// GET /dequeue
-function handleDequeue(_req, res) {
-  const ids = listDir(INCOMING);
-  if (ids.length === 0) return send(res, 200, { submission: null });
+// GET /dequeue?wait=N
+//
+// Atomically claims the oldest pending submission (rename incoming → active).
+//
+// ?wait=N  — if the queue is empty, hold the HTTP connection open for up to N
+//            seconds (max 60) and return the moment a job arrives. Workers that
+//            pass this parameter block server-side instead of polling repeatedly.
+//            Omit or set to 0 for the original immediate response.
+//
+// Race safety: renameSync is atomic on POSIX. If two workers race on the same
+// job, one rename succeeds and the other throws ENOENT. The loser retries the
+// full attempt loop rather than returning a 500 — it will either claim the next
+// job or re-enter the wait period.
+function handleDequeue(req, res) {
+  const url      = new URL(req.url, 'http://localhost');
+  const waitMs   = Math.min(Number(url.searchParams.get('wait') ?? 0), 60) * 1000;
+  const deadline = Date.now() + waitMs;
 
-  const submissions = ids.flatMap(id => {
-    const s = readSubmission(INCOMING, id);
-    return s ? [s] : [];
-  });
-  submissions.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  function attempt() {
+    const ids = listDir(INCOMING);
 
-  const submission = submissions[0];
-  const srcDir     = join(INCOMING, submission.id);
-  const dstDir     = join(ACTIVE,   submission.id);
+    if (ids.length === 0) {
+      // Nothing pending. Either wait and retry, or return immediately.
+      if (Date.now() < deadline) return setTimeout(attempt, 200);
+      return send(res, 200, { submission: null });
+    }
 
-  try {
-    renameSync(srcDir, dstDir);
-  } catch (err) {
-    return send(res, 500, { error: `Could not move to active: ${err.message}` });
+    const submissions = ids.flatMap(id => {
+      const s = readSubmission(INCOMING, id);
+      return s ? [s] : [];
+    });
+    submissions.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+    const submission = submissions[0];
+    const srcDir     = join(INCOMING, submission.id);
+    const dstDir     = join(ACTIVE,   submission.id);
+
+    try {
+      renameSync(srcDir, dstDir);
+    } catch {
+      // Another worker claimed this job between our listDir and our rename.
+      // Retry quickly — there may be another job, or we re-enter the wait.
+      return setTimeout(attempt, 50);
+    }
+
+    // Update progress state → active
+    const progFile = join(dstDir, 'progress.json');
+    const prog     = readJson(progFile, {});
+    prog.state     = 'active';
+    prog.updatedAt = new Date().toISOString();
+    writeJson(progFile, prog);
+
+    send(res, 200, { submission });
   }
 
-  // Update progress state → active
-  const progFile = join(dstDir, 'progress.json');
-  const prog     = readJson(progFile, {});
-  prog.state     = 'active';
-  prog.updatedAt = new Date().toISOString();
-  writeJson(progFile, prog);
-
-  send(res, 200, { submission });
+  attempt();
 }
 
 // GET /submission/:id
@@ -259,17 +287,71 @@ function handleGetSubmission(id, res) {
   send(res, 200, { submission: s });
 }
 
-// DELETE /clear/:id
+// DELETE /clear/:id  (accepts submission UUID or jobId)
 function handleClear(id, res) {
-  const inDir = join(INCOMING, id);
-  const acDir = join(ACTIVE,   id);
+  let submissionId = id;
+  let jobId        = null;
 
+  // Locate the submission directory — try id as submissionId first, then as jobId
+  let dir = findSubmissionDir(id);
+  if (!dir) {
+    const resolved = resolveJobId(id);
+    if (resolved) {
+      submissionId = resolved;
+      jobId        = id;
+      dir          = findSubmissionDir(submissionId);
+    }
+  }
+
+  if (!dir) return send(res, 404, { error: `Submission ${id} not found.` });
+
+  // Read jobId from form.json before deleting (so we can clean the index)
+  if (!jobId) {
+    const form = readJson(join(dir, 'form.json'), {});
+    jobId = form.jobId ?? null;
+  }
+
+  const inDir = join(INCOMING, submissionId);
+  const acDir = join(ACTIVE,   submissionId);
   let from = null;
   if (existsSync(inDir)) { rmSync(inDir, { recursive: true, force: true }); from = 'incoming'; }
   else if (existsSync(acDir)) { rmSync(acDir, { recursive: true, force: true }); from = 'active'; }
 
-  if (!from) return send(res, 404, { error: `Submission ${id} not found.` });
-  send(res, 200, { cleared: id, from });
+  // Remove job index file so the jobId can be reused
+  if (jobId) {
+    const jobFile = join(JOBS, jobId);
+    if (existsSync(jobFile)) rmSync(jobFile, { force: true });
+  }
+
+  send(res, 200, { cleared: submissionId, jobId, from });
+}
+
+// GET /clean — remove all submissions whose state is 'done' or 'error'
+function handleClean(_req, res) {
+  const cleared = [];
+
+  for (const [baseDir, label] of [[INCOMING, 'incoming'], [ACTIVE, 'active']]) {
+    for (const id of listDir(baseDir)) {
+      const dir   = join(baseDir, id);
+      const prog  = readJson(join(dir, 'progress.json'), {});
+      const state = prog.state ?? 'pending';
+      if (state !== 'done' && state !== 'error') continue;
+
+      const form  = readJson(join(dir, 'form.json'), {});
+      const jobId = form.jobId ?? null;
+
+      rmSync(dir, { recursive: true, force: true });
+
+      if (jobId) {
+        const jobFile = join(JOBS, jobId);
+        if (existsSync(jobFile)) rmSync(jobFile, { force: true });
+      }
+
+      cleared.push({ id, jobId, from: label, state });
+    }
+  }
+
+  send(res, 200, { cleared: cleared.length, jobs: cleared });
 }
 
 // GET /status
@@ -318,6 +400,7 @@ function handlePostProgress(jobId, req, res) {
       state:     body.state     ?? existing.state     ?? 'active',
       updatedAt: new Date().toISOString(),
     };
+    if (body.result !== undefined) updated.result = body.result;
     writeJson(progFile, updated);
     send(res, 200, updated);
   }).catch(err => send(res, 500, { error: err.message }));
@@ -382,6 +465,7 @@ function router(req, res) {
   if (method === 'GET'    && path === '/queue')    return handleQueue(req, res);
   if (method === 'GET'    && path === '/dequeue')  return handleDequeue(req, res);
   if (method === 'GET'    && path === '/status')   return handleStatus(req, res);
+  if (method === 'GET'    && path === '/clean')    return handleClean(req, res);
 
   const subMatch = path.match(/^\/submission\/(.+)$/);
   if (method === 'GET' && subMatch) {
@@ -429,7 +513,8 @@ server.listen(PORT, () => {
   console.log('  GET    /queue                   List pending submissions');
   console.log('  GET    /dequeue                 Pop the oldest submission → active');
   console.log('  GET    /submission/:id           Read a specific submission');
-  console.log('  DELETE /clear/:id               Remove a processed submission');
+  console.log('  DELETE /clear/:id               Remove a submission (UUID or jobId)');
+  console.log('  GET    /clean                   Remove all done/error submissions');
   console.log('  GET    /status                  Queue stats');
   console.log('');
   console.log('  GET    /job/:jobId              Lookup by client jobId');

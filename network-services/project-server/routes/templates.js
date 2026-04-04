@@ -16,7 +16,7 @@ import { readdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { join, dirname }     from 'node:path';
 import { fileURLToPath }     from 'node:url';
 
-import { normalizeIconName } from '../../lib/icons.js';
+import { normalizeIconName } from '../../../src/lib/icons.js';
 
 const __dir    = dirname(fileURLToPath(import.meta.url));
 const TMPL_DIR = join(__dir, '..', '..', '..', 'templates');

@@ -61,10 +61,14 @@ export async function handle(fields, ctx) {
   // -stream_loop -1  : loop the video stream indefinitely
   // -shortest        : stop when the shortest stream (audio) ends
   // h264_nvenc is tried first; fall back to libx264 if GPU is unavailable
-  const videoEncoded = await tryGpuThenCpu(ctx, [
+  // NOTE: -c:v (encoder) must come AFTER all -i inputs or ffmpeg treats it
+  //       as a decoder for the input file.
+  const inputArgs = [
     '-stream_loop', '-1',
-    '-i',      clipPath,
-    '-i',      audioPath,
+    '-i',  clipPath,
+    '-i',  audioPath,
+  ];
+  const outputArgs = [
     '-map',    '0:v:0',
     '-map',    '1:a:0',
     '-c:a',    'aac',
@@ -72,7 +76,9 @@ export async function handle(fields, ctx) {
     '-pix_fmt','yuv420p',
     '-shortest',
     videoOut,
-  ], { duration, progressStart: 5, progressEnd: 75 });
+  ];
+  const videoEncoded = await tryGpuThenCpu(ctx, inputArgs, outputArgs,
+    { duration, progressStart: 5, progressEnd: 75 });
 
   await ctx.log(`video.mp4 written → ${videoOut}`);
   await ctx.progress(75, 'Video encoded.');
@@ -138,16 +144,19 @@ async function probeDuration(filePath) {
 /**
  * Try encoding with h264_nvenc (GPU). If ffmpeg rejects it, fall back to
  * libx264 (CPU). Logs which encoder was used.
+ *
+ * inputArgs  — everything up to and including the last -i flag
+ * outputArgs — map/codec/filter/output flags (no -c:v; we inject it here)
  */
-async function tryGpuThenCpu(ctx, sharedArgs, spawnOpts) {
-  const gpuArgs = ['-hide_banner', '-y', '-c:v', 'h264_nvenc', ...sharedArgs];
+async function tryGpuThenCpu(ctx, inputArgs, outputArgs, spawnOpts) {
+  const gpuArgs = ['-hide_banner', '-y', ...inputArgs, '-c:v', 'h264_nvenc', ...outputArgs];
   try {
     await ctx.spawn('ffmpeg', gpuArgs, spawnOpts);
     await ctx.log('Encoded with h264_nvenc (GPU).');
     return 'nvenc';
   } catch {
     await ctx.log('h264_nvenc unavailable — falling back to libx264 (CPU).', 'warn');
-    const cpuArgs = ['-hide_banner', '-y', '-c:v', 'libx264', '-preset', 'fast', ...sharedArgs];
+    const cpuArgs = ['-hide_banner', '-y', ...inputArgs, '-c:v', 'libx264', '-preset', 'fast', ...outputArgs];
     await ctx.spawn('ffmpeg', cpuArgs, spawnOpts);
     await ctx.log('Encoded with libx264 (CPU).');
     return 'libx264';
