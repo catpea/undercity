@@ -70,7 +70,7 @@
         "id": "c62c8c82",
         "type": "room",
         "label": "Phone Video",
-        "x": -600,
+        "x": -640,
         "y": 200,
         "payload": {
           "Enter": [
@@ -167,7 +167,7 @@
         "type": "room",
         "label": "Use PersonaLive",
         "x": -520,
-        "y": 280,
+        "y": 240,
         "payload": {
           "Enter": [],
           "Exit": [],
@@ -422,7 +422,7 @@
         "id": "66520aca",
         "type": "room",
         "label": "Submit To Task Server",
-        "x": 400,
+        "x": -80,
         "y": 400,
         "payload": {
           "Enter": [],
@@ -458,7 +458,7 @@
         "id": "15b49c3e",
         "type": "room",
         "label": "Preview",
-        "x": 200,
+        "x": -240,
         "y": 400,
         "payload": {
           "Enter": [
@@ -488,8 +488,8 @@
         "id": "1cf5db68",
         "type": "room",
         "label": "Just Text Processor",
-        "x": 0,
-        "y": 600,
+        "x": -40,
+        "y": 680,
         "payload": {
           "Enter": [
             {
@@ -525,8 +525,8 @@
         "id": "82ccdc9e",
         "type": "room",
         "label": "Show Inventory",
-        "x": 200,
-        "y": 600,
+        "x": 120,
+        "y": 760,
         "payload": {
           "Enter": [
             {
@@ -651,5 +651,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-04T23:01:21.969Z"
+  "modified": "2026-04-05T00:12:54.511Z"
 }
