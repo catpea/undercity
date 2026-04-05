@@ -1,0 +1,197 @@
+{
+  "formId": "picture-in-picture",
+  "title": "Picture-in-Picture Video",
+  "description": "Overlays a looping PiP clip over a main video with rounded corners and optional border.",
+  "fields": {
+    "main": {
+      "type": "file",
+      "mimeTypes": ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"],
+      "required": true,
+      "description": "Main background video"
+    },
+    "pip": {
+      "type": "file",
+      "mimeTypes": ["video/webm", "video/mp4", "video/quicktime"],
+      "required": true,
+      "description": "Picture-in-picture source video clip"
+    },
+    "title": {
+      "type": "text",
+      "required": false,
+      "description": "Optional title written to text.md"
+    },
+    "text": {
+      "type": "text",
+      "required": false,
+      "description": "Optional body text written to text.md"
+    },
+    "pipStart": {
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "description": "Start time (seconds) to sample from the PiP source"
+    },
+    "pipEnd": {
+      "type": "number",
+      "required": false,
+      "default": 50,
+      "description": "End time (seconds) to sample from the PiP source"
+    },
+    "pipScale": {
+      "type": "number",
+      "required": false,
+      "default": 0.35,
+      "description": "PiP height as a fraction of main video height (0.0–1.0)"
+    },
+    "pipSide": {
+      "type": "text",
+      "required": false,
+      "default": "LEFT",
+      "description": "PiP placement side: LEFT or RIGHT"
+    },
+    "pipMarginX": {
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "description": "Horizontal margin from the chosen side (pixels)"
+    },
+    "pipMarginY": {
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "description": "Vertical margin from the bottom (pixels)"
+    },
+    "pipRadius": {
+      "type": "number",
+      "required": false,
+      "default": 2,
+      "description": "Corner radius for the PiP clip (pixels)"
+    },
+    "pipBorder": {
+      "type": "number",
+      "required": false,
+      "default": 2,
+      "description": "Border thickness (pixels; 0 disables border)"
+    },
+    "pipBorderColor": {
+      "type": "text",
+      "required": false,
+      "default": "black@0.92",
+      "description": "ffmpeg color expression for the PiP border"
+    },
+    "pipAa": {
+      "type": "number",
+      "required": false,
+      "default": 1.2,
+      "description": "Alpha edge blur sigma for anti-aliased corners (0 disables)"
+    },
+    "venc": {
+      "type": "text",
+      "required": false,
+      "default": "h264",
+      "description": "Output video encoder (h264 auto-picks best available H.264 codec)"
+    },
+    "aenc": {
+      "type": "text",
+      "required": false,
+      "default": "aac",
+      "description": "Output audio encoder"
+    },
+    "vbitrate": {
+      "type": "text",
+      "required": false,
+      "default": "6M",
+      "description": "Target video bitrate"
+    },
+    "vmaxrate": {
+      "type": "text",
+      "required": false,
+      "default": "8M",
+      "description": "Maximum video bitrate"
+    },
+    "vbufsize": {
+      "type": "text",
+      "required": false,
+      "default": "12M",
+      "description": "Video encoder buffer size"
+    },
+    "gop": {
+      "type": "number",
+      "required": false,
+      "default": 60,
+      "description": "GOP size in frames (keyframe interval; ~2s at 30 fps)"
+    },
+    "outFps": {
+      "type": "number",
+      "required": false,
+      "default": 30,
+      "description": "Output constant frame rate (CFR)"
+    },
+    "mixPipAudio": {
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "description": "Mix PiP audio into output (1 = yes, 0 = no)"
+    },
+    "pipAudioVol": {
+      "type": "number",
+      "required": false,
+      "default": 1.0,
+      "description": "PiP audio volume multiplier (only used when mixPipAudio=1)"
+    },
+    "previewOut": {
+      "type": "text",
+      "required": false,
+      "default": "preview.avif",
+      "description": "Preview output filename; use - to skip preview generation"
+    },
+    "previewLen": {
+      "type": "number",
+      "required": false,
+      "default": 10,
+      "description": "Preview clip length (seconds)"
+    },
+    "previewStart": {
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "description": "Start offset into the output video for preview (seconds)"
+    },
+    "previewFps": {
+      "type": "number",
+      "required": false,
+      "default": 12,
+      "description": "Preview frame rate"
+    },
+    "previewH": {
+      "type": "number",
+      "required": false,
+      "default": 1024,
+      "description": "Preview height (pixels; width scales proportionally)"
+    },
+    "previewCrf": {
+      "type": "number",
+      "required": false,
+      "default": 45,
+      "description": "Preview AV1 CRF quality (higher = smaller file)"
+    },
+    "previewCpuUsed": {
+      "type": "number",
+      "required": false,
+      "default": 8,
+      "description": "libaom-av1 cpu-used speed preset (0=slow/best … 8=fast/worst)"
+    },
+    "previewSquare": {
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "description": "Crop preview to square (1 = yes, 0 = no)"
+    },
+    "previewSize": {
+      "type": "number",
+      "required": false,
+      "default": 512,
+      "description": "Square crop size in pixels (only used when previewSquare=1)"
+    }
+  }
+}

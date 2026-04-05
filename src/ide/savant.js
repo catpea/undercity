@@ -983,13 +983,11 @@ export class Savant extends Emitter {
     }
 
     for (const p of params) {
+      const uid   = `p-${stepId}-${p.name}`;
       const row   = document.createElement('div');
-      row.className = 'param-row';
       const lbl   = document.createElement('label');
-      lbl.className = 'param-label';
-      lbl.textContent = p.label;
-
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
+      input.id = uid;
       input.addEventListener('change', () => {
         const storedVal = input.type === 'checkbox' ? input.checked : input.value;
         const current = this.#findCurrentStep(stepId);
@@ -998,8 +996,27 @@ export class Savant extends Emitter {
           params: { ...(current.step.params ?? {}), [p.name]: storedVal },
         });
       });
-      row.appendChild(lbl);
-      row.appendChild(input);
+      if (p.type === 'boolean') {
+        row.className = 'mb-2 form-check form-switch';
+        lbl.className = 'form-check-label';
+        lbl.textContent = p.label;
+        lbl.htmlFor = uid;
+        row.appendChild(input);
+        row.appendChild(lbl);
+      } else {
+        row.className = 'mb-2';
+        lbl.className = 'form-label mb-1';
+        lbl.textContent = p.label;
+        lbl.htmlFor = uid;
+        row.appendChild(lbl);
+        row.appendChild(input);
+      }
+      if (p.helpText) {
+        const help = document.createElement('div');
+        help.className = 'form-text';
+        help.textContent = p.helpText;
+        row.appendChild(help);
+      }
       container.appendChild(row);
     }
 
@@ -1025,12 +1042,11 @@ export class Savant extends Emitter {
     }
 
     for (const p of params) {
+      const uid   = `p-${stepId}-${p.name}`;
       const row   = document.createElement('div');
-      row.className = 'param-row';
       const lbl   = document.createElement('label');
-      lbl.className = 'param-label';
-      lbl.innerHTML = `${p.label}${p.type === 'code' ? ' <span class="param-code-badge">JS</span>' : ''}`;
       const input = this.#makeParamInput(p, step.params?.[p.name] ?? p.default ?? '');
+      input.id = uid;
       input.addEventListener('change', () => {
         const storedVal = input.type === 'checkbox' ? input.checked : input.value;
         const current = this.#findCurrentStep(stepId);
@@ -1039,8 +1055,27 @@ export class Savant extends Emitter {
           params: { ...(current.step.params ?? {}), [p.name]: storedVal },
         });
       });
-      row.appendChild(lbl);
-      row.appendChild(input);
+      if (p.type === 'boolean') {
+        row.className = 'mb-2 form-check form-switch';
+        lbl.className = 'form-check-label';
+        lbl.innerHTML = `${p.label}${p.type === 'code' ? ' <span class="param-code-badge">JS</span>' : ''}`;
+        lbl.htmlFor = uid;
+        row.appendChild(input);
+        row.appendChild(lbl);
+      } else {
+        row.className = 'mb-2';
+        lbl.className = 'form-label mb-1';
+        lbl.innerHTML = `${p.label}${p.type === 'code' ? ' <span class="param-code-badge">JS</span>' : ''}`;
+        lbl.htmlFor = uid;
+        row.appendChild(lbl);
+        row.appendChild(input);
+      }
+      if (p.helpText) {
+        const help = document.createElement('div');
+        help.className = 'form-text';
+        help.textContent = p.helpText;
+        row.appendChild(help);
+      }
       container.appendChild(row);
     }
   }
@@ -1083,7 +1118,7 @@ export class Savant extends Emitter {
   #makeParamInput(paramDef, value) {
     if (paramDef.type === 'select') {
       const sel = document.createElement('select');
-      sel.className = 'param-input';
+      sel.className = 'form-select form-select-sm';
       for (const opt of (paramDef.options ?? [])) {
         const o = document.createElement('option');
         o.value = opt; o.textContent = opt;
@@ -1096,7 +1131,7 @@ export class Savant extends Emitter {
     if (paramDef.type === 'boolean') {
       const cb = document.createElement('input');
       cb.type      = 'checkbox';
-      cb.className = 'param-switch';
+      cb.className = 'form-check-input';
       cb.setAttribute('role', 'switch');
       cb.checked   = value === true || value === 'true';
       return cb;
@@ -1104,7 +1139,7 @@ export class Savant extends Emitter {
 
     if (paramDef.type === 'textarea') {
       const ta = document.createElement('textarea');
-      ta.className = 'param-input';
+      ta.className = 'form-control form-control-sm';
       ta.rows = 2;
       ta.value = value ?? '';
       ta.placeholder = paramDef.placeholder ?? '';
@@ -1114,7 +1149,7 @@ export class Savant extends Emitter {
     if (paramDef.type === 'room') {
       // Dropdown populated by app via needNodeOptions event
       const sel = document.createElement('select');
-      sel.className = 'param-input';
+      sel.className = 'form-select form-select-sm';
       const placeholder = document.createElement('option');
       placeholder.value = ''; placeholder.textContent = '— select room —';
       sel.appendChild(placeholder);
@@ -1131,14 +1166,14 @@ export class Savant extends Emitter {
       const keyName = typeof value === 'string' ? value : '';
       const inp = document.createElement('input');
       inp.type = 'text';
-      inp.className = 'param-input param-input-inv-key';
+      inp.className = 'form-control form-control-sm param-input-inv-key';
       inp.value = keyName;
       inp.placeholder = paramDef.placeholder ?? 'inventoryKey';
       return inp;
     }
 
     const inp = document.createElement('input');
-    inp.className = 'param-input';
+    inp.className = 'form-control form-control-sm';
     if (paramDef.type === 'number') inp.type = 'number';
     else if (paramDef.type === 'url') inp.type = 'url';
     else inp.type = 'text';

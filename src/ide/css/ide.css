@@ -670,90 +670,12 @@ wf-repeater {
   gap: 5px;
 }
 .step-params.open { display: flex; }
-.param-row {
-  display: grid;
-  grid-template-columns: 88px 1fr;
-  align-items: center;
-  gap: 6px;
-}
-.param-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .param-code-badge {
   font-size: 8px; font-weight: 800; color: var(--sol-yellow);
   background: rgba(181,137,0,.15); border-radius: 3px;
   padding: 0 3px; vertical-align: middle; margin-left: 3px;
 }
-.param-input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text);
-  font-size: 11px;
-  padding: 3px 6px;
-  width: 100%;
-  font-family: 'Fira Code', 'Consolas', monospace;
-  transition: border-color var(--transition);
-}
-.param-input:focus        { outline: none; border-color: var(--accent); }
-.param-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
 .param-input-code { color: var(--sol-yellow); }
-
-/* ── Select: hide browser chrome, add custom caret ──────────────────────── */
-select.param-input {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23586e75'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 7px center;
-  padding-right: 22px;
-  cursor: pointer;
-}
-select.param-input:focus { border-color: var(--accent); }
-
-/* ── Boolean pill switch ────────────────────────────────────────────────── */
-input.param-switch {
-  appearance: none;
-  -webkit-appearance: none;
-  flex-shrink: 0;
-  width: 34px;
-  height: 18px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  position: relative;
-  cursor: pointer;
-  transition: background var(--transition), border-color var(--transition);
-  margin: 0;
-}
-input.param-switch::before {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: var(--text-muted);
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--transition), background var(--transition);
-}
-input.param-switch:checked {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-input.param-switch:checked::before {
-  transform: translateX(16px);
-  background: #fff;
-}
-input.param-switch:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 
 /* Basic mode helper elements */
 .step-basic-desc {

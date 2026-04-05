@@ -421,6 +421,11 @@ class UndercityMap extends HTMLElement {
 
   #onPointerDown(e) {
     if (e.button !== 0) return;
+    // Flush any pending input change before preventDefault() suppresses focus
+    // transfer. Without this, an input that the user just finished typing in
+    // would never receive blur → change, so its value would be lost when the
+    // workspace is cleared by the nodeDeselected / nodeSelected handlers.
+    document.activeElement?.blur();
     e.preventDefault();
     this.#svg.setPointerCapture(e.pointerId);
 

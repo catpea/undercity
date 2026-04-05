@@ -1,0 +1,29 @@
+{
+  "formId": "video-from-looping-clip-over-mp3",
+  "title": "Video from Looping Clip + Audio",
+  "description": "Loops a short video clip over an MP3 for its full duration, with AVIF cover and optional text.",
+  "fields": {
+    "clip": {
+      "type": "file",
+      "mimeTypes": ["video/mp4", "video/webm", "video/quicktime"],
+      "required": true,
+      "description": "Short video clip to loop for the full audio duration"
+    },
+    "audio": {
+      "type": "file",
+      "mimeTypes": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac", "audio/flac"],
+      "required": true,
+      "description": "Audio track (MP3, WAV, etc.)"
+    },
+    "title": {
+      "type": "text",
+      "required": false,
+      "description": "Optional title written to text.md"
+    },
+    "text": {
+      "type": "text",
+      "required": false,
+      "description": "Optional body text written to text.md"
+    }
+  }
+}

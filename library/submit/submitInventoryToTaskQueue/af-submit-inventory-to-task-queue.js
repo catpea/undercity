@@ -80,6 +80,12 @@ template.innerHTML = `
     </table>
   </div>
 
+  <!-- ── Settings validation ────────────────────────────── -->
+  <div part="settings-section" class="mb-3" hidden>
+    <div class="section-title mb-1" style="color:var(--sol-red,#dc322f);">Missing Required Fields</div>
+    <div part="settings-body" style="font-size:0.8rem;"></div>
+  </div>
+
   <!-- ── Action bar ──────────────────────────────────────── -->
   <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
     <button part="submit-btn" class="btn btn-sm btn-outline-primary"    disabled>Submit</button>
@@ -140,42 +146,50 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
 
   // DOM refs
   #root = null;
-  #healthBadge   = null;
-  #serverUrl     = null;
+  #healthBadge    = null;
+  #serverUrl      = null;
   #previewSection = null;
-  #previewBody   = null;
-  #submitBtn     = null;
-  #retryBtn      = null;
-  #abortBtn      = null;
-  #jobStatus     = null;
-  #jobIdDisplay  = null;
+  #previewBody    = null;
+  #settingsSection = null;
+  #settingsBody   = null;
+  #submitBtn      = null;
+  #retryBtn       = null;
+  #abortBtn       = null;
+  #jobStatus      = null;
+  #jobIdDisplay   = null;
   #progressSection = null;
-  #progressBar   = null;
-  #progressMsg   = null;
-  #logSection    = null;
-  #logToggle     = null;
-  #logBody       = null;
+  #progressBar    = null;
+  #progressMsg    = null;
+  #logSection     = null;
+  #logToggle      = null;
+  #logBody        = null;
 
   // Runtime state
-  #invSub      = null;
-  #healthTimer = null;
-  #pollTimer   = null;
-  #jobId       = null;   // client-generated UUID, stable for this component instance
-  #submissionId = null;  // server-assigned UUID returned by POST /submit
-  #state       = S.IDLE;
-  #logOpen     = false;
+  #invSub       = null;
+  #healthTimer  = null;
+  #pollTimer    = null;
+  #jobId        = null;   // client-generated UUID, stable for this component instance
+  #submissionId = null;   // server-assigned UUID returned by POST /submit
+  #state        = S.IDLE;
+  #logOpen      = false;
   #seenLogCount = 0;
+
+  // Settings validation state
+  #settings     = null;   // parsed settings.json for the current job-type, or null
+  #healthOnline = false;  // true while server is reachable
 
   constructor() {
     super();
     this.#root = this.attachShadow({ mode: 'open' });
     this.#root.appendChild(template.content.cloneNode(true));
 
-    this.#healthBadge    = this.#root.querySelector('[part="health-badge"]');
-    this.#serverUrl      = this.#root.querySelector('[part="server-url"]');
-    this.#previewSection = this.#root.querySelector('[part="preview-section"]');
-    this.#previewBody    = this.#root.querySelector('[part="preview-body"]');
-    this.#submitBtn      = this.#root.querySelector('[part="submit-btn"]');
+    this.#healthBadge     = this.#root.querySelector('[part="health-badge"]');
+    this.#serverUrl       = this.#root.querySelector('[part="server-url"]');
+    this.#previewSection  = this.#root.querySelector('[part="preview-section"]');
+    this.#previewBody     = this.#root.querySelector('[part="preview-body"]');
+    this.#settingsSection = this.#root.querySelector('[part="settings-section"]');
+    this.#settingsBody    = this.#root.querySelector('[part="settings-body"]');
+    this.#submitBtn       = this.#root.querySelector('[part="submit-btn"]');
     this.#retryBtn       = this.#root.querySelector('[part="retry-btn"]');
     this.#abortBtn       = this.#root.querySelector('[part="abort-btn"]');
     this.#jobStatus      = this.#root.querySelector('[part="job-status"]');
@@ -204,6 +218,7 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     if (inv?.subscribeAll) {
       this.#invSub = inv.subscribeAll(() => {
         if (this.#attr('preview') !== null) this.#renderPreview();
+        this.#updateValidation();
       });
     }
   }
@@ -257,6 +272,9 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     } else {
       this.#previewSection.hidden = true;
     }
+    // Clear cached settings so they are re-fetched on the next health check
+    this.#settings = null;
+    this.#settingsSection.hidden = true;
   }
 
   // ── Preview table ────────────────────────────────────────────────────────────
@@ -341,14 +359,107 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
         const data = await res.json().catch(() => ({}));
         const label = data.version ? `online v${data.version}` : 'online';
         this.#setBadge(this.#healthBadge, 'online', label);
-        if (this.#state === S.IDLE) this.#submitBtn.disabled = false;
+        this.#healthOnline = true;
+        // Fetch settings on first successful health check (or after attr reset)
+        if (!this.#settings) await this.#fetchSettings();
+        this.#refreshSubmitBtn();
       } else {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch {
       this.#setBadge(this.#healthBadge, 'offline', 'offline');
-      if (this.#state === S.IDLE) this.#submitBtn.disabled = true;
+      this.#healthOnline = false;
+      this.#refreshSubmitBtn();
     }
+  }
+
+  // ── Settings fetch + validation ──────────────────────────────────────────────
+
+  /**
+   * Fetches GET /task/:jobType/settings from the server and caches the result.
+   * If the server returns 404 (no settings.json) or the request fails,
+   * validation is skipped and submit remains enabled.
+   */
+  async #fetchSettings() {
+    const jobType = this.#attr('job-type');
+    if (!jobType) return;
+    try {
+      const res = await fetch(
+        `${this.#baseUrl()}/task/${encodeURIComponent(jobType)}/settings`,
+        { signal: AbortSignal.timeout(3000) },
+      );
+      if (!res.ok) return;   // 404 = no settings file; skip validation
+      this.#settings = await res.json();
+      this.#updateValidation();
+    } catch {
+      // Server unreachable or malformed JSON — skip validation silently
+    }
+  }
+
+  /**
+   * Compares Inventory contents against the required fields in settings.json.
+   * Renders a "Missing Required Fields" warning and disables Submit if any
+   * required field is absent or has the wrong type.
+   */
+  #updateValidation() {
+    if (!this.#settings?.fields) {
+      this.#settingsSection.hidden = true;
+      this.#refreshSubmitBtn();
+      return;
+    }
+
+    const inventory = this.#filteredSnapshot();
+    const missing = [];
+
+    for (const [key, spec] of Object.entries(this.#settings.fields)) {
+      if (!spec.required) continue;
+
+      const val = inventory[key];
+
+      if (val === undefined || val === null) {
+        missing.push({ key, spec });
+        continue;
+      }
+
+      // File fields must be objects with a url property
+      if (spec.type === 'file' && (typeof val !== 'object' || !val.url)) {
+        missing.push({ key, spec });
+      }
+    }
+
+    if (missing.length > 0) {
+      this.#settingsSection.hidden = false;
+      this.#settingsBody.innerHTML = '';
+      for (const { key, spec } of missing) {
+        const p = document.createElement('p');
+        p.className  = 'mb-1';
+        p.style.color = 'var(--sol-red,#dc322f)';
+        const strong = document.createElement('strong');
+        strong.textContent = key;
+        p.append('✗ ', strong);
+        if (spec.description) {
+          const small = document.createElement('small');
+          small.style.color = 'var(--sol-base1,#93a1a1)';
+          small.textContent = ` — ${spec.description}`;
+          p.appendChild(small);
+        }
+        this.#settingsBody.appendChild(p);
+      }
+    } else {
+      this.#settingsSection.hidden = true;
+    }
+
+    this.#refreshSubmitBtn();
+  }
+
+  /**
+   * Central method that decides whether the Submit button should be enabled.
+   * Only active in IDLE state — other states manage the button themselves.
+   */
+  #refreshSubmitBtn() {
+    if (this.#state !== S.IDLE) return;
+    const validationOk = !this.#settings?.fields || this.#settingsSection.hidden;
+    this.#submitBtn.disabled = !(this.#healthOnline && validationOk);
   }
 
   // ── Submit flow ─────────────────────────────────────────────────────────────
@@ -549,7 +660,7 @@ class AfSubmitInventoryToTaskQueue extends HTMLElement {
     }
     this.#jobIdDisplay.hidden      = true;
     this.#setState(S.IDLE);
-    this.#submitBtn.disabled = false;
+    this.#refreshSubmitBtn();
   }
 
   #updateProgress({ percent = 0, message = '' } = {}) {

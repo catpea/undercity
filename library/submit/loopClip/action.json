@@ -1,0 +1,20 @@
+{
+  "id":      "submit.loopClip",
+  "icon":    "arrow-repeat",
+  "color":   "var(--sol-green)",
+  "label":   "Loop Clip",
+  "desc":    "Submit inventory to the video-from-looping-clip-over-mp3 processor. Requires 'clip' (short video) and 'audio' in inventory. Optionally stores output files back into inventory under the configured keys.",
+  "version": "1.0.0",
+  "params": [
+    { "name": "url",        "label": "Server URL",           "type": "text",          "placeholder": "http://localhost:4000", "default": "http://localhost:4000" },
+    { "name": "videoKey",   "label": "Store video.mp4 as",   "type": "inventory-key", "placeholder": "videoFile",
+      "helpText": "Clip looped to the full length of the audio track. Leave blank to skip." },
+    { "name": "coverKey",   "label": "Store cover.avif as",  "type": "inventory-key", "placeholder": "coverImage",
+      "helpText": "10-second AVIF preview extracted from the clip. Leave blank to skip." },
+    { "name": "textKey",    "label": "Store text.md as",     "type": "inventory-key", "placeholder": "textContent",
+      "helpText": "Title and body text content. Leave blank to skip." },
+    { "name": "omit",       "label": "Omit inventory keys",  "type": "text",          "placeholder": "sensitiveKey, tempKey" },
+    { "name": "preview",    "label": "Show preview table",   "type": "boolean",       "default": true },
+    { "name": "manualRetry","label": "Retry button",         "type": "boolean",       "default": true }
+  ]
+}

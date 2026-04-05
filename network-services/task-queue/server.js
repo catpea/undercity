@@ -50,6 +50,10 @@ import { mkdirSync, writeFileSync,
          rmSync, renameSync, existsSync }      from 'node:fs';
 import { join, resolve }                       from 'node:path';
 
+// Directory where processor/<formId>/settings.json files live.
+// Override with PROC_DIR env var when running server and processor separately.
+const PROC_DIR = process.env.PROC_DIR ?? resolve(import.meta.dirname, 'processor');
+
 const VERSION = '2.0.0';
 
 // ── Storage roots ─────────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ const ROOT     = process.env.TASK_QUEUE_ROOT ?? '/tmp/undercity-task-queue';
 const INCOMING = join(ROOT, 'incoming');
 const ACTIVE   = join(ROOT, 'active');
 const JOBS     = join(ROOT, 'jobs');      // jobId → submissionId index
+const OUTPUT   = join(ROOT, 'output');    // processor output files (read-only from server)
 
 for (const dir of [ROOT, INCOMING, ACTIVE, JOBS]) {
   mkdirSync(dir, { recursive: true });
@@ -406,6 +411,66 @@ function handlePostProgress(jobId, req, res) {
   }).catch(err => send(res, 500, { error: err.message }));
 }
 
+// GET /job-output/:submissionId/:filename
+//
+// Serves a single file from the processor output directory so browser clients
+// can download results and upload them to the inventory-cache server.
+// Only alphanumeric/hyphen/underscore/dot filenames are allowed — no traversal.
+function handleGetJobOutput(submissionId, filename, res) {
+  if (!UUID_RE.test(submissionId)) {
+    return send(res, 400, { error: 'Invalid submission ID.' });
+  }
+  if (!/^[a-zA-Z0-9_.-]+$/.test(filename)) {
+    return send(res, 400, { error: 'Invalid filename — only alphanumeric, dot, dash, underscore allowed.' });
+  }
+  const filePath = join(OUTPUT, submissionId, filename);
+  if (!existsSync(filePath)) {
+    return send(res, 404, { error: `Output file not found: ${filename}` });
+  }
+  const ext = filename.split('.').pop().toLowerCase();
+  const MIME_MAP = {
+    mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
+    avif: 'image/avif', png: 'image/png', jpg: 'image/jpeg',
+    md: 'text/markdown; charset=utf-8', txt: 'text/plain; charset=utf-8',
+    json: 'application/json',
+  };
+  const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
+  try {
+    const data = readFileSync(filePath);
+    res.writeHead(200, {
+      'Content-Type':                contentType,
+      'Content-Length':              String(data.length),
+      'Cache-Control':               'no-store',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(data);
+  } catch (err) {
+    send(res, 500, { error: err.message });
+  }
+}
+
+// GET /task/:formId/settings
+//
+// Returns the settings.json for the named processor, enabling clients to
+// discover which fields are required before submitting a job.
+// Only allows formId values that consist of alphanumeric characters, dashes,
+// and underscores — no path traversal possible.
+function handleGetTaskSettings(formId, res) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(formId)) {
+    return send(res, 400, { error: 'Invalid formId — only alphanumeric, dash, and underscore allowed.' });
+  }
+  const settingsPath = join(PROC_DIR, formId, 'settings.json');
+  if (!existsSync(settingsPath)) {
+    return send(res, 404, { error: `No settings.json found for processor "${formId}".` });
+  }
+  try {
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+    send(res, 200, settings);
+  } catch (err) {
+    send(res, 500, { error: `Failed to read settings: ${err.message}` });
+  }
+}
+
 // GET /job/:jobId/log
 function handleGetLog(jobId, res) {
   const { dir } = findDirByJobId(jobId);
@@ -481,6 +546,18 @@ function router(req, res) {
     return handleClear(id, res);
   }
 
+  // Job output file route  — GET /job-output/:submissionId/:filename
+  const jobOutputMatch = path.match(/^\/job-output\/([^/]+)\/([^/]+)$/);
+  if (jobOutputMatch && method === 'GET') {
+    return handleGetJobOutput(jobOutputMatch[1], jobOutputMatch[2], res);
+  }
+
+  // Task settings route  — GET /task/:formId/settings
+  const taskSettingsMatch = path.match(/^\/task\/([^/]+)\/settings$/);
+  if (taskSettingsMatch && method === 'GET') {
+    return handleGetTaskSettings(taskSettingsMatch[1], res);
+  }
+
   // Job tracking routes
   const jobMatch = path.match(/^\/job\/([^/]+)(\/progress|\/log)?$/);
   if (jobMatch) {
@@ -516,6 +593,9 @@ server.listen(PORT, () => {
   console.log('  DELETE /clear/:id               Remove a submission (UUID or jobId)');
   console.log('  GET    /clean                   Remove all done/error submissions');
   console.log('  GET    /status                  Queue stats');
+  console.log('');
+  console.log('  GET    /job-output/:id/:file     Serve a processor output file');
+  console.log('  GET    /task/:formId/settings   Processor field requirements');
   console.log('');
   console.log('  GET    /job/:jobId              Lookup by client jobId');
   console.log('  GET    /job/:jobId/progress     Read job progress');

@@ -8,8 +8,8 @@
         "id": "abb32625",
         "type": "room",
         "label": "Start",
-        "x": -760,
-        "y": 400,
+        "x": -800,
+        "y": 600,
         "payload": {
           "Enter": [
             {
@@ -58,7 +58,8 @@
                     "placeholder": "Moby-Dick; or, The Whale",
                     "required": "true",
                     "autocomplete": "",
-                    "spellcheck": "true"
+                    "spellcheck": "true",
+                    "helpText": "Interesting and positive, no more than 99 characters long."
                   }
                 }
               ]
@@ -244,8 +245,8 @@
         "id": "65c4db6f",
         "type": "room",
         "label": "Just Text",
-        "x": -560,
-        "y": 560,
+        "x": -600,
+        "y": 600,
         "payload": {
           "Enter": [
             {
@@ -284,20 +285,18 @@
             "events": {
               "Take": [
                 {
-                  "action": "display.value",
-                  "params": {
-                    "key": ""
-                  }
-                },
-                {
                   "action": "input.longText",
                   "params": {
-                    "key": "poem",
-                    "label": "Enter poem text",
+                    "key": "text",
+                    "label": "Poem Text",
                     "placeholder": "",
-                    "rows": "16",
-                    "required": "true",
-                    "spellcheck": true
+                    "rows": "8",
+                    "required": false,
+                    "spellcheck": true,
+                    "helpText": "",
+                    "size": "",
+                    "validFeedback": "",
+                    "invalidFeedback": ""
                   }
                 }
               ]
@@ -309,8 +308,8 @@
         "id": "fdb191dc",
         "type": "room",
         "label": "Upload Narration",
-        "x": -400,
-        "y": 600,
+        "x": -440,
+        "y": 640,
         "payload": {
           "Enter": [
             {
@@ -368,7 +367,7 @@
         "type": "room",
         "label": "Upload Cover Image",
         "x": -200,
-        "y": 600,
+        "y": 640,
         "payload": {
           "Enter": [
             {
@@ -400,7 +399,7 @@
             "id": "d5dd9baa",
             "type": "FormThing",
             "config": {
-              "name": "Form"
+              "name": "Form1"
             },
             "events": {
               "Take": [
@@ -488,8 +487,8 @@
         "id": "1cf5db68",
         "type": "room",
         "label": "Just Text Processor",
-        "x": -40,
-        "y": 680,
+        "x": 0,
+        "y": 640,
         "payload": {
           "Enter": [
             {
@@ -500,7 +499,7 @@
             {
               "action": "submit.submitInventoryToTaskQueue",
               "params": {
-                "key": "res2",
+                "key": "encoderResponse",
                 "url": "http://localhost:4000",
                 "jobType": "video-from-audio-and-jpg",
                 "keepJobUrl": true,
@@ -525,10 +524,318 @@
         "id": "82ccdc9e",
         "type": "room",
         "label": "Show Inventory",
-        "x": 120,
-        "y": 760,
+        "x": 600,
+        "y": 600,
         "payload": {
           "Enter": [
+            {
+              "action": "debug.inventoryDump",
+              "params": {}
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "71991b54",
+        "type": "room",
+        "label": "Upload Looping Video",
+        "x": -200,
+        "y": 560,
+        "payload": {
+          "Enter": [
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "data": "{}"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "size": "",
+                "outline": false,
+                "group": false
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": [
+          {
+            "id": "a8b74fb7",
+            "type": "FormThing",
+            "config": {
+              "name": "Form1"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.video",
+                  "params": {
+                    "key": "clip",
+                    "label": "Sort Looping Clip",
+                    "accept": "video/*",
+                    "required": true,
+                    "helpText": "",
+                    "size": "",
+                    "validFeedback": "",
+                    "invalidFeedback": ""
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "0f83e7d6",
+        "type": "room",
+        "label": "Looping Processor",
+        "x": 0,
+        "y": 560,
+        "payload": {
+          "Enter": [
+            {
+              "action": "submit.submitInventoryToTaskQueue",
+              "params": {
+                "key": "encoderResponse",
+                "url": "http://localhost:4000",
+                "jobType": "video-from-looping-clip-over-mp3",
+                "keepJobUrl": false,
+                "omit": "",
+                "manualRetry": true,
+                "manualAbort": true,
+                "preview": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "8c52d639",
+        "type": "room",
+        "label": "Upload Cover And Speaker (PIP)",
+        "x": 200,
+        "y": 720,
+        "payload": {
+          "Enter": [
+            {
+              "action": "debug.inventoryDump",
+              "params": {}
+            },
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "data": "{}"
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "size": "",
+                "outline": false,
+                "group": false
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": [
+          {
+            "id": "3c07510e",
+            "type": "FormThing",
+            "config": {
+              "name": "Form"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.video",
+                  "params": {
+                    "key": "pip",
+                    "label": "Speaker/PIP Clip (Picture-in-picture source video clip)",
+                    "accept": "video/*",
+                    "required": true,
+                    "helpText": "",
+                    "size": "",
+                    "validFeedback": "",
+                    "invalidFeedback": ""
+                  }
+                },
+                {
+                  "action": "input.radio",
+                  "params": {
+                    "key": "pipSide",
+                    "label": "Which side shoudl the picture-in-picture appear at?",
+                    "options": "LEFT, RIGHT",
+                    "required": true,
+                    "helpText": "",
+                    "size": "",
+                    "validFeedback": "",
+                    "invalidFeedback": ""
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "212d934c",
+        "type": "room",
+        "label": "Pip Speaker Processor",
+        "x": 400,
+        "y": 720,
+        "payload": {
+          "Enter": [
+            {
+              "action": "submit.pictureInPicture",
+              "params": {
+                "url": "http://localhost:4000",
+                "videoKey": "",
+                "previewKey": "",
+                "textKey": "",
+                "omit": "",
+                "preview": true,
+                "manualRetry": true
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "7b0d16c1",
+        "type": "room",
+        "label": "Picture-in-Picture",
+        "x": -200,
+        "y": 720,
+        "payload": {
+          "Enter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "size": "",
+                "outline": false,
+                "group": false
+              }
+            },
+            {
+              "action": "room.emit",
+              "params": {
+                "event": "Take",
+                "data": "{}"
+              }
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": [
+          {
+            "id": "eb55ba58",
+            "type": "FormThing",
+            "config": {
+              "name": "Form21"
+            },
+            "events": {
+              "Take": [
+                {
+                  "action": "input.image",
+                  "params": {
+                    "key": "image",
+                    "label": "Poem's Cover Image",
+                    "accept": "image/*",
+                    "required": true,
+                    "helpText": "",
+                    "size": "",
+                    "validFeedback": "",
+                    "invalidFeedback": ""
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "e8f45805",
+        "type": "room",
+        "label": "Create Background Video",
+        "x": 0,
+        "y": 720,
+        "payload": {
+          "Enter": [
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "size": "",
+                "outline": false,
+                "group": false
+              }
+            },
+            {
+              "action": "submit.narratedStill",
+              "params": {
+                "url": "http://localhost:4000",
+                "videoKey": "main",
+                "coverKey": "",
+                "textKey": "",
+                "omit": "",
+                "preview": true,
+                "manualRetry": true
+              }
+            },
             {
               "action": "debug.inventoryDump",
               "params": {}
@@ -643,6 +950,62 @@
         "toId": "82ccdc9e",
         "label": "",
         "condition": ""
+      },
+      {
+        "id": "16deaeff",
+        "fromId": "fdb191dc",
+        "toId": "71991b54",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "401416e3",
+        "fromId": "0f83e7d6",
+        "toId": "82ccdc9e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "b4a6dc46",
+        "fromId": "71991b54",
+        "toId": "0f83e7d6",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "f4ec7b04",
+        "fromId": "212d934c",
+        "toId": "82ccdc9e",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "6798d053",
+        "fromId": "fdb191dc",
+        "toId": "7b0d16c1",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "0e7d6e70",
+        "fromId": "7b0d16c1",
+        "toId": "e8f45805",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "8eb13c99",
+        "fromId": "e8f45805",
+        "toId": "8c52d639",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "3c66c6f2",
+        "fromId": "8c52d639",
+        "toId": "212d934c",
+        "label": "",
+        "condition": ""
       }
     ]
   },
@@ -651,5 +1014,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-05T00:12:54.511Z"
+  "modified": "2026-04-05T22:00:33.752Z"
 }

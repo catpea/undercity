@@ -1,0 +1,29 @@
+{
+  "formId": "video-from-audio-and-jpg",
+  "title": "Video from Audio + Image",
+  "description": "Creates a video from a still image and audio track, with AVIF cover and optional text.",
+  "fields": {
+    "image": {
+      "type": "file",
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"],
+      "required": true,
+      "description": "Still image for the video background (JPEG or PNG)"
+    },
+    "audio": {
+      "type": "file",
+      "mimeTypes": ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac", "audio/flac"],
+      "required": true,
+      "description": "Audio track (MP3, WAV, etc.)"
+    },
+    "title": {
+      "type": "text",
+      "required": false,
+      "description": "Optional title written to text.md"
+    },
+    "text": {
+      "type": "text",
+      "required": false,
+      "description": "Optional body text written to text.md"
+    }
+  }
+}
