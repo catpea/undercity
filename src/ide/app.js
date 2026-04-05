@@ -825,24 +825,24 @@ class App extends Emitter {
     document.getElementById('props-title').textContent = 'Connector';
     const body = document.getElementById('props-body');
     body.innerHTML = `
-      <div class="props-section">
+      <div class="mb-4">
         <div class="props-section-title">Connection</div>
-        <div class="props-field">
-          <label class="props-label">From</label>
-          <div class="props-value">${escAttr(fromNode?.label.value ?? edge.fromId)}</div>
+        <div class="mb-3">
+          <label class="form-label">From</label>
+          <div class="form-control-plaintext form-control-sm">${escAttr(fromNode?.label.value ?? edge.fromId)}</div>
         </div>
-        <div class="props-field">
-          <label class="props-label">To</label>
-          <div class="props-value">${escAttr(toNode?.label.value ?? edge.toId)}</div>
+        <div class="mb-3">
+          <label class="form-label">To</label>
+          <div class="form-control-plaintext form-control-sm">${escAttr(toNode?.label.value ?? edge.toId)}</div>
         </div>
-        <div class="props-field">
-          <label class="props-label">Label</label>
-          <input class="props-input" id="edge-label" value="${escAttr(edge.label.value)}">
+        <div class="mb-3">
+          <label class="form-label" for="edge-label">Label</label>
+          <input class="form-control form-control-sm" id="edge-label" value="${escAttr(edge.label.value)}">
         </div>
         ${isDiamond ? `
-        <div class="props-field">
-          <label class="props-label">Condition <span class="props-hint">(JS expression)</span></label>
-          <input class="props-input" id="edge-condition" value="${escAttr(edge.condition.value)}" placeholder="inventory.get('key') === 'value'">
+        <div class="mb-3">
+          <label class="form-label" for="edge-condition">Condition <span class="form-text">(JS expression)</span></label>
+          <input class="form-control form-control-sm" id="edge-condition" value="${escAttr(edge.condition.value)}" placeholder="inventory.get('key') === 'value'">
         </div>` : ''}
       </div>`;
 
@@ -861,40 +861,39 @@ class App extends Emitter {
   #renderPropsBody(node) {
     const body = document.getElementById('props-body');
     body.innerHTML = `
-      <div class="props-section">
+      <div class="mb-4">
         <div class="props-section-title">Identity</div>
-        <div class="props-field">
-          <label class="props-label">Label</label>
-          <input class="props-input" id="prop-label" value="${escAttr(node.label.value)}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-label">Label</label>
+          <input class="form-control form-control-sm" id="prop-label" value="${escAttr(node.label.value)}">
         </div>
-        <div class="props-field">
-          <label class="props-label">Type</label>
-          <select class="props-select" id="prop-type">
+        <div class="mb-3">
+          <label class="form-label" for="prop-type">Type</label>
+          <select class="form-select form-select-sm" id="prop-type">
             <option value="room"  ${node.type === 'room'  ? 'selected' : ''}> Room</option>
             <option value="diamond"  ${node.type === 'diamond'  ? 'selected' : ''}>Diamond (Logic Joint)</option>
             <option value="terminal" ${node.type === 'terminal' ? 'selected' : ''}>Terminal (End State)</option>
           </select>
         </div>
-        <div class="props-field">
-          <label class="props-label">
-            <input type="checkbox" id="prop-entry" ${node.meta?.isEntry ? 'checked' : ''}> Entry point (Lobby)
-          </label>
+        <div class="mb-3 form-check">
+          <input class="form-check-input" type="checkbox" id="prop-entry" ${node.meta?.isEntry ? 'checked' : ''}>
+          <label class="form-check-label" for="prop-entry">Entry point (Lobby)</label>
         </div>
       </div>
       ${node.type === 'room' && node.meta?.isEntry ? `
-      <div class="props-section">
+      <div class="mb-4">
         <div class="props-section-title">Lobby Meta</div>
-        <div class="props-field">
-          <label class="props-label">App Name</label>
-          <input class="props-input" id="prop-meta-appName" value="${escAttr(node.meta?.appName ?? '')}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-appName">App Name</label>
+          <input class="form-control form-control-sm" id="prop-meta-appName" value="${escAttr(node.meta?.appName ?? '')}">
         </div>
-        <div class="props-field">
-          <label class="props-label">Tagline</label>
-          <input class="props-input" id="prop-meta-tagline" value="${escAttr(node.meta?.tagline ?? '')}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-tagline">Tagline</label>
+          <input class="form-control form-control-sm" id="prop-meta-tagline" value="${escAttr(node.meta?.tagline ?? '')}">
         </div>
-        <div class="props-field">
-          <label class="props-label">Icon (Bootstrap icon name)</label>
-          <input class="props-input" id="prop-meta-icon" value="${escAttr(node.meta?.icon ?? '')}" placeholder="shield-lock">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-icon">Icon (Bootstrap icon name)</label>
+          <input class="form-control form-control-sm" id="prop-meta-icon" value="${escAttr(node.meta?.icon ?? '')}" placeholder="shield-lock">
         </div>
       </div>` : ''}
       ${node.type === 'terminal' ? this.#terminalMetaHTML(node) : ''}
@@ -967,19 +966,19 @@ class App extends Emitter {
   #terminalMetaHTML(node) {
     const m = node.meta ?? {};
     return `
-      <div class="props-section">
+      <div class="mb-4">
         <div class="props-section-title">Terminal Metadata</div>
-        <div class="props-field">
-          <label class="props-label">Message</label>
-          <input class="props-input" id="prop-meta-message" value="${escAttr(m.message ?? '')}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-message">Message</label>
+          <input class="form-control form-control-sm" id="prop-meta-message" value="${escAttr(m.message ?? '')}">
         </div>
-        <div class="props-field">
-          <label class="props-label">Button Label</label>
-          <input class="props-input" id="prop-meta-nextLabel" value="${escAttr(m.nextLabel ?? '')}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-nextLabel">Button Label</label>
+          <input class="form-control form-control-sm" id="prop-meta-nextLabel" value="${escAttr(m.nextLabel ?? '')}">
         </div>
-        <div class="props-field">
-          <label class="props-label">Button URL</label>
-          <input class="props-input" id="prop-meta-nextHref" value="${escAttr(m.nextHref ?? '')}">
+        <div class="mb-3">
+          <label class="form-label" for="prop-meta-nextHref">Button URL</label>
+          <input class="form-control form-control-sm" id="prop-meta-nextHref" value="${escAttr(m.nextHref ?? '')}">
         </div>
       </div>`;
   }

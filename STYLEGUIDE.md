@@ -25,6 +25,7 @@ Violations will be caught in review and sent back for rewrite.**
 6. [State Machines — `src/lib/state-machine.js`](#6-state-machines--srclibstate-machinejs)
 7. [Inventory Access Pattern](#7-inventory-access-pattern)
 8. [Importing the Primitives](#8-importing-the-primitives)
+9. Please Use Bootstrap CSS Framework
 
 ---
 

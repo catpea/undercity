@@ -365,7 +365,7 @@
       {
         "id": "ee8ff735",
         "type": "room",
-        "label": "Upload Cover Image",
+        "label": "Still Image",
         "x": -200,
         "y": 640,
         "payload": {
@@ -524,8 +524,8 @@
         "id": "82ccdc9e",
         "type": "room",
         "label": "Show Inventory",
-        "x": 600,
-        "y": 600,
+        "x": 720,
+        "y": 640,
         "payload": {
           "Enter": [
             {
@@ -546,7 +546,7 @@
       {
         "id": "71991b54",
         "type": "room",
-        "label": "Upload Looping Video",
+        "label": "Looping Video",
         "x": -200,
         "y": 560,
         "payload": {
@@ -608,8 +608,8 @@
         "id": "0f83e7d6",
         "type": "room",
         "label": "Looping Processor",
-        "x": 0,
-        "y": 560,
+        "x": 560,
+        "y": 600,
         "payload": {
           "Enter": [
             {
@@ -726,12 +726,22 @@
               "action": "submit.pictureInPicture",
               "params": {
                 "url": "http://localhost:4000",
-                "videoKey": "",
-                "previewKey": "",
+                "videoKey": "pipVideo",
+                "previewKey": "pipPreview",
                 "textKey": "",
                 "omit": "",
                 "preview": true,
                 "manualRetry": true
+              }
+            },
+            {
+              "action": "room.showNav",
+              "params": {
+                "variant": "primary",
+                "full": true,
+                "size": "",
+                "outline": false,
+                "group": false
               }
             }
           ],
@@ -748,7 +758,7 @@
       {
         "id": "7b0d16c1",
         "type": "room",
-        "label": "Picture-in-Picture",
+        "label": "Still With Picture-in-Picture",
         "x": -200,
         "y": 720,
         "payload": {
@@ -839,6 +849,42 @@
             {
               "action": "debug.inventoryDump",
               "params": {}
+            }
+          ],
+          "Exit": [],
+          "Back": [],
+          "Reset": [],
+          "Unload": []
+        },
+        "routes": [],
+        "template": null,
+        "meta": {},
+        "things": []
+      },
+      {
+        "id": "7a737b7b",
+        "type": "room",
+        "label": "Pip Results",
+        "x": 560,
+        "y": 720,
+        "payload": {
+          "Enter": [
+            {
+              "action": "display.value",
+              "params": {
+                "key": "pipVideo",
+                "centered": true
+              }
+            },
+            {
+              "action": "display.divider",
+              "params": {}
+            },
+            {
+              "action": "display.value",
+              "params": {
+                "key": "pipPreview"
+              }
             }
           ],
           "Exit": [],
@@ -973,13 +1019,6 @@
         "condition": ""
       },
       {
-        "id": "f4ec7b04",
-        "fromId": "212d934c",
-        "toId": "82ccdc9e",
-        "label": "",
-        "condition": ""
-      },
-      {
         "id": "6798d053",
         "fromId": "fdb191dc",
         "toId": "7b0d16c1",
@@ -1006,6 +1045,20 @@
         "toId": "212d934c",
         "label": "",
         "condition": ""
+      },
+      {
+        "id": "1fb1dd2f",
+        "fromId": "212d934c",
+        "toId": "7a737b7b",
+        "label": "",
+        "condition": ""
+      },
+      {
+        "id": "7f99a057",
+        "fromId": "7a737b7b",
+        "toId": "82ccdc9e",
+        "label": "",
+        "condition": ""
       }
     ]
   },
@@ -1014,5 +1067,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-05T22:00:33.752Z"
+  "modified": "2026-04-05T23:29:07.704Z"
 }

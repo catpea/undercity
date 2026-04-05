@@ -95,42 +95,6 @@ html, body {
 }
 .ide-logo span { color: var(--sol-blue); }
 
-#project-select {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text-em);
-  border-radius: var(--radius);
-  padding: 3px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  min-width: 160px;
-}
-#project-select:focus { outline: none; border-color: var(--accent); }
-
-.ide-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: var(--radius);
-  padding: 3px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.ide-btn:hover  { border-color: var(--accent); color: var(--accent); }
-.ide-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.ide-btn.primary:hover { background: #1a7abf; border-color: #1a7abf; }
-.ide-btn.success { background: var(--success); border-color: var(--success); color: #fff; }
-.ide-btn.success:hover { opacity: .85; }
-.ide-btn.danger  { background: var(--danger); border-color: var(--danger); color: #fff; }
-.ide-btn af-icon { font-size: 13px; }
-
-.ide-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
-.ide-spacer { flex: 1; }
 
 /* ── Main split ───────────────────────────────────────────────────────────── */
 #ide-body {
@@ -752,23 +716,6 @@ wf-repeater {
 
 #props-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
 
-.props-field { margin-bottom: 12px; }
-.props-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
-.props-input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-em);
-  font-size: 12px;
-  padding: 5px 8px;
-}
-.props-input:focus { outline: none; border-color: var(--accent); }
-.props-select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-em); font-size: 12px; padding: 5px 8px; }
-.props-value { font-size: 12px; color: var(--text-em); padding: 2px 0; }
-.props-hint  { font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
-
-.props-section { margin-bottom: 16px; }
 .props-section-title {
   display: flex; align-items: center; gap: 6px;
   font-size: 10px; font-weight: 800; color: var(--text-muted);
@@ -1056,24 +1003,6 @@ wf-repeater {
   to   { opacity: 1; transform: none; }
 }
 .modal-title { font-size: 16px; font-weight: 700; color: var(--text-em); margin-bottom: 20px; }
-.modal-field { margin-bottom: 14px; }
-.modal-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px; }
-.modal-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-em); font-size: 13px; padding: 8px 10px; transition: border-color var(--transition); }
-.modal-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(38,139,210,.18); }
-.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.modal-back {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.modal-back:hover { text-decoration: underline; }
 
 /* Template card grid */
 .tmpl-gallery {

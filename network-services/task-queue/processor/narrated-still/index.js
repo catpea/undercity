@@ -1,4 +1,4 @@
-// processor/video-from-audio-and-jpg/index.js
+// processor/narrated-still/index.js
 //
 // Creates a video from a still image + audio track, then compresses the image
 // as an AVIF cover, and saves any text field as text.md.
@@ -99,7 +99,7 @@ export async function handle(fields, ctx) {
   await ctx.progress(95, 'Text saved.');
 
   // ── Done ──────────────────────────────────────────────────────────────────
-  await ctx.log('video-from-audio-and-jpg complete.');
+  await ctx.log('narrated-still complete.');
   await ctx.log(`Output directory: ${ctx.outputDir}`);
   // processor.js posts 100% / done after handle() returns
 }

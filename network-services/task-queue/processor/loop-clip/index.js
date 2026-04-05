@@ -1,4 +1,4 @@
-// processor/video-from-looping-clip-over-mp3/index.js
+// processor/loop-clip/index.js
 //
 // Loops a short video clip over an MP3 for its full duration, then extracts
 // a 10-second AVIF preview clip, and saves any text field as text.md.
@@ -113,7 +113,7 @@ export async function handle(fields, ctx) {
   await ctx.progress(97, 'Text saved.');
 
   // ── Done ──────────────────────────────────────────────────────────────────
-  await ctx.log('video-from-looping-clip-over-mp3 complete.');
+  await ctx.log('loop-clip complete.');
   await ctx.log(`Output directory: ${ctx.outputDir}`);
 }
 

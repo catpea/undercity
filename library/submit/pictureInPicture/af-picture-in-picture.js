@@ -456,17 +456,24 @@ class AfPictureInPicture extends HTMLElement {
       const key = (this.#attr(out.attr) || '').trim();
       if (!key) continue;
 
-      // Fetch the output file from the task-queue server
+      // Fetch the output file from the task-queue server.
+      // Retry up to 5 times with 1s backoff — the job state may be written
+      // to disk just before the output file is fully flushed, so a brief
+      // retry window handles that race reliably.
       let blob = null;
       let chosenFilename = out.filename;
       let chosenMime     = out.mime;
 
-      for (const candidate of [out, ...(out.fallback ? [out.fallback] : [])]) {
-        try {
-          const r = await fetch(`${base}/job-output/${sid}/${candidate.filename}`,
-            { signal: AbortSignal.timeout(30_000) });
-          if (r.ok) { blob = await r.blob(); chosenFilename = candidate.filename; chosenMime = candidate.mime; break; }
-        } catch { /* try next candidate */ }
+      const candidates = [out, ...(out.fallback ? [out.fallback] : [])];
+      for (let attempt = 0; attempt < 5 && !blob; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 1000));
+        for (const candidate of candidates) {
+          try {
+            const r = await fetch(`${base}/job-output/${sid}/${candidate.filename}`,
+              { signal: AbortSignal.timeout(30_000) });
+            if (r.ok) { blob = await r.blob(); chosenFilename = candidate.filename; chosenMime = candidate.mime; break; }
+          } catch { /* try next candidate */ }
+        }
       }
 
       if (!blob) {
