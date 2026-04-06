@@ -993,8 +993,8 @@ class App extends Emitter {
     return `
       <div class="props-section" id="things-section">
         <div class="props-section-title">Things
-          <select id="thing-type-select" class="things-add-select">${typeOptions}</select>
-          <button id="thing-add-btn" class="things-add-btn">+ Add</button>
+          <select id="thing-type-select" class="form-select form-select-sm ms-auto" style="width:auto">${typeOptions}</select>
+          <button id="thing-add-btn" class="btn btn-sm btn-success">+ Add</button>
         </div>
         <div id="things-list"></div>
       </div>`;
@@ -1024,8 +1024,8 @@ class App extends Emitter {
             <i class="bi bi-${icon}"></i>
             <span class="thing-card-label" title="Double-click to rename">${escHtml(lbl)}</span>
             <div class="thing-card-actions">
-              <button class="thing-btn thing-edit" title="Edit workflows">⚙</button>
-              <button class="thing-btn thing-remove" title="Remove">×</button>
+              <button class="btn btn-sm btn-link p-0 thing-edit" title="Edit workflows"><i class="bi bi-gear" aria-hidden="true"></i></button>
+              <button class="btn btn-sm btn-link p-0 text-danger thing-remove" title="Remove"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </div>
           </div>
           ${cfg ? `<div class="thing-card-cfg">${cfg}</div>` : ''}
@@ -1149,7 +1149,7 @@ class App extends Emitter {
         recentSection?.classList.remove('d-none-ish');
         recentEl.innerHTML = recent.map(p => `
           <div class="welcome-recent-item" data-pid="${escAttr(p.id)}">
-            <af-icon name="folder2-open"></af-icon>
+            <i class="bi bi-folder2-open" aria-hidden="true"></i>
             <div class="wr-info">
               <div class="wr-name">${escHtml(p.name)}</div>
               ${p.description ? `<div class="wr-desc">${escHtml(p.description)}</div>` : ''}
@@ -1173,7 +1173,7 @@ class App extends Emitter {
         const templates = await API.listTemplates();
         tmplEl.innerHTML = templates.slice(0, 6).map(t => `
           <div class="welcome-tmpl-card" data-tid="${escAttr(t.id)}">
-            <div class="welcome-tmpl-icon"><af-icon name="${normalizeIconName(t.icon, 'stars')}"></af-icon></div>
+            <div class="welcome-tmpl-icon"><i class="bi bi-${normalizeIconName(t.icon, 'stars')}" aria-hidden="true"></i></div>
             <div class="welcome-tmpl-name">${escHtml(t.name)}</div>
           </div>`).join('');
         tmplEl.querySelectorAll('.welcome-tmpl-card').forEach(card => {
@@ -1319,7 +1319,7 @@ class App extends Emitter {
           card.dataset.tmplId = tmpl.id;
           const iconName = normalizeIconName(tmpl.icon, 'stars');
           card.innerHTML = `
-            <div class="tmpl-card-icon"><af-icon name="${iconName}"></af-icon></div>
+            <div class="tmpl-card-icon"><i class="bi bi-${iconName}" aria-hidden="true"></i></div>
             <div class="tmpl-card-name">${escHtml(tmpl.name)}</div>
             <div class="tmpl-card-desc">${escHtml(tmpl.description)}</div>`;
           card.addEventListener('click', () => selectTemplate(tmpl));
@@ -1336,7 +1336,7 @@ class App extends Emitter {
       $('new-proj-step-gallery').style.display = 'none';
       $('new-proj-step-name').style.display = '';
       $('tmpl-selected-badge').innerHTML =
-        `<span class="tmpl-badge"><af-icon name="${normalizeIconName(tmpl.icon, 'stars')}"></af-icon><span>${escHtml(tmpl.name)}</span></span>`;
+        `<span class="tmpl-badge"><i class="bi bi-${normalizeIconName(tmpl.icon, 'stars')}" aria-hidden="true"></i><span>${escHtml(tmpl.name)}</span></span>`;
       $('new-proj-name').value = '';
       $('new-proj-id').value = '';
       if ($('new-proj-desc')) $('new-proj-desc').value = '';
@@ -1705,7 +1705,7 @@ function escHtml(str) {
 }
 
 function buttonLabel(iconName, label) {
-  return `<af-icon name="${iconName}"></af-icon><span>${escHtml(label)}</span>`;
+  return `<i class="bi bi-${iconName}" aria-hidden="true"></i><span>${escHtml(label)}</span>`;
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────────────

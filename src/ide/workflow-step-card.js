@@ -8,6 +8,7 @@ const STEP_MODES = new Set(['basic', 'configure', 'json']);
 
 const template = document.createElement('template');
 template.innerHTML = `
+  <link rel="stylesheet" href="/bootstrap-icons.min.css">
   <style>
     :host {
       display: block;
@@ -209,7 +210,7 @@ template.innerHTML = `
       color: var(--danger);
     }
 
-    .toggle-button af-icon {
+    .toggle-button i {
       font-size: 13px;
     }
 
@@ -250,12 +251,12 @@ template.innerHTML = `
       <code part="action-id" class="action-id" hidden></code>
       <div part="controls" class="controls">
         <button part="toggle-button" class="step-button toggle-button" type="button" title="Disable in generated code">
-          <af-icon name="eye"></af-icon>
+          <i class="bi bi-eye" aria-hidden="true"></i>
         </button>
-        <button part="move-up-button" class="step-button" data-role="move-up" type="button" title="Move up">↑</button>
-        <button part="move-down-button" class="step-button" data-role="move-down" type="button" title="Move down">↓</button>
+        <button part="move-up-button" class="step-button" data-role="move-up" type="button" title="Move up"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+        <button part="move-down-button" class="step-button" data-role="move-down" type="button" title="Move down"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
         <button part="delete-button" class="step-button" data-role="delete" type="button" title="Delete">
-          <af-icon name="x-lg"></af-icon>
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -344,7 +345,7 @@ class WorkflowStepCard extends HTMLElement {
     this.#modePillsEl = root.querySelector('.mode-pills');
     this.#modeButtons = [...root.querySelectorAll('.mode-pill')];
     this.#toggleBtn = root.querySelector('.toggle-button');
-    this.#toggleIconEl = this.#toggleBtn.querySelector('af-icon');
+    this.#toggleIconEl = this.#toggleBtn.querySelector('i');
     this.#upBtn = root.querySelector('[data-role="move-up"]');
     this.#downBtn = root.querySelector('[data-role="move-down"]');
     this.#deleteBtn = root.querySelector('[data-role="delete"]');
@@ -448,7 +449,7 @@ class WorkflowStepCard extends HTMLElement {
       this.#toggleBtn.title = disabled ? 'Enable in generated code' : 'Disable in generated code';
       this.#toggleBtn.setAttribute('aria-pressed', String(disabled));
       this.#toggleBtn.dataset.disabled = String(disabled);
-      this.#toggleIconEl.setAttribute('name', disabled ? 'eye-slash' : 'eye');
+      this.#toggleIconEl.className = disabled ? 'bi bi-eye-slash' : 'bi bi-eye';
 
       this.#upBtn.disabled = !canMoveUp;
       this.#downBtn.disabled = !canMoveDown;

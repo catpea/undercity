@@ -178,13 +178,13 @@ export class SavantChat {
     this.#containerEl.innerHTML = `
       <div id="chat-header">
         <span id="chat-title">AI Chat</span>
-        <button id="chat-clear-btn" title="Clear history">↺</button>
+        <button id="chat-clear-btn" class="btn btn-sm btn-outline-secondary lh-1 p-1" title="Clear history"><i class="bi bi-trash3" aria-hidden="true"></i></button>
       </div>
       <div id="chat-context-bar"></div>
       <div id="chat-messages"></div>
       <div id="chat-input-row">
-        <textarea id="chat-input" rows="2" placeholder="Ask or say 'Build a login flow'…"></textarea>
-        <button id="chat-send-btn">Send</button>
+        <textarea id="chat-input" class="form-control form-control-sm" rows="2" placeholder="Ask or say 'Build a login flow'…"></textarea>
+        <button id="chat-send-btn" class="btn btn-sm btn-violet"><i class="bi bi-send" aria-hidden="true"></i></button>
       </div>`;
 
     this.#messagesEl = this.#containerEl.querySelector('#chat-messages');

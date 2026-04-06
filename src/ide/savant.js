@@ -710,8 +710,8 @@ export class Savant extends Emitter {
     const aiSection = document.createElement('div');
     aiSection.className = 'cat-ai-section';
     aiSection.innerHTML = `
-      <textarea class="cat-ai-input" rows="2" placeholder="Describe a new action… e.g. 'Video upload with thumbnail frame selector'"></textarea>
-      <button class="cat-ai-btn"><af-icon name="magic"></af-icon><span>Generate Action</span></button>
+      <textarea class="form-control form-control-sm cat-ai-input" rows="2" placeholder="Describe a new action… e.g. 'Video upload with thumbnail frame selector'"></textarea>
+      <button class="btn btn-sm btn-violet w-100 mt-1 cat-ai-btn"><i class="bi bi-magic" aria-hidden="true"></i> Generate Action</button>
     `;
     this.#catPane.appendChild(aiSection);
 
@@ -724,7 +724,7 @@ export class Savant extends Emitter {
     const item = document.createElement('div');
     item.className = 'cat-item';
     item.dataset.cat = catId;
-    item.innerHTML = `<af-icon name="${icon}" class="cat-icon"></af-icon><span>${label}</span>`;
+    item.innerHTML = `<i class="bi bi-${icon} cat-icon" aria-hidden="true"></i><span>${label}</span>`;
     item.addEventListener('click', () => this.#selectCategory(catId));
     return item;
   }
@@ -1025,7 +1025,7 @@ export class Savant extends Emitter {
     if (codeParams.length > 0) {
       const note = document.createElement('div');
       note.className = 'step-basic-code-note';
-      note.innerHTML = `<af-icon name="gear"></af-icon> <span>${codeParams.map(p => p.label).join(', ')} — switch to <strong>Configure</strong> to edit</span>`;
+      note.innerHTML = `<i class="bi bi-gear" aria-hidden="true"></i> <span>${codeParams.map(p => p.label).join(', ')} — switch to <strong>Configure</strong> to edit</span>`;
       container.appendChild(note);
     }
   }
@@ -1227,7 +1227,7 @@ export class Savant extends Emitter {
     });
 
     const addBtn = document.createElement('button');
-    addBtn.className = 'add-route-btn';
+    addBtn.className = 'btn btn-sm btn-outline-secondary w-100 add-route-btn';
     addBtn.textContent = '+ Add Route';
     addBtn.addEventListener('click', () => {
       const rs = [...(this.#node.routes.peek() ?? [])];
@@ -1286,13 +1286,13 @@ export class Savant extends Emitter {
         <div class="route-advanced${parsed ? ' hidden' : ''}">
           <input class="route-condition" placeholder="inventory.get('key') === 'value'" value="${escAttr(route.condition ?? '')}">
         </div>
-        <button class="route-toggle-mode" title="${parsed ? 'Switch to expression mode' : 'Switch to visual mode'}">${parsed ? '{ }' : '◈'}</button>
+        <button class="btn btn-sm btn-outline-secondary route-toggle-mode" title="${parsed ? 'Switch to expression mode' : 'Switch to visual mode'}">${parsed ? '{ }' : '◈'}</button>
       </div>
       <div class="route-footer">
         <select class="route-target">
           <option value="">— target room —</option>
         </select>
-        <button class="route-del" title="Delete route"><af-icon name="x-lg"></af-icon></button>
+        <button class="btn btn-sm btn-link p-0 text-danger route-del" title="Delete route"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </div>`;
 
     const visualDiv  = row.querySelector('.route-visual');
@@ -1378,7 +1378,7 @@ export class Savant extends Emitter {
     if (!prompt) return;
 
     this.#aiBtn.disabled = true;
-    this.#aiBtn.innerHTML = `<af-icon name="arrow-repeat"></af-icon><span>Generating…</span>`;
+    this.#aiBtn.innerHTML = `<i class="bi bi-arrow-repeat" aria-hidden="true"></i> Generating…`;
 
     try {
       const result = await API.generateAction(prompt);
@@ -1400,7 +1400,7 @@ export class Savant extends Emitter {
       this.emit('toast', { msg: `AI error: ${err.message}`, type: 'error' });
     } finally {
       this.#aiBtn.disabled = false;
-      this.#aiBtn.innerHTML = `<af-icon name="magic"></af-icon><span>Generate Action</span>`;
+      this.#aiBtn.innerHTML = `<i class="bi bi-magic" aria-hidden="true"></i> Generate Action`;
     }
   }
 
