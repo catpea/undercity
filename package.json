@@ -1,6 +1,6 @@
 {
   "name": "undercity",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Visual flow IDE — MUD-style logic graph builder with Bootstrap code generation",
   "type": "module",
   "main": "server.js",
