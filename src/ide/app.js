@@ -1051,11 +1051,11 @@ class App extends Emitter {
       const card = e.target.closest('.thing-card');
       if (!card) return;
       const id = card.dataset.thingId;
-      if (e.target.classList.contains('thing-remove')) {
+      if (e.target.closest('.thing-remove')) {
         node.removeThing(id);
         this.markDirty();
         // #renderThingsList fires via subscription
-      } else if (e.target.classList.contains('thing-edit')) {
+      } else if (e.target.closest('.thing-edit')) {
         const t = node.things.peek().find(x => x.id === id);
         if (t) this.#openThingConfig(node, t);
       }

@@ -200,7 +200,7 @@
               "action": "submit.submitInventoryToTaskQueue",
               "params": {
                 "url": "http://localhost:4000",
-                "jobType": "video-from-looping-clip-over-mp3",
+                "jobType": "loop-clip",
                 "omit": "",
                 "preview": true
               }

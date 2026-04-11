@@ -1,5 +1,5 @@
 {
-  "formId": "video-from-looping-clip-over-mp3",
+  "formId": "loop-clip",
   "title": "Video from Looping Clip + Audio",
   "description": "Loops a short video clip over an MP3 for its full duration, with AVIF cover and optional text.",
   "fields": {

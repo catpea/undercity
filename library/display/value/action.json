@@ -6,6 +6,10 @@
   "desc":    "Append an inventory key's current value as plain text in the current card.",
   "version": "2.0.0",
   "params": [
-    { "name": "key", "label": "Inventory key", "type": "text", "placeholder": "firstName" }
+
+    { "name": "key", "label": "Inventory key", "type": "text", "placeholder": "firstName" },
+    { "name": "centered", "label": "Centered", "type": "boolean", "default": true, "helpText": "Center value display." },
+    { "name": "fullWidth", "label": "Full Width", "type": "boolean", "default": true, "helpText": "Full width" }
+
   ]
 }

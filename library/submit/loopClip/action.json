@@ -3,7 +3,7 @@
   "icon":    "arrow-repeat",
   "color":   "var(--sol-green)",
   "label":   "Loop Clip",
-  "desc":    "Submit inventory to the video-from-looping-clip-over-mp3 processor. Requires 'clip' (short video) and 'audio' in inventory. Optionally stores output files back into inventory under the configured keys.",
+  "desc":    "Submit inventory to the loop-clip processor. Requires 'clip' (short video) and 'audio' in inventory. Optionally stores output files back into inventory under the configured keys.",
   "version": "1.0.0",
   "params": [
     { "name": "url",        "label": "Server URL",           "type": "text",          "placeholder": "http://localhost:4000", "default": "http://localhost:4000" },

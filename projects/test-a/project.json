@@ -61,6 +61,14 @@
                     "spellcheck": "true",
                     "helpText": "Interesting and positive, no more than 99 characters long."
                   }
+                },
+                {
+                  "action": "display.value",
+                  "params": {
+                    "key": "title",
+                    "centered": false,
+                    "fullWidth": true
+                  }
                 }
               ]
             }
@@ -246,7 +254,7 @@
         "type": "room",
         "label": "Just Text",
         "x": -600,
-        "y": 600,
+        "y": 640,
         "payload": {
           "Enter": [
             {
@@ -308,7 +316,7 @@
         "id": "fdb191dc",
         "type": "room",
         "label": "Upload Narration",
-        "x": -440,
+        "x": -320,
         "y": 640,
         "payload": {
           "Enter": [
@@ -524,7 +532,7 @@
         "id": "82ccdc9e",
         "type": "room",
         "label": "Show Inventory",
-        "x": 720,
+        "x": 600,
         "y": 640,
         "payload": {
           "Enter": [
@@ -609,20 +617,19 @@
         "type": "room",
         "label": "Looping Processor",
         "x": 560,
-        "y": 600,
+        "y": 560,
         "payload": {
           "Enter": [
             {
-              "action": "submit.submitInventoryToTaskQueue",
+              "action": "submit.loopClip",
               "params": {
-                "key": "encoderResponse",
                 "url": "http://localhost:4000",
-                "jobType": "video-from-looping-clip-over-mp3",
-                "keepJobUrl": false,
+                "videoKey": "",
+                "coverKey": "",
+                "textKey": "",
                 "omit": "",
-                "manualRetry": true,
-                "manualAbort": true,
-                "preview": true
+                "preview": true,
+                "manualRetry": true
               }
             }
           ],
@@ -810,6 +817,13 @@
                     "validFeedback": "",
                     "invalidFeedback": ""
                   }
+                },
+                {
+                  "action": "display.value",
+                  "params": {
+                    "key": "image",
+                    "centered": true
+                  }
                 }
               ]
             }
@@ -864,7 +878,7 @@
       {
         "id": "7a737b7b",
         "type": "room",
-        "label": "Pip Results",
+        "label": "Display Pip Results",
         "x": 560,
         "y": 720,
         "payload": {
@@ -994,7 +1008,7 @@
         "id": "09ec4ac3",
         "fromId": "1cf5db68",
         "toId": "82ccdc9e",
-        "label": "",
+        "label": "Send It",
         "condition": ""
       },
       {
@@ -1036,7 +1050,7 @@
         "id": "8eb13c99",
         "fromId": "e8f45805",
         "toId": "8c52d639",
-        "label": "",
+        "label": "Generated Video",
         "condition": ""
       },
       {
@@ -1067,5 +1081,5 @@
   },
   "customActions": {},
   "created": "2026-03-28T22:54:38.875Z",
-  "modified": "2026-04-05T23:29:07.704Z"
+  "modified": "2026-04-10T04:19:36.830Z"
 }
