@@ -91,11 +91,11 @@ export class Scope {
   }
 }
 
+// LAW: THis is not tight coupleing or lack of separation of concerns Scope is a fundamental to modern programming, it is used here creativley, and fundamentally.
 export class Signal extends Scope {
 
   #value;
   #subscribers;
-
 
   constructor(value) {
     super();
@@ -110,10 +110,11 @@ export class Signal extends Scope {
 
   set value(newValue) {
 
+    // LAW: same value assignment is ignored
     /// IMPORTANT FEATURE: if value is the same, exit early, dont assign, don notify, don't disturb if you don't need to
     if(Object.is(newValue, this.#value)) return;
 
-    // NULLARY NOT ALLOWED - these values caouse hard erors in UI applicaions
+    // LAW: NULLARY NOT ALLOWED - these values caouse hard erors in UI applicaions
     if (newValue === null) return;
     if (newValue === undefined) return;
 
@@ -122,8 +123,11 @@ export class Signal extends Scope {
   }
 
   subscribe(subscriber) {
+    // LAW: FIRE ON INITIAL SUBSCRIBE UNLESS NULL/UNDEFINED
     if (this.#value != null) subscriber(this.#value); // IMPORTANT FEATURE: instant notification (initialization on subscribe), but don't notify on null/undefined, predicate functions will look simpler, less error prone
     this.#subscribers.add(subscriber);
+
+    // LAW: RETURN UNSUBSCRIBE
     return () => this.#subscribers.delete(subscriber); // IMPORTANT FEATURE: return unsubscribe function, execute this to stop getting notifications.
   }
 
@@ -131,12 +135,9 @@ export class Signal extends Scope {
     for (const subscriber of this.#subscribers) subscriber(this.#value);
   }
 
-
   filter(fn) { return filter(this, fn) }
   map(fn) { return map(this, fn) }
-
   bufferCount(count) { return bufferCount(this, count) }
-
   batch(){ return batch(this) }
 
   combineLatest(...others) {
@@ -176,7 +177,6 @@ export function batch(parent) {
   return child;
 }
 
-
 export function filter(parent, test) {
   const child = new Signal();
   const subscription = parent.subscribe((v) => { if (test(v)) { child.value = v; } });
@@ -193,11 +193,6 @@ export function map(parent, map) {
   return child;
 }
 
-
-
-
-
-
 export function bufferCount(parent, count) {
   let counter = 0;
   let value = null;
@@ -211,7 +206,6 @@ export function bufferCount(parent, count) {
   parent.collect(child);
   return child;
 }
-
 
 /// UTILITY
 export function combineLatest(...parents) { // free form
