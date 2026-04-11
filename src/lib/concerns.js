@@ -3,14 +3,14 @@ export class Concern extends Scope {
   #name;
   #parent;
   constructor(name, parent) {
+    super();
     this.#name = name;
     this.#parent = parent;
-    super();
   }
 
   #signals = new Map(); // name → Signal
-  signal(name, signal){
-    if(signal) this.#signals.set(name, signal);
+  signal(name, signal) {
+    if (signal) this.#signals.set(name, signal);
     return this.#signals.get(name);
   }
 
@@ -20,21 +20,31 @@ export class Concern extends Scope {
     return this.#concerns.get(name);
   }
 
-  get root(){
+  // Descend into child concerns by path: 'inventory/display' or '/inventory/display' (from root)
+  lookup(path) {
+    const parts = path.replace(/^\//, '').split('/');
+    let current = path.startsWith('/') ? this.root : this;
+    for (const part of parts) current = current.concern(part);
+    return current;
+  }
+
+  get root() {
     let current = this;
-    while (current.parent) {
-      current = current.parent;
-    }
-  return current;
+    while (current.#parent) current = current.#parent;
+    return current;
   }
-  get parent(){ return this.#parent || this; }
+  get parent() { return this.#parent || this; }
 
-
-  subscribe(name, fn){
-    child.collect(this.signal(name).subscribe(fn));
+  subscribe(name, fn) {
+    this.collect(this.signal(name).subscribe(fn));
   }
 
-  bind(signal, element){
+  // Bind a signal to an <input> element: element changes update the signal,
+  // and the listener is automatically removed when this concern is disposed.
+  bind(signal, element) {
+    const handler = () => { signal.value = element.value; };
+    element.addEventListener('input', handler);
+    this.collect(() => element.removeEventListener('input', handler));
   }
 
 }
@@ -126,6 +136,7 @@ export class Signal extends Scope {
   map(fn) { return map(this, fn) }
 
   bufferCount(count) { return bufferCount(this, count) }
+
   batch(){ return batch(this) }
 
   combineLatest(...others) {
@@ -145,8 +156,25 @@ export class Signal extends Scope {
 }
 
 
-// TODO: Create a queue microtask based batch, that fires after many asignment
-export function batch(parent) {}
+// Coalesces rapid assignments: if parent is set multiple times in the same
+// synchronous turn, subscribers of the child signal fire only once — after
+// the microtask queue drains — with the final value.
+export function batch(parent) {
+  const child = new Signal();
+  let pending = false;
+  const subscription = parent.subscribe(() => {
+    if (!pending) {
+      pending = true;
+      queueMicrotask(() => {
+        pending = false;
+        child.value = parent.value;
+      });
+    }
+  });
+  child.collect(subscription);
+  parent.collect(child);
+  return child;
+}
 
 
 export function filter(parent, test) {
